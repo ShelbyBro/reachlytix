@@ -128,3 +128,9 @@ export default function Dashboard() {
     </Layout>
   );
 }
+<Button onClick={() => {
+  const el = document.getElementById("client-login");
+  if (el) el.scrollIntoView({ behavior: "smooth" });
+}}>
+  Client Login
+</Button>
