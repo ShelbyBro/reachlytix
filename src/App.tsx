@@ -7,11 +7,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
-// Import our new pages
+// Import our pages
 import Login from "./pages/auth/Login";
 import Dashboard from "./pages/dashboard/Dashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import LandingPage from "./pages/landing/LandingPage";
+import UploadPage from "./pages/upload";
+import CampaignsPage from "./pages/campaigns";
 
 const queryClient = new QueryClient();
 
@@ -22,10 +24,12 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<Index />} />
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/signup" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/upload" element={<UploadPage />} />
+          <Route path="/campaigns" element={<CampaignsPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
