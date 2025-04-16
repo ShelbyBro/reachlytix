@@ -61,7 +61,17 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+                brand: {
+                    purple: '#9b87f5',
+                    'light-purple': '#D6BCFA',
+                    'dark-purple': '#1A1F2C',
+                    blue: '#D3E4FD',
+                }
+			},
+			backgroundImage: {
+				'gradient-primary': 'linear-gradient(90deg, hsla(277, 75%, 84%, 1) 0%, hsla(297, 50%, 51%, 1) 100%)',
+				'gradient-secondary': 'linear-gradient(90deg, hsla(216, 41%, 79%, 1) 0%, hsla(186, 33%, 94%, 1) 100%)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
