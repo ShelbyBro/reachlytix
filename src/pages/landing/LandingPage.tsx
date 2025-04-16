@@ -7,13 +7,17 @@ import {
   BarChart3, 
   Users, 
   Zap, 
-  Shield, 
+  Shield,
+  ShieldCheck,
   Menu, 
   X,
-  ChevronRight
+  ChevronRight,
+  Phone,
+  Workflow
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NeuralBackground } from "@/components/neural-background";
 import {
   Accordion,
   AccordionContent,
