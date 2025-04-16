@@ -128,9 +128,9 @@ export default function Dashboard() {
     </Layout>
   );
 }
-<Button onClick={() => {
-  const el = document.getElementById("client-login");
-  if (el) el.scrollIntoView({ behavior: "smooth" });
-}}>
-  Client Login
-</Button>
+<section id="client-login">
+  <div className="login-form">
+    <h2>Welcome Back</h2>
+    <form>...</form>
+  </div>
+</section>
