@@ -1,6 +1,5 @@
 
 import { ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { NeuralBackground } from "@/components/neural-background";
 import { Header } from "./components/Header";
@@ -30,11 +29,20 @@ export default function LandingPage() {
             <p className="text-xl opacity-90 mb-8">
               Start your free trial today and see the difference Reachlytix can make for your business.
             </p>
-            <Button size="lg" variant="secondary" className="rounded-full" asChild>
-              <Link to="/auth/signup">
-                Get Started Now <ChevronRight className="ml-1" />
-              </Link>
+            
+            {/* Updated Button with Smooth Scroll */}
+            <Button
+              size="lg"
+              variant="secondary"
+              className="rounded-full"
+              onClick={() => {
+                const el = document.getElementById("client-login");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              Get Started Now <ChevronRight className="ml-1" />
             </Button>
+
           </div>
         </div>
       </section>
@@ -43,3 +51,4 @@ export default function LandingPage() {
     </div>
   );
 }
+
