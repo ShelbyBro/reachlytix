@@ -1,3 +1,4 @@
+// ✅ Full Refined Dashboard Page (client-login wrapped section)
 import {
   ArrowUpRight,
   TrendingUp,
@@ -76,9 +77,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">12,345</div>
-              <p className="text-xs text-muted-foreground">
-                +2.5% from last month
-              </p>
+              <p className="text-xs text-muted-foreground">+2.5% from last month</p>
               <Progress value={78} className="h-1 mt-3" />
             </CardContent>
           </Card>
@@ -104,9 +103,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">8</div>
-              <p className="text-xs text-muted-foreground">
-                4 ending this month
-              </p>
+              <p className="text-xs text-muted-foreground">4 ending this month</p>
               <Progress value={65} className="h-1 mt-3" />
             </CardContent>
           </Card>
@@ -118,9 +115,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">24.6%</div>
-              <p className="text-xs text-muted-foreground">
-                1.2% higher than average
-              </p>
+              <p className="text-xs text-muted-foreground">1.2% higher than average</p>
               <Progress value={85} className="h-1 mt-3" />
             </CardContent>
           </Card>
@@ -131,9 +126,7 @@ export default function Dashboard() {
           <Card className="lg:col-span-4">
             <CardHeader>
               <CardTitle>Campaign Performance</CardTitle>
-              <CardDescription>
-                Overview of campaign metrics over time
-              </CardDescription>
+              <CardDescription>Overview of campaign metrics over time</CardDescription>
             </CardHeader>
             <CardContent className="pt-2">
               <AreaChart
@@ -217,8 +210,7 @@ export default function Dashboard() {
                 </TabsList>
                 <TabsContent value="active">
                   <div className="space-y-2">
-                    {[
-                      { name: "Q2 Newsletter", leads: "2,420", conversion: "3.8%", status: "Active" },
+                    {[{ name: "Q2 Newsletter", leads: "2,420", conversion: "3.8%", status: "Active" },
                       { name: "Summer Promo", leads: "1,865", conversion: "4.2%", status: "Active" },
                       { name: "Product Launch", leads: "3,647", conversion: "5.1%", status: "Active" },
                     ].map((campaign) => (
@@ -244,8 +236,7 @@ export default function Dashboard() {
 
                 <TabsContent value="scheduled">
                   <div className="space-y-2">
-                    {[
-                      { name: "Fall Collection", date: "Sep 15", leads: "Target: 5,000", status: "Scheduled" },
+                    {[{ name: "Fall Collection", date: "Sep 15", leads: "Target: 5,000", status: "Scheduled" },
                       { name: "Holiday Special", date: "Nov 20", leads: "Target: 8,500", status: "Scheduled" },
                     ].map((campaign) => (
                       <div key={campaign.name} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
@@ -270,8 +261,7 @@ export default function Dashboard() {
 
                 <TabsContent value="completed">
                   <div className="space-y-2">
-                    {[
-                      { name: "Q1 Newsletter", leads: "2,145", conversion: "3.5%", status: "Completed" },
+                    {[{ name: "Q1 Newsletter", leads: "2,145", conversion: "3.5%", status: "Completed" },
                       { name: "Spring Sale", leads: "3,274", conversion: "4.7%", status: "Completed" },
                       { name: "Webinar Series", leads: "1,532", conversion: "2.9%", status: "Completed" },
                     ].map((campaign) => (
