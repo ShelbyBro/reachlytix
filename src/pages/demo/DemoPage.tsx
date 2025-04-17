@@ -1,4 +1,5 @@
-import { ArrowUpRight, TrendingUp, Users, Activity, BarChart3 } from "lucide-react";
+
+import { ArrowUpRight, TrendingUp, Users, Activity, BarChart3, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,21 +38,24 @@ export default function DemoPage() {
   
   return (
     <Layout>
-      <Alert className="bg-yellow-100 border-yellow-300 mb-6">
-        <AlertDescription className="text-yellow-800 font-medium">
-          This is a public demo of Reachlytix. Data is for preview only.
+      <Alert className="bg-amber-100 border-amber-300 mb-6">
+        <AlertCircle className="h-4 w-4 text-amber-500" />
+        <AlertDescription className="text-amber-800 font-medium ml-2">
+          This is a public demo of Reachlytix. Features are limited and no data will be saved.
         </AlertDescription>
       </Alert>
       
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard Demo</h1>
           <p className="text-muted-foreground">
             Welcome to the Reachlytix dashboard demo
           </p>
         </div>
-        <div className="flex gap-4">
-          <Button variant="outline">Export</Button>
+        <div className="flex gap-3">
+          <DemoFeatureTooltip>
+            <Button variant="outline">Export</Button>
+          </DemoFeatureTooltip>
           <Button onClick={() => window.location.href = "/auth/login"}>Create Account</Button>
         </div>
       </div>
@@ -149,8 +153,8 @@ export default function DemoPage() {
         </Card>
       </div>
 
-      {/* Demo Feature Buttons */}
-      <div className="mt-6 flex gap-4">
+      {/* Demo Feature Buttons - updated section */}
+      <div className="mt-6 flex flex-wrap gap-3">
         <DemoFeatureTooltip>
           <Button
             variant="outline"
@@ -168,11 +172,27 @@ export default function DemoPage() {
             Settings
           </Button>
         </DemoFeatureTooltip>
+        
+        <DemoFeatureTooltip>
+          <Button
+            variant="outline"
+          >
+            Reports
+          </Button>
+        </DemoFeatureTooltip>
+        
+        <DemoFeatureTooltip>
+          <Button
+            variant="outline"
+          >
+            Integrations
+          </Button>
+        </DemoFeatureTooltip>
       </div>
 
       <div className="mt-8 text-center">
-        <p className="mb-4">Want to access the full dashboard and all features?</p>
-        <div className="flex gap-4 justify-center">
+        <p className="mb-4 text-muted-foreground">Want to access the full dashboard and all features?</p>
+        <div className="flex flex-wrap gap-4 justify-center">
           <Button onClick={() => window.location.href = "/auth/login"}>
             Create an Account
           </Button>
