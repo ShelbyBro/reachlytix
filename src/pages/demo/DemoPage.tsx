@@ -1,4 +1,3 @@
-
 import { ArrowUpRight, TrendingUp, Users, Activity, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,8 +11,10 @@ import { Progress } from "@/components/ui/progress";
 import { AreaChart, BarChart } from "@/components/ui/chart";
 import Layout from "@/components/layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { NewCampaignDialog } from "@/components/demo/NewCampaignDialog";
+import { DemoFeatureTooltip } from "@/components/demo/DemoFeatureTooltip";
+import { useNavigate } from "react-router-dom";
 
-// Mock chart data (same as in Dashboard)
 const areaChartData = [
   { name: "Jan", value: 30 },
   { name: "Feb", value: 40 },
@@ -32,6 +33,8 @@ const barChartData = [
 ];
 
 export default function DemoPage() {
+  const navigate = useNavigate();
+  
   return (
     <Layout>
       <Alert className="bg-yellow-100 border-yellow-300 mb-6">
@@ -90,6 +93,9 @@ export default function DemoPage() {
             <div className="text-2xl font-bold">8</div>
             <p className="text-xs text-muted-foreground">4 ending this month</p>
             <Progress value={65} className="h-1 mt-3" />
+            <div className="mt-4">
+              <NewCampaignDialog />
+            </div>
           </CardContent>
         </Card>
 
@@ -141,6 +147,27 @@ export default function DemoPage() {
             />
           </CardContent>
         </Card>
+      </div>
+
+      {/* Demo Feature Buttons */}
+      <div className="mt-6 flex gap-4">
+        <DemoFeatureTooltip>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/demo/coming-soon")}
+          >
+            Analytics
+          </Button>
+        </DemoFeatureTooltip>
+        
+        <DemoFeatureTooltip>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/demo/coming-soon")}
+          >
+            Settings
+          </Button>
+        </DemoFeatureTooltip>
       </div>
 
       <div className="mt-8 text-center">

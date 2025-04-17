@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +15,7 @@ import LandingPage from "./pages/landing/LandingPage";
 import UploadPage from "./pages/upload";
 import CampaignsPage from "./pages/campaigns";
 import DemoPage from "./pages/demo/DemoPage";
+import ComingSoonPage from "./pages/demo/ComingSoonPage";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +32,7 @@ const App = () => (
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/signup" element={<Login />} />
             <Route path="/demo" element={<DemoPage />} />
+            <Route path="/demo/coming-soon" element={<ComingSoonPage />} />
             
             {/* Protected routes */}
             <Route path="/dashboard" element={
