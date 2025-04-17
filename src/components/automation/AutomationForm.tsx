@@ -43,9 +43,16 @@ export function AutomationForm({ onSuccess }: { onSuccess: () => void }) {
   async function onSubmit(data: AutomationFormValues) {
     setIsSubmitting(true);
     try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) throw userError;
+      
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("User not authenticated");
+      
       const { error } = await supabase.from("automations").insert({
         ...data,
-        created_by: (await supabase.auth.getUser()).data.user?.id
+        created_by: userId
       });
 
       if (error) throw error;
