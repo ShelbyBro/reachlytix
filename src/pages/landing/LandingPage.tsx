@@ -1,7 +1,8 @@
-// ✅ Full Refined Landing Page
+
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NeuralBackground } from "@/components/neural-background";
+import { useNavigate } from "react-router-dom";
 import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
 import { Features } from "./components/Features";
@@ -11,6 +12,8 @@ import { FAQ } from "./components/FAQ";
 import { Footer } from "./components/Footer";
 
 export default function LandingPage() {
+  const navigate = useNavigate();
+  
   return (
     <div className="min-h-screen flex flex-col">
       <NeuralBackground />
@@ -38,21 +41,17 @@ export default function LandingPage() {
               size="lg"
               variant="secondary"
               className="rounded-full"
-              onClick={() => {
-                window.location.href = "/auth/login";
-              }}
+              onClick={() => navigate("/auth/login")}
             >
               Get Started Now <ChevronRight className="ml-1" />
             </Button>
 
-            {/* Optional: Watch Demo Button */}
+            {/* Updated Watch Demo Button */}
             <Button
               size="lg"
               variant="ghost"
               className="mt-4 text-white underline"
-              onClick={() => {
-                window.location.href = "/auth/login";
-              }}
+              onClick={() => navigate("/demo")}
             >
               Watch Demo
             </Button>

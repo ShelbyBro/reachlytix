@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 type SidebarProps = {
   isAdmin?: boolean;
@@ -22,6 +23,7 @@ type SidebarProps = {
 export function Sidebar({ isAdmin = false }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { signOut } = useAuth();
   
   const clientLinks = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -42,6 +44,10 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
   
   const links = isAdmin ? adminLinks : clientLinks;
 
+  const handleLogout = async () => {
+    await signOut();
+  };
+
   return (
     <aside 
       className={cn(
@@ -51,10 +57,12 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
     >
       <div className="flex items-center justify-between h-16 px-4 border-b border-sidebar-border">
         <div className={cn("flex items-center", collapsed && "justify-center w-full")}>
-          {!collapsed && (
-            <span className="font-bold text-lg bg-gradient-primary text-transparent bg-clip-text">Reachlytix</span>
-          )}
-          {collapsed && <span className="font-bold text-xl">R</span>}
+          <Link to="/">
+            {!collapsed && (
+              <span className="font-bold text-lg bg-gradient-primary text-transparent bg-clip-text">Reachlytix</span>
+            )}
+            {collapsed && <span className="font-bold text-xl">R</span>}
+          </Link>
         </div>
         <Button
           variant="ghost"
@@ -91,16 +99,16 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
       </div>
       
       <div className="p-4 border-t border-sidebar-border">
-        <Link
-          to="/logout"
+        <Button
+          onClick={handleLogout}
           className={cn(
-            "flex items-center h-10 px-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors",
+            "flex items-center w-full h-10 px-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors",
             collapsed && "justify-center"
           )}
         >
           <LogOut size={20} />
           {!collapsed && <span className="ml-3">Logout</span>}
-        </Link>
+        </Button>
       </div>
     </aside>
   );

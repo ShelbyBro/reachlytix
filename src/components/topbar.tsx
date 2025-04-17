@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 
 type TopBarProps = {
   user?: {
@@ -21,7 +22,16 @@ type TopBarProps = {
   };
 };
 
-export function TopBar({ user = { name: "John Doe", email: "john@example.com" } }: TopBarProps) {
+export function TopBar({ user }: TopBarProps) {
+  const { user: authUser, signOut } = useAuth();
+  
+  const displayName = user?.name || authUser?.user_metadata?.first_name + " " + authUser?.user_metadata?.last_name || "User";
+  const displayEmail = user?.email || authUser?.email || "user@example.com";
+  
+  const handleLogout = async () => {
+    await signOut();
+  };
+
   return (
     <header className="h-16 border-b border-border flex items-center justify-between px-6">
       <div className="flex-1 md:flex hidden items-center max-w-sm">
@@ -46,19 +56,22 @@ export function TopBar({ user = { name: "John Doe", email: "john@example.com" } 
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="p-0 h-auto rounded-full">
               <Avatar className="h-8 w-8 ring-2 ring-primary/20">
-                <AvatarImage src={user?.image} alt={user?.name} />
-                <AvatarFallback>{user?.name.substring(0, 2)}</AvatarFallback>
+                <AvatarImage src={user?.image} alt={displayName} />
+                <AvatarFallback>{displayName.substring(0, 2)}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>{displayName}</DropdownMenuLabel>
+            <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
+              {displayEmail}
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuItem>Billing</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Logout</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

@@ -1,89 +1,159 @@
 
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Link } from "react-router-dom";
+import { Link as ScrollLink } from "react-scroll";
 
 export function Header() {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
 
   return (
-    <header 
-      className={`sticky top-0 z-40 transition-all duration-200 ${
-        isScrolled 
-          ? "bg-background/80 backdrop-blur-lg border-b shadow-sm" 
-          : "bg-transparent"
-      }`}
-    >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center">
-              <span className="text-xl font-bold bg-gradient-primary text-transparent bg-clip-text">Reachlytix</span>
-            </Link>
-            <nav className="hidden md:flex items-center space-x-8 ml-10">
-              <Link to="#features" className="text-sm font-medium hover:text-primary transition-colors">Features</Link>
-              <Link to="#pricing" className="text-sm font-medium hover:text-primary transition-colors">Pricing</Link>
-              <Link to="#testimonials" className="text-sm font-medium hover:text-primary transition-colors">Testimonials</Link>
-              <Link to="#faq" className="text-sm font-medium hover:text-primary transition-colors">FAQ</Link>
-            </nav>
-          </div>
-          <div className="flex items-center space-x-4">
-            <ThemeToggle />
-            <div className="hidden md:flex items-center space-x-4">
-              <Button variant="ghost" asChild>
-                <Link to="/auth/login">Login</Link>
-              </Button>
-              <Button asChild>
-                <Link to="/auth/signup">Sign Up</Link>
-              </Button>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+    <header className="relative z-20 w-full">
+      <div className="container flex h-16 items-center px-4 sm:px-6 lg:px-8">
+        <div className="mr-4 flex">
+          <Link to="/" className="flex items-center space-x-2">
+            <span className="font-bold text-xl bg-gradient-primary text-transparent bg-clip-text">
+              Reachlytix
+            </span>
+          </Link>
+        </div>
+        <div className="hidden md:flex flex-1 items-center justify-center">
+          <nav className="flex items-center space-x-6 text-sm font-medium">
+            <ScrollLink
+              to="features"
+              spy={true}
+              smooth={true}
+              offset={-70}
+              duration={500}
+              className="transition-colors hover:text-foreground/80 cursor-pointer"
             >
-              {mobileMenuOpen ? <X /> : <Menu />}
-            </Button>
+              Features
+            </ScrollLink>
+            <ScrollLink
+              to="pricing"
+              spy={true}
+              smooth={true}
+              offset={-70}
+              duration={500}
+              className="transition-colors hover:text-foreground/80 cursor-pointer"
+            >
+              Pricing
+            </ScrollLink>
+            <ScrollLink
+              to="testimonials"
+              spy={true}
+              smooth={true}
+              offset={-70}
+              duration={500}
+              className="transition-colors hover:text-foreground/80 cursor-pointer"
+            >
+              Testimonials
+            </ScrollLink>
+            <ScrollLink
+              to="faq"
+              spy={true}
+              smooth={true}
+              offset={-70}
+              duration={500}
+              className="transition-colors hover:text-foreground/80 cursor-pointer"
+            >
+              FAQ
+            </ScrollLink>
+          </nav>
+        </div>
+        <div className="flex flex-1 items-center justify-end space-x-4">
+          <div className="hidden md:flex items-center">
+            <ThemeToggle />
+            <Link to="/auth/login">
+              <Button variant="ghost" size="sm" className="ml-4">
+                Sign In
+              </Button>
+            </Link>
+            <Link to="/auth/signup">
+              <Button size="sm" className="ml-2">
+                Get Started
+              </Button>
+            </Link>
           </div>
+          <button
+            className="md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
         </div>
       </div>
-
+      {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t">
-          <div className="container mx-auto px-4 py-3">
-            <nav className="flex flex-col space-y-3">
-              <Link to="#features" className="text-sm font-medium hover:text-primary transition-colors py-2">Features</Link>
-              <Link to="#pricing" className="text-sm font-medium hover:text-primary transition-colors py-2">Pricing</Link>
-              <Link to="#testimonials" className="text-sm font-medium hover:text-primary transition-colors py-2">Testimonials</Link>
-              <Link to="#faq" className="text-sm font-medium hover:text-primary transition-colors py-2">FAQ</Link>
-              <div className="flex space-x-4 pt-2">
-                <Button variant="outline" asChild className="flex-1">
-                  <Link to="/auth/login">Login</Link>
-                </Button>
-                <Button asChild className="flex-1">
-                  <Link to="/auth/signup">Sign Up</Link>
-                </Button>
-              </div>
+        <div className="md:hidden fixed inset-0 top-16 z-50 bg-background/90 backdrop-blur-sm">
+          <div className="container flex flex-col gap-6 py-8">
+            <nav className="flex flex-col gap-6 text-lg font-medium">
+              <ScrollLink
+                to="features"
+                spy={true}
+                smooth={true}
+                offset={-70}
+                duration={500}
+                className="transition-colors hover:text-foreground/80 cursor-pointer"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Features
+              </ScrollLink>
+              <ScrollLink
+                to="pricing"
+                spy={true}
+                smooth={true}
+                offset={-70}
+                duration={500}
+                className="transition-colors hover:text-foreground/80 cursor-pointer"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Pricing
+              </ScrollLink>
+              <ScrollLink
+                to="testimonials"
+                spy={true}
+                smooth={true}
+                offset={-70}
+                duration={500}
+                className="transition-colors hover:text-foreground/80 cursor-pointer"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Testimonials
+              </ScrollLink>
+              <ScrollLink
+                to="faq"
+                spy={true}
+                smooth={true}
+                offset={-70}
+                duration={500}
+                className="transition-colors hover:text-foreground/80 cursor-pointer"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                FAQ
+              </ScrollLink>
             </nav>
+            <div className="flex flex-col gap-4 mt-4">
+              <Link to="/auth/login">
+                <Button variant="outline" className="w-full" onClick={() => setMobileMenuOpen(false)}>
+                  Sign In
+                </Button>
+              </Link>
+              <Link to="/auth/signup">
+                <Button className="w-full" onClick={() => setMobileMenuOpen(false)}>
+                  Get Started
+                </Button>
+              </Link>
+              <div className="flex justify-center mt-4">
+                <ThemeToggle />
+              </div>
+            </div>
           </div>
         </div>
       )}
