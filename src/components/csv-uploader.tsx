@@ -17,6 +17,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { UploadOptions } from "./upload-options";
 
 interface CsvRow {
   [key: string]: string | boolean | undefined;
@@ -24,6 +25,7 @@ interface CsvRow {
   email: string;
   phone: string;
   source: string;
+  campaign_id?: string;
   isValid: boolean;
   invalidReason?: string;
 }
@@ -35,6 +37,8 @@ export function CSVUploader() {
   const [parseProgress, setParseProgress] = useState(0);
   const [parsedData, setParsedData] = useState<CsvRow[]>([]);
   const [previewVisible, setPreviewVisible] = useState(false);
+  const [selectedSource, setSelectedSource] = useState("");
+  const [selectedCampaign, setSelectedCampaign] = useState("");
   const { toast } = useToast();
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -85,7 +89,14 @@ export function CSVUploader() {
         return;
       }
 
-      setParsedData(rows);
+      // Add source and campaign_id to each row
+      const enrichedRows = rows.map(row => ({
+        ...row,
+        source: selectedSource || row.source || '',
+        campaign_id: selectedCampaign || undefined,
+      }));
+
+      setParsedData(enrichedRows);
       setPreviewVisible(true);
       setIsUploading(false);
     } catch (error) {
@@ -104,7 +115,7 @@ export function CSVUploader() {
     const headers = lines[0].split(',').map(header => header.trim().toLowerCase());
     
     // Check for required headers
-    const requiredHeaders = ['name', 'email', 'phone', 'source'];
+    const requiredHeaders = ['name', 'email', 'phone'];
     const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
     
     if (missingHeaders.length > 0) {
@@ -144,12 +155,12 @@ export function CSVUploader() {
         name: row.name || '',
         email: row.email || '',
         phone: row.phone || '',
-        source: row.source || '',
+        source: selectedSource || row.source || '',
+        campaign_id: selectedCampaign || undefined,
         isValid: isValid,
         invalidReason
       });
       
-      // Update progress
       setParseProgress(Math.floor((i / (lines.length - 1)) * 100));
     }
     
@@ -157,7 +168,14 @@ export function CSVUploader() {
   };
 
   const handleUpload = async () => {
-    if (!parsedData.length || !user) return;
+    if (!parsedData.length || !user || !selectedSource) {
+      toast({
+        variant: "destructive",
+        title: "Missing Required Fields",
+        description: !selectedSource ? "Please select a lead source" : "No valid leads to upload"
+      });
+      return;
+    }
     
     try {
       setIsUploading(true);
@@ -180,7 +198,8 @@ export function CSVUploader() {
         name: row.name,
         email: row.email,
         phone: row.phone,
-        source: row.source,
+        source: selectedSource,
+        campaign_id: selectedCampaign || null,
         status: 'new',
         client_id: user.id
       }));
@@ -233,6 +252,8 @@ export function CSVUploader() {
       setParsedData([]);
       setParseProgress(0);
       setPreviewVisible(false);
+      setSelectedSource("");
+      setSelectedCampaign("");
       
       // Reset file input
       if (fileInputRef.current) {
@@ -251,12 +272,16 @@ export function CSVUploader() {
     }
   };
 
-  const togglePreview = () => {
-    setPreviewVisible(!previewVisible);
-  };
-
   return (
     <div className="space-y-4">
+      <UploadOptions
+        source={selectedSource}
+        campaignId={selectedCampaign}
+        onSourceChange={setSelectedSource}
+        onCampaignChange={setSelectedCampaign}
+        disabled={isUploading}
+      />
+
       {!file ? (
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center ${
@@ -335,7 +360,7 @@ export function CSVUploader() {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={togglePreview}
+                onClick={() => setPreviewVisible(!previewVisible)}
                 className="mb-2 text-xs flex items-center gap-1"
               >
                 <Eye className="h-3.5 w-3.5" />
@@ -353,6 +378,7 @@ export function CSVUploader() {
                         <TableHead>Email</TableHead>
                         <TableHead>Phone</TableHead>
                         <TableHead>Source</TableHead>
+                        {selectedCampaign && <TableHead>Campaign</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -381,12 +407,13 @@ export function CSVUploader() {
                           <TableCell>{row.phone || (
                             <span className="text-destructive text-xs">Missing</span>
                           )}</TableCell>
-                          <TableCell>{row.source}</TableCell>
+                          <TableCell>{selectedSource || row.source}</TableCell>
+                          {selectedCampaign && <TableCell>Yes</TableCell>}
                         </TableRow>
                       ))}
                       {parsedData.length > 5 && (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-2">
+                          <TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-2">
                             {parsedData.length - 5} more rows not shown in preview
                           </TableCell>
                         </TableRow>
@@ -415,7 +442,7 @@ export function CSVUploader() {
           <div className="mt-4 flex gap-2">
             <Button
               onClick={handleUpload}
-              disabled={isUploading || parsedData.filter(row => row.isValid).length === 0}
+              disabled={isUploading || parsedData.filter(row => row.isValid).length === 0 || !selectedSource}
               className="w-full"
             >
               {isUploading ? "Uploading..." : `Upload ${parsedData.filter(row => row.isValid).length} Valid Leads`}
