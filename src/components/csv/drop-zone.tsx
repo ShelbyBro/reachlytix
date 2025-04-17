@@ -1,4 +1,5 @@
 
+import { useState, useRef } from "react";
 import { Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
