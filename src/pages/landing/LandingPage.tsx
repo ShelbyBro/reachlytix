@@ -36,7 +36,7 @@ export default function LandingPage() {
               make for your business.
             </p>
 
-            {/* Updated Get Started Button - Redirect to Login */}
+            {/* Get Started Button - Redirect to Login */}
             <Button
               size="lg"
               variant="secondary"
@@ -46,7 +46,7 @@ export default function LandingPage() {
               Get Started Now <ChevronRight className="ml-1" />
             </Button>
 
-            {/* Updated Watch Demo Button */}
+            {/* Watch Demo Button */}
             <Button
               size="lg"
               variant="ghost"

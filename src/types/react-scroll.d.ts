@@ -32,7 +32,7 @@ declare module 'react-scroll' {
     };
   }
   export function animateScroll(options?: any): void;
-  export function scrollSpy: {
+  export const scrollSpy: {
     update: () => void;
   };
 }

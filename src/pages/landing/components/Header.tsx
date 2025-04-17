@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Link } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import { Link as ScrollLink } from "react-scroll";
 
 export function Header() {
@@ -13,11 +13,11 @@ export function Header() {
     <header className="relative z-20 w-full">
       <div className="container flex h-16 items-center px-4 sm:px-6 lg:px-8">
         <div className="mr-4 flex">
-          <Link to="/" className="flex items-center space-x-2">
+          <RouterLink to="/" className="flex items-center space-x-2">
             <span className="font-bold text-xl bg-gradient-primary text-transparent bg-clip-text">
               Reachlytix
             </span>
-          </Link>
+          </RouterLink>
         </div>
         <div className="hidden md:flex flex-1 items-center justify-center">
           <nav className="flex items-center space-x-6 text-sm font-medium">
@@ -66,16 +66,16 @@ export function Header() {
         <div className="flex flex-1 items-center justify-end space-x-4">
           <div className="hidden md:flex items-center">
             <ThemeToggle />
-            <Link to="/auth/login">
+            <RouterLink to="/auth/login">
               <Button variant="ghost" size="sm" className="ml-4">
                 Sign In
               </Button>
-            </Link>
-            <Link to="/auth/signup">
+            </RouterLink>
+            <RouterLink to="/auth/signup">
               <Button size="sm" className="ml-2">
                 Get Started
               </Button>
-            </Link>
+            </RouterLink>
           </div>
           <button
             className="md:hidden"
@@ -140,16 +140,16 @@ export function Header() {
               </ScrollLink>
             </nav>
             <div className="flex flex-col gap-4 mt-4">
-              <Link to="/auth/login">
+              <RouterLink to="/auth/login">
                 <Button variant="outline" className="w-full" onClick={() => setMobileMenuOpen(false)}>
                   Sign In
                 </Button>
-              </Link>
-              <Link to="/auth/signup">
+              </RouterLink>
+              <RouterLink to="/auth/signup">
                 <Button className="w-full" onClick={() => setMobileMenuOpen(false)}>
                   Get Started
                 </Button>
-              </Link>
+              </RouterLink>
               <div className="flex justify-center mt-4">
                 <ThemeToggle />
               </div>
