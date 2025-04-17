@@ -7,6 +7,7 @@ import Layout from "@/components/layout";
 import { supabase } from "@/integrations/supabase/client";
 import { CSVUploader } from "@/components/csv-uploader";
 import { NeuralBackground } from "@/components/neural-background";
+import { MarketingAutomationSection } from "@/components/automation/MarketingAutomationSection";
 
 export default function Dashboard() {
   const [leadsCount, setLeadsCount] = useState<number>(0);
@@ -114,6 +115,11 @@ export default function Dashboard() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Marketing Automation Section */}
+            <div className="mb-8">
+              <MarketingAutomationSection />
             </div>
 
             {/* CSV Upload Form with improved UI */}

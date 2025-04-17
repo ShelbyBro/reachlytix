@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      automations: {
+        Row: {
+          action_type: Database["public"]["Enums"]["action_type"] | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          message_body: string | null
+          status: Database["public"]["Enums"]["automation_status"] | null
+          title: string
+          trigger_type: Database["public"]["Enums"]["trigger_type"] | null
+          trigger_value: string | null
+        }
+        Insert: {
+          action_type?: Database["public"]["Enums"]["action_type"] | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          message_body?: string | null
+          status?: Database["public"]["Enums"]["automation_status"] | null
+          title: string
+          trigger_type?: Database["public"]["Enums"]["trigger_type"] | null
+          trigger_value?: string | null
+        }
+        Update: {
+          action_type?: Database["public"]["Enums"]["action_type"] | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          message_body?: string | null
+          status?: Database["public"]["Enums"]["automation_status"] | null
+          title?: string
+          trigger_type?: Database["public"]["Enums"]["trigger_type"] | null
+          trigger_value?: string | null
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           client_id: string | null
@@ -137,7 +173,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      action_type: "email" | "sms"
+      automation_status: "active" | "paused"
+      trigger_type: "source" | "campaign" | "time_delay"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -252,6 +290,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      action_type: ["email", "sms"],
+      automation_status: ["active", "paused"],
+      trigger_type: ["source", "campaign", "time_delay"],
+    },
   },
 } as const
