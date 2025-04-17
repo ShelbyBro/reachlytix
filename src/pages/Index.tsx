@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { ArrowUpRight, Upload, Users, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -115,10 +116,13 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            {/* CSV Upload Form */}
-            <Card className="border-0 bg-gradient-to-br from-card to-secondary/30 backdrop-blur-sm shadow-md">
+            {/* CSV Upload Form with improved UI */}
+            <Card className="border-0 bg-gradient-to-br from-card to-secondary/30 backdrop-blur-sm shadow-md mb-8">
               <CardHeader>
-                <CardTitle>Upload Leads</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="h-5 w-5 text-primary" />
+                  Upload Leads
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <CSVUploader />
