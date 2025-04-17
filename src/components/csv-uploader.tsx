@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CsvRow {
-  [key: string]: string;
+  [key: string]: string | boolean | undefined;
   name: string;
   email: string;
   phone: string;
@@ -145,7 +145,7 @@ export function CSVUploader() {
         email: row.email || '',
         phone: row.phone || '',
         source: row.source || '',
-        isValid,
+        isValid: isValid,
         invalidReason
       });
       
