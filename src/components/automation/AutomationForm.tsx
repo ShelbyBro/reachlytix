@@ -50,10 +50,18 @@ export function AutomationForm({ onSuccess }: { onSuccess: () => void }) {
       const userId = userData.user?.id;
       if (!userId) throw new Error("User not authenticated");
       
-      const { error } = await supabase.from("automations").insert({
-        ...data,
+      // Create a properly typed object that matches the expected schema
+      const automationData = {
+        title: data.title,
+        trigger_type: data.trigger_type,
+        trigger_value: data.trigger_value,
+        action_type: data.action_type,
+        message_body: data.message_body,
+        status: data.status,
         created_by: userId
-      });
+      };
+
+      const { error } = await supabase.from("automations").insert(automationData);
 
       if (error) throw error;
       
