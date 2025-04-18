@@ -27,7 +27,7 @@ export default function ManageCampaignsPage() {
       
       if (error) throw error;
       
-      return data as Campaign[];
+      return (data || []) as Campaign[];
     }
   });
 
@@ -35,7 +35,9 @@ export default function ManageCampaignsPage() {
   const { data: leads, isLoading: leadsLoading, refetch: refetchLeads } = useQuery({
     queryKey: ['campaign-leads', selectedCampaign?.id],
     queryFn: async () => {
-      if (!selectedCampaign?.id) return [] as Lead[];
+      if (!selectedCampaign?.id) {
+        return [] as Lead[];
+      }
       
       const { data, error } = await supabase
         .from('leads')
@@ -54,7 +56,9 @@ export default function ManageCampaignsPage() {
   const { data: campaignScript } = useQuery({
     queryKey: ['campaign-script', selectedCampaign?.id],
     queryFn: async () => {
-      if (!selectedCampaign?.id) return null as Script | null;
+      if (!selectedCampaign?.id) {
+        return null;
+      }
       
       const { data, error } = await supabase
         .from('scripts')
@@ -62,7 +66,9 @@ export default function ManageCampaignsPage() {
         .eq('campaign_id', selectedCampaign.id)
         .single();
       
-      if (error) return null as Script | null;
+      if (error) {
+        return null;
+      }
       
       return data as Script;
     },
