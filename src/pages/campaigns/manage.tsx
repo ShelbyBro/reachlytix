@@ -1,4 +1,3 @@
-
 import Layout from "@/components/layout";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -7,16 +6,12 @@ import { SimpleCampaign, SimpleLead, SimpleScript } from "@/types/campaign";
 import { CampaignList } from "@/components/campaigns/CampaignList";
 import { CreateCampaignForm } from "@/components/campaigns/CreateCampaignForm";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Loader2, Mail, MessageSquare } from "lucide-react";
@@ -29,6 +24,7 @@ export default function ManageCampaigns() {
   const [campaignLeads, setCampaignLeads] = useState<Record<string, SimpleLead[]>>({});
   const [campaignScripts, setCampaignScripts] = useState<Record<string, SimpleScript>>({});
   const [selectedCampaign, setSelectedCampaign] = useState<SimpleCampaign | null>(null);
+  const [editingCampaign, setEditingCampaign] = useState<SimpleCampaign | null>(null);
   const [sendingCampaign, setSendingCampaign] = useState(false);
   const [messageType, setMessageType] = useState<"email" | "sms">("email");
 
@@ -115,6 +111,36 @@ export default function ManageCampaigns() {
     }
   };
 
+  const handleDeleteCampaign = async (campaignId: string) => {
+    try {
+      const { error } = await supabase
+        .from("campaigns")
+        .delete()
+        .eq("id", campaignId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Campaign deleted",
+        description: "The campaign has been deleted successfully."
+      });
+
+      // Refresh campaigns list
+      fetchCampaigns();
+    } catch (error: any) {
+      console.error("Error deleting campaign:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to delete campaign."
+      });
+    }
+  };
+
+  const handleEditCampaign = (campaign: SimpleCampaign) => {
+    setEditingCampaign(campaign);
+  };
+
   const handleSendCampaign = async () => {
     if (!selectedCampaign) return;
     
@@ -189,29 +215,31 @@ export default function ManageCampaigns() {
         <h1 className="text-3xl font-bold mb-6">Campaign Manager</h1>
         
         <div className="grid gap-8 md:grid-cols-[1fr_400px]">
-          {/* Campaigns List */}
           <CampaignList 
             campaigns={campaigns}
             campaignsLoading={campaignsLoading}
             campaignLeads={campaignLeads}
             onSendCampaign={setSelectedCampaign}
+            onDeleteCampaign={handleDeleteCampaign}
+            onEditCampaign={handleEditCampaign}
           />
           
-          {/* Create Campaign Form */}
-          <CreateCampaignForm onCampaignCreated={fetchCampaigns} />
+          <CreateCampaignForm 
+            onCampaignCreated={fetchCampaigns}
+            editingCampaign={editingCampaign}
+            onCancel={() => setEditingCampaign(null)}
+          />
         </div>
 
         {/* Send Campaign Dialog */}
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <span className="hidden">Open Dialog</span>
-          </AlertDialogTrigger>
-          {selectedCampaign && (
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Send Campaign</AlertDialogTitle>
-                <AlertDialogDescription>
-                  You're about to send "{selectedCampaign.title}" to {campaignLeads[selectedCampaign.id]?.length || 0} leads.
+        <Dialog open={!!selectedCampaign} onOpenChange={() => setSelectedCampaign(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Send Campaign</DialogTitle>
+              <DialogDescription>
+                {selectedCampaign && (
+                  `You're about to send "${selectedCampaign.title}" to ${campaignLeads[selectedCampaign.id]?.length || 0} leads.`
+                )}
                   <div className="mt-4">
                     <RadioGroup 
                       defaultValue={messageType} 
@@ -232,8 +260,8 @@ export default function ManageCampaigns() {
                       </div>
                     </RadioGroup>
                   </div>
-                </AlertDialogDescription>
-              </AlertDialogHeader>
+              </DialogDescription>
+            </DialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel onClick={() => setSelectedCampaign(null)}>
                   Cancel
@@ -255,9 +283,8 @@ export default function ManageCampaigns() {
                   )}
                 </AlertDialogAction>
               </AlertDialogFooter>
-            </AlertDialogContent>
-          )}
-        </AlertDialog>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

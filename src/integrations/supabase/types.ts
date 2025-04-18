@@ -87,7 +87,9 @@ export type Database = {
         Row: {
           client_id: string | null
           created_at: string | null
+          description: string | null
           id: string
+          schedule_status: string | null
           scheduled_at: string | null
           script_id: string | null
           status: string | null
@@ -97,7 +99,9 @@ export type Database = {
         Insert: {
           client_id?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
+          schedule_status?: string | null
           scheduled_at?: string | null
           script_id?: string | null
           status?: string | null
@@ -107,7 +111,9 @@ export type Database = {
         Update: {
           client_id?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
+          schedule_status?: string | null
           scheduled_at?: string | null
           script_id?: string | null
           status?: string | null

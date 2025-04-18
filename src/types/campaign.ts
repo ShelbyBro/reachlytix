@@ -7,6 +7,8 @@ export interface Campaign {
   script_id?: string;
   client_id?: string;
   scheduled_at?: string;
+  description?: string;
+  schedule_status?: 'draft' | 'scheduled' | 'active' | 'completed' | 'failed';
 }
 
 export interface Lead {
@@ -39,6 +41,8 @@ export type SimpleCampaign = {
   script_id?: string;
   client_id?: string;
   scheduled_at?: string;
+  description?: string;
+  schedule_status?: 'draft' | 'scheduled' | 'active' | 'completed' | 'failed';
 };
 
 export type SimpleLead = {
