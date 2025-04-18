@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,7 +71,9 @@ export default function ManageCampaignsPage() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return (data || []) as Campaign[];
+      
+      // Explicitly type the return value to avoid deep type instantiation
+      return (data || []) as Array<Campaign>;
     }
   });
 
@@ -89,7 +90,9 @@ export default function ManageCampaignsPage() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return (data || []) as Lead[];
+      
+      // Explicitly type the return value to avoid deep type instantiation
+      return (data || []) as Array<Lead>;
     },
     enabled: !!selectedCampaign?.id,
   });
@@ -107,7 +110,9 @@ export default function ManageCampaignsPage() {
         .single();
       
       if (error) return null;
-      return data as Script;
+      
+      // Explicitly cast to Script type
+      return data as Script | null;
     },
     enabled: !!selectedCampaign?.id,
   });
