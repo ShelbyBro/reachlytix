@@ -18,14 +18,14 @@ export default function ProtectedRoute({ children, requiredRoles }: ProtectedRou
   // Add timeout for handling very slow auth responses
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (loading) {
+      if (loading || !roleReady) {
         console.warn("Auth loading timeout reached after 5 seconds");
         setTimeoutReached(true);
       }
     }, 5000);
     
     return () => clearTimeout(timeoutId);
-  }, [loading]);
+  }, [loading, roleReady]);
   
   // Show loading state if still determining auth status and timeout not reached
   if ((loading || !roleReady) && !timeoutReached) {
