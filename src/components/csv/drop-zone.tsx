@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -7,9 +6,16 @@ import { useToast } from "@/components/ui/use-toast";
 interface DropZoneProps {
   onFileSelect: (file: File) => void;
   isUploading: boolean;
+  accept?: string;
+  multiple?: boolean;
 }
 
-export function DropZone({ onFileSelect, isUploading }: DropZoneProps) {
+export function DropZone({ 
+  onFileSelect, 
+  isUploading, 
+  accept = ".csv",
+  multiple = false 
+}: DropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -18,33 +24,49 @@ export function DropZone({ onFileSelect, isUploading }: DropZoneProps) {
     e.preventDefault();
     setIsDragging(false);
     
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile?.type !== 'text/csv' && !droppedFile?.name.endsWith('.csv')) {
-      toast({
-        variant: "destructive",
-        title: "Invalid file type",
-        description: "Please upload a CSV file"
-      });
-      return;
-    }
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    const validFiles = droppedFiles.filter(file => {
+      const isValid = file.type === 'text/csv' || file.name.endsWith('.csv');
+      if (!isValid) {
+        toast({
+          variant: "destructive",
+          title: "Invalid file type",
+          description: `${file.name} is not a CSV file`
+        });
+      }
+      return isValid;
+    });
     
-    onFileSelect(droppedFile);
+    if (validFiles.length === 0) return;
+    
+    if (multiple) {
+      validFiles.forEach(file => onFileSelect(file));
+    } else {
+      onFileSelect(validFiles[0]);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
+    const selectedFiles = Array.from(e.target.files || []);
+    const validFiles = selectedFiles.filter(file => {
+      const isValid = file.type === 'text/csv' || file.name.endsWith('.csv');
+      if (!isValid) {
+        toast({
+          variant: "destructive",
+          title: "Invalid file type",
+          description: `${file.name} is not a CSV file`
+        });
+      }
+      return isValid;
+    });
     
-    if (selectedFile.type !== 'text/csv' && !selectedFile.name.endsWith('.csv')) {
-      toast({
-        variant: "destructive",
-        title: "Invalid file type",
-        description: "Please upload a CSV file"
-      });
-      return;
+    if (validFiles.length === 0) return;
+    
+    if (multiple) {
+      validFiles.forEach(file => onFileSelect(file));
+    } else {
+      onFileSelect(validFiles[0]);
     }
-    
-    onFileSelect(selectedFile);
   };
 
   return (
@@ -61,16 +83,17 @@ export function DropZone({ onFileSelect, isUploading }: DropZoneProps) {
     >
       <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
       <h3 className="mt-2 text-lg font-medium">
-        Drop your CSV file here, or{" "}
+        Drop your {multiple ? "CSV files" : "CSV file"} here, or{" "}
         <label className="text-primary cursor-pointer hover:underline">
           browse
           <Input
             ref={fileInputRef}
             type="file"
             className="hidden"
-            accept=".csv"
+            accept={accept}
             onChange={handleChange}
             disabled={isUploading}
+            multiple={multiple}
           />
         </label>
       </h3>

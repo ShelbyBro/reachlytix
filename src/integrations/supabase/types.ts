@@ -122,6 +122,45 @@ export type Database = {
         }
         Relationships: []
       }
+      cleaned_leads: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_duplicate: boolean | null
+          name: string | null
+          phone: string | null
+          source: string | null
+          status: string
+          validation_errors: Json | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_duplicate?: boolean | null
+          name?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: string
+          validation_errors?: Json | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_duplicate?: boolean | null
+          name?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: string
+          validation_errors?: Json | null
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           created_at: string | null
