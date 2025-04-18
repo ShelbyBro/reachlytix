@@ -1,0 +1,42 @@
+
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+
+interface EmailContentFieldsProps {
+  subject: string;
+  content: string;
+  onSubjectChange: (value: string) => void;
+  onContentChange: (value: string) => void;
+}
+
+export function EmailContentFields({
+  subject,
+  content,
+  onSubjectChange,
+  onContentChange
+}: EmailContentFieldsProps) {
+  return (
+    <>
+      <div className="space-y-2">
+        <label className="text-sm font-medium" htmlFor="subject">Email Subject</label>
+        <Input
+          id="subject"
+          placeholder="Email Subject"
+          value={subject}
+          onChange={(e) => onSubjectChange(e.target.value)}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium" htmlFor="content">Email Content</label>
+        <Textarea
+          id="content"
+          rows={8}
+          placeholder="Email Content"
+          value={content}
+          onChange={(e) => onContentChange(e.target.value)}
+        />
+      </div>
+    </>
+  );
+}
