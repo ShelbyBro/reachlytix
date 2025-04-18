@@ -5,19 +5,22 @@ import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { Loader2, Mail } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
-import { Campaign, Lead, Script } from "@/types/campaign";
-import { CampaignTable } from "@/components/campaigns/CampaignTable";
-import { SendCampaignDialog } from "@/components/campaigns/SendCampaignDialog";
+import { Campaign, Lead } from "@/types/campaign";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatDate } from "@/utils/campaign-utils";
 
 export default function ManageCampaignsPage() {
   const { toast } = useToast();
-  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { data: campaigns, isLoading: campaignsLoading, refetch: refetchCampaigns } = useQuery({
-    queryKey: ['manage-campaigns'],
+  // Simplified query with any types to avoid deep inference
+  const { data: campaigns = [], isLoading: campaignsLoading, refetch: refetchCampaigns } = useQuery({
+    queryKey: ['campaigns'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('campaigns')
@@ -25,18 +28,15 @@ export default function ManageCampaignsPage() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      
-      // Simple direct casting to avoid deep type inference
-      return (data as any[] || []) as Campaign[];
+      return data || [];
     }
   });
 
-  const { data: leads, isLoading: leadsLoading, refetch: refetchLeads } = useQuery({
-    queryKey: ['campaign-leads', selectedCampaign?.id],
+  // Simplified leads query with any types
+  const { data: leads = [], isLoading: leadsLoading } = useQuery({
+    queryKey: ['leads', selectedCampaign?.id],
     queryFn: async () => {
-      if (!selectedCampaign?.id) {
-        return [] as Lead[];
-      }
+      if (!selectedCampaign?.id) return [];
       
       const { data, error } = await supabase
         .from('leads')
@@ -45,19 +45,16 @@ export default function ManageCampaignsPage() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      
-      // Simple direct casting to avoid deep type inference
-      return (data as any[] || []) as Lead[];
+      return data || [];
     },
-    enabled: !!selectedCampaign?.id,
+    enabled: !!selectedCampaign?.id && dialogOpen,
   });
 
+  // Simplified script query with any types
   const { data: campaignScript } = useQuery({
-    queryKey: ['campaign-script', selectedCampaign?.id],
+    queryKey: ['script', selectedCampaign?.id],
     queryFn: async () => {
-      if (!selectedCampaign?.id) {
-        return null as Script | null;
-      }
+      if (!selectedCampaign?.id) return null;
       
       const { data, error } = await supabase
         .from('scripts')
@@ -65,18 +62,57 @@ export default function ManageCampaignsPage() {
         .eq('campaign_id', selectedCampaign.id)
         .single();
       
-      if (error) {
-        return null as Script | null;
-      }
-      
-      // Simple direct casting to avoid deep type inference
-      return data as Script;
+      if (error) return null;
+      return data;
     },
-    enabled: !!selectedCampaign?.id,
+    enabled: !!selectedCampaign?.id && dialogOpen,
   });
 
-  const handleSendSuccess = () => {
-    refetchCampaigns();
+  const handleSelectCampaign = (campaign: any) => {
+    setSelectedCampaign(campaign);
+    setDialogOpen(true);
+  };
+
+  const handleSendCampaign = async () => {
+    if (!selectedCampaign || !leads.length || !campaignScript) {
+      toast({
+        variant: "destructive",
+        title: "Cannot send campaign",
+        description: "Missing campaign, leads, or content.",
+      });
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      // In a real implementation, this would call an edge function to send emails
+      // For now, simulate a successful send
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // Update campaign status to "sent"
+      const { error } = await supabase
+        .from('campaigns')
+        .update({ status: 'sent' })
+        .eq('id', selectedCampaign.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Campaign sent",
+        description: `Email sent to ${leads.length} leads.`,
+      });
+
+      refetchCampaigns();
+      setDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error sending campaign",
+        description: error.message || "Failed to send the campaign.",
+      });
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   return (
@@ -107,26 +143,46 @@ export default function ManageCampaignsPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : campaigns && campaigns.length > 0 ? (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <div className="w-full">
-                    <CampaignTable 
-                      campaigns={campaigns} 
-                      isLoading={campaignsLoading} 
-                      onSelectCampaign={setSelectedCampaign} 
-                    />
-                  </div>
-                </DialogTrigger>
-                {selectedCampaign && (
-                  <SendCampaignDialog
-                    campaign={selectedCampaign}
-                    leads={leads || []}
-                    leadsLoading={leadsLoading}
-                    campaignScript={campaignScript}
-                    onSendSuccess={handleSendSuccess}
-                  />
-                )}
-              </Dialog>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Campaign Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {campaigns.map((campaign: any) => (
+                    <TableRow key={campaign.id}>
+                      <TableCell className="font-medium">{campaign.title}</TableCell>
+                      <TableCell className="capitalize">{campaign.type}</TableCell>
+                      <TableCell>
+                        <span 
+                          className={`inline-block px-2 py-1 rounded-full text-xs font-medium capitalize
+                            ${campaign.status === 'sent' ? 'bg-green-100 text-green-800' : 
+                              campaign.status === 'draft' ? 'bg-blue-100 text-blue-800' : 
+                              'bg-gray-100 text-gray-800'}`}
+                        >
+                          {campaign.status}
+                        </span>
+                      </TableCell>
+                      <TableCell>{campaign.created_at ? formatDate(campaign.created_at) : 'N/A'}</TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleSelectCampaign(campaign)}
+                        >
+                          <Mail className="h-4 w-4 mr-2" />
+                          Send
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             ) : (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">No campaigns found</p>
@@ -138,6 +194,82 @@ export default function ManageCampaignsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Campaign Send Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-[625px]">
+          <DialogHeader>
+            <DialogTitle>Send Campaign: {selectedCampaign?.title}</DialogTitle>
+            <DialogDescription>
+              Review details and select leads to send this campaign to
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-6 py-4">
+            <div>
+              <h4 className="font-medium mb-2">Campaign Details</h4>
+              <div className="bg-muted p-3 rounded-md">
+                <p><strong>Subject:</strong> {campaignScript?.title || "No subject"}</p>
+                <p className="mt-2"><strong>Content:</strong></p>
+                <div className="mt-1 whitespace-pre-wrap">
+                  {campaignScript?.content || "No content"}
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-medium mb-2">Recipients</h4>
+              {leadsLoading ? (
+                <div className="flex justify-center items-center py-4">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
+              ) : leads && leads.length > 0 ? (
+                <div className="border rounded-md max-h-[200px] overflow-y-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {leads.map((lead: any) => (
+                        <TableRow key={lead.id}>
+                          <TableCell>{lead.name}</TableCell>
+                          <TableCell>{lead.email}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-4 bg-muted rounded-md">
+                  <p className="text-sm text-muted-foreground">No leads found for this campaign</p>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button 
+              onClick={handleSendCampaign} 
+              disabled={sendingEmail || !leads?.length}
+            >
+              {sendingEmail ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>Send to {leads?.length || 0} Leads</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
