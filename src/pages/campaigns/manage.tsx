@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,9 +48,12 @@ interface Lead {
 }
 
 interface Script {
+  id: string;
   title: string;
   content: string;
-  campaign_id: string;
+  client_id?: string;
+  type?: string;
+  created_at?: string;
 }
 
 export default function ManageCampaignsPage() {
