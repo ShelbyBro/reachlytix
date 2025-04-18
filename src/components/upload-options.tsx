@@ -67,7 +67,7 @@ export function UploadOptions({
         <div className="space-y-2">
           <Label htmlFor="campaign">Assign to Campaign (Optional)</Label>
           <Select
-            value={campaignId || ""}
+            value={campaignId || "none"}
             onValueChange={onCampaignChange}
             disabled={disabled}
           >
@@ -75,6 +75,7 @@ export function UploadOptions({
               <SelectValue placeholder="Select campaign" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="none">No Campaign</SelectItem>
               {campaigns?.map((campaign) => (
                 <SelectItem key={campaign.id} value={campaign.id}>
                   {campaign.title}

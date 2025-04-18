@@ -145,14 +145,14 @@ export function EmailAnalytics() {
             <div className="space-y-1">
               <label className="text-sm font-medium">Campaign</label>
               <Select
-                value={filters.campaignId || ""}
-                onValueChange={(value) => setFilters({...filters, campaignId: value || null})}
+                value={filters.campaignId || "all"}
+                onValueChange={(value) => setFilters({...filters, campaignId: value === "all" ? null : value})}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Campaigns" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Campaigns</SelectItem>
+                  <SelectItem value="all">All Campaigns</SelectItem>
                   {availableCampaigns.map((campaign) => (
                     <SelectItem key={campaign.id} value={campaign.id}>
                       {campaign.title}
@@ -167,14 +167,14 @@ export function EmailAnalytics() {
               <div className="space-y-1">
                 <label className="text-sm font-medium">Client</label>
                 <Select
-                  value={filters.clientId || ""}
-                  onValueChange={(value) => setFilters({...filters, clientId: value || null})}
+                  value={filters.clientId || "all"}
+                  onValueChange={(value) => setFilters({...filters, clientId: value === "all" ? null : value})}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Clients" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Clients</SelectItem>
+                    <SelectItem value="all">All Clients</SelectItem>
                     {availableClients.map((client) => (
                       <SelectItem key={client.id} value={client.id}>
                         {client.name}
