@@ -45,6 +45,44 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_logs: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          delivery_status: string
+          id: string
+          message_type: string
+          timestamp: string
+          total_recipients: number
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          delivery_status: string
+          id?: string
+          message_type: string
+          timestamp?: string
+          total_recipients: number
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          delivery_status?: string
+          id?: string
+          message_type?: string
+          timestamp?: string
+          total_recipients?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_logs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           client_id: string | null

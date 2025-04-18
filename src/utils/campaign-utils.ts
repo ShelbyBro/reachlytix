@@ -7,20 +7,23 @@ export const formatDate = (dateString: string) => {
 
 export interface CampaignLog {
   campaign_id: string;
-  timestamp: string;
   total_recipients: number;
   delivery_status: string;
   message_type: string;
 }
 
-export const logCampaignSend = async (log: Omit<CampaignLog, "timestamp">): Promise<void> => {
+export const logCampaignSend = async (log: CampaignLog): Promise<void> => {
   try {
-    await supabase.from("campaign_logs").insert({
-      campaign_id: log.campaign_id,
-      total_recipients: log.total_recipients,
-      delivery_status: log.delivery_status,
-      message_type: log.message_type,
-    });
+    const { error } = await supabase
+      .from('campaign_logs')
+      .insert({
+        campaign_id: log.campaign_id,
+        total_recipients: log.total_recipients,
+        delivery_status: log.delivery_status,
+        message_type: log.message_type,
+      });
+
+    if (error) throw error;
   } catch (error) {
     console.error("Error logging campaign send:", error);
     throw error;
@@ -29,10 +32,12 @@ export const logCampaignSend = async (log: Omit<CampaignLog, "timestamp">): Prom
 
 export const updateCampaignStatus = async (campaignId: string, status: string): Promise<void> => {
   try {
-    await supabase
-      .from("campaigns")
+    const { error } = await supabase
+      .from('campaigns')
       .update({ status })
-      .eq("id", campaignId);
+      .eq('id', campaignId);
+
+    if (error) throw error;
   } catch (error) {
     console.error("Error updating campaign status:", error);
     throw error;
@@ -52,10 +57,7 @@ export const sendCampaignEmails = async (
     console.log("Subject:", subject);
     console.log("Content:", content);
     
-    // In a real implementation, you would call your email service API here
-    // e.g., using Resend API via a Supabase Edge Function
-    
-    // Simulate successful sending
+    // In a real implementation, this would call Resend API or another email service
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     // Log the campaign send
