@@ -51,6 +51,7 @@ interface Script {
   id: string;
   title: string;
   content: string;
+  campaign_id?: string;
   client_id?: string;
   type?: string;
   created_at?: string;
@@ -71,7 +72,7 @@ export default function ManageCampaignsPage() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Campaign[];
+      return (data || []) as Campaign[];
     }
   });
 
@@ -88,7 +89,7 @@ export default function ManageCampaignsPage() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Lead[];
+      return (data || []) as Lead[];
     },
     enabled: !!selectedCampaign?.id,
   });
