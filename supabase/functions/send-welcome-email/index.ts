@@ -18,6 +18,17 @@ interface LeadPayload {
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"))
 
+// This is our React-like template (simplified for Deno edge function)
+const generateEmailHtml = (name: string | null) => {
+  return `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+      <h1 style="color: #4f46e5; margin-bottom: 16px;">Welcome to Reachlytix, ${name || 'there'}!</h1>
+      <p style="font-size: 16px; line-height: 24px;">We're glad you're here and excited to have you on board.</p>
+      <p style="font-size: 16px; line-height: 24px; margin-top: 24px;">The Reachlytix Team</p>
+    </div>
+  `;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -32,14 +43,48 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Lead email is required")
     }
 
+    // Generate email HTML from our template function
+    const html = generateEmailHtml(lead.name)
+
     const emailResponse = await resend.emails.send({
       from: "onboarding@resend.dev",
       to: lead.email,
       subject: "🚀 Welcome to Reachlytix",
-      html: `<p>Welcome to Reachlytix CRM, ${lead.name || "there"}!<br>We're excited to have you on board.</p>`,
+      html: html,
     })
 
     console.log("Email sent successfully:", emailResponse)
+
+    // Log the email send to our database
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") || 'https://szkhnwedzwvlqlktgvdp.supabase.co';
+      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      
+      if (supabaseKey) {
+        const logResponse = await fetch(`${supabaseUrl}/rest/v1/email_logs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': `${supabaseKey}`
+          },
+          body: JSON.stringify({
+            lead_id: lead.id,
+            status: 'delivered',
+            response: JSON.stringify(emailResponse),
+          }),
+        });
+        
+        if (!logResponse.ok) {
+          console.error("Failed to log email:", await logResponse.text());
+        }
+      } else {
+        console.warn("SUPABASE_SERVICE_ROLE_KEY not available, skipping email logging");
+      }
+    } catch (logError) {
+      console.error("Error logging email:", logError);
+      // We don't want to fail the response just because logging failed
+    }
 
     return new Response(JSON.stringify(emailResponse), {
       status: 200,
