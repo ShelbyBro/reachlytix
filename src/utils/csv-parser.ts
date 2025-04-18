@@ -5,7 +5,6 @@ export interface CsvRow {
   email: string;
   phone: string;
   source: string;
-  campaign_id?: string;
   isValid: boolean;
   invalidReason?: string;
 }
@@ -42,7 +41,6 @@ export function parseCSV(text: string, selectedSource: string, selectedCampaign:
       email: row.email || '',
       phone: row.phone || '',
       source: selectedSource || row.source || '',
-      campaign_id: selectedCampaign || undefined,
       isValid: isValid,
       invalidReason
     });

@@ -80,7 +80,6 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
         email: row.email,
         phone: row.phone,
         source: selectedSource,
-        campaign_id: selectedCampaign || null,
         status: 'new',
         client_id: user.id
       }));
