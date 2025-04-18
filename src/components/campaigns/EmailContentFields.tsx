@@ -1,6 +1,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface EmailContentFieldsProps {
   subject: string;
@@ -15,6 +16,9 @@ export function EmailContentFields({
   onSubjectChange,
   onContentChange
 }: EmailContentFieldsProps) {
+  const { role } = useAuth();
+  const isReadOnly = role === "agent"; // Agents can view but not edit
+
   return (
     <>
       <div className="space-y-2">
@@ -24,6 +28,8 @@ export function EmailContentFields({
           placeholder="Email Subject"
           value={subject}
           onChange={(e) => onSubjectChange(e.target.value)}
+          readOnly={isReadOnly}
+          className={isReadOnly ? "bg-muted" : ""}
         />
       </div>
 
@@ -35,6 +41,8 @@ export function EmailContentFields({
           placeholder="Email Content"
           value={content}
           onChange={(e) => onContentChange(e.target.value)}
+          readOnly={isReadOnly}
+          className={isReadOnly ? "bg-muted" : ""}
         />
       </div>
     </>

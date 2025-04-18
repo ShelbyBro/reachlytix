@@ -1,5 +1,6 @@
 
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CampaignDetailsFieldsProps {
   campaignName: string;
@@ -14,6 +15,9 @@ export function CampaignDetailsFields({
   onCampaignNameChange,
   onDescriptionChange
 }: CampaignDetailsFieldsProps) {
+  const { role } = useAuth();
+  const isReadOnly = role === "agent"; // Agents can view but not edit
+
   return (
     <>
       <div className="space-y-2">
@@ -23,6 +27,8 @@ export function CampaignDetailsFields({
           placeholder="Campaign Name"
           value={campaignName}
           onChange={(e) => onCampaignNameChange(e.target.value)}
+          readOnly={isReadOnly}
+          className={isReadOnly ? "bg-muted" : ""}
         />
       </div>
 
@@ -33,6 +39,8 @@ export function CampaignDetailsFields({
           placeholder="Campaign Description"
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
+          readOnly={isReadOnly}
+          className={isReadOnly ? "bg-muted" : ""}
         />
       </div>
     </>

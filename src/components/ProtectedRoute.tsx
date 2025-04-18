@@ -5,10 +5,11 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface ProtectedRouteProps {
   children: ReactNode;
+  requiredRoles?: ("admin" | "client" | "agent")[];
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+export default function ProtectedRoute({ children, requiredRoles }: ProtectedRouteProps) {
+  const { user, loading, role } = useAuth();
   const location = useLocation();
   
   // Show loading state if still determining auth status
@@ -25,6 +26,14 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
   
-  // If authenticated, show children
+  // Check for required roles if specified
+  if (requiredRoles && requiredRoles.length > 0 && role) {
+    if (!requiredRoles.includes(role)) {
+      // User doesn't have the required role, redirect to dashboard
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+  
+  // If authenticated and has required role (or no role required), show children
   return <>{children}</>;
 }

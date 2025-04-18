@@ -22,6 +22,7 @@ import AnalyticsPage from "./pages/analytics";
 import LeadGeneratorPage from "./pages/lead-generator";
 import DemoPage from "./pages/demo/DemoPage";
 import ComingSoonPage from "./pages/demo/ComingSoonPage";
+import SettingsPage from "./pages/settings";
 
 const queryClient = new QueryClient();
 
@@ -82,8 +83,13 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/admin" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={["admin"]}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <SettingsPage />
               </ProtectedRoute>
             } />
             

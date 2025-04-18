@@ -3,9 +3,11 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SimpleCampaign, SimpleLead, SimpleScript } from "@/types/campaign";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const useCampaigns = () => {
   const { toast } = useToast();
+  const { user, role } = useAuth();
   const [campaigns, setCampaigns] = useState<SimpleCampaign[]>([]);
   const [campaignsLoading, setCampaignsLoading] = useState(true);
   const [campaignLeads, setCampaignLeads] = useState<Record<string, SimpleLead[]>>({});
@@ -17,6 +19,8 @@ export const useCampaigns = () => {
       
       await Promise.all(
         campaigns.map(async (campaign) => {
+          if (!campaign.client_id) return;
+          
           const { data, error } = await supabase
             .from("leads")
             .select("*")
@@ -39,6 +43,8 @@ export const useCampaigns = () => {
       
       await Promise.all(
         campaigns.filter(c => c.script_id).map(async (campaign) => {
+          if (!campaign.script_id) return;
+          
           const { data, error } = await supabase
             .from("scripts")
             .select("*")
@@ -61,8 +67,12 @@ export const useCampaigns = () => {
   };
 
   const fetchCampaigns = async () => {
+    if (!user) return;
+    
     try {
       setCampaignsLoading(true);
+      
+      // The RLS policies will automatically filter campaigns based on the user's role
       const { data: campaignsData, error } = await supabase
         .from("campaigns")
         .select("*")
@@ -73,10 +83,12 @@ export const useCampaigns = () => {
       const campaigns = campaignsData as SimpleCampaign[];
       setCampaigns(campaigns);
       
-      await Promise.all([
-        fetchCampaignLeads(campaigns),
-        fetchCampaignScripts(campaigns)
-      ]);
+      if (campaigns.length > 0) {
+        await Promise.all([
+          fetchCampaignLeads(campaigns),
+          fetchCampaignScripts(campaigns)
+        ]);
+      }
       
     } catch (error) {
       console.error("Error fetching campaigns:", error);
@@ -91,8 +103,10 @@ export const useCampaigns = () => {
   };
 
   useEffect(() => {
-    fetchCampaigns();
-  }, []);
+    if (user) {
+      fetchCampaigns();
+    }
+  }, [user]);
 
   return {
     campaigns,

@@ -122,6 +122,33 @@ export type Database = {
         }
         Relationships: []
       }
+      clients: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          email: string
+          id: string
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          email: string
+          id?: string
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          email?: string
+          id?: string
+          name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       email_logs: {
         Row: {
           created_at: string
@@ -194,6 +221,7 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
+          role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
         Insert: {
@@ -202,6 +230,7 @@ export type Database = {
           first_name?: string | null
           id: string
           last_name?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
         Update: {
@@ -210,6 +239,7 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
         Relationships: []
@@ -241,6 +271,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_clients: {
+        Row: {
+          assigned_at: string | null
+          client_id: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          client_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          client_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_clients_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -249,6 +308,10 @@ export type Database = {
       bytea_to_text: {
         Args: { data: string }
         Returns: string
+      }
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
       }
       http: {
         Args: { request: Database["public"]["CompositeTypes"]["http_request"] }
@@ -314,6 +377,7 @@ export type Database = {
       action_type: "email" | "sms"
       automation_status: "active" | "paused"
       trigger_type: "source" | "campaign" | "time_delay"
+      user_role: "admin" | "client" | "agent"
     }
     CompositeTypes: {
       http_header: {
@@ -448,6 +512,7 @@ export const Constants = {
       action_type: ["email", "sms"],
       automation_status: ["active", "paused"],
       trigger_type: ["source", "campaign", "time_delay"],
+      user_role: ["admin", "client", "agent"],
     },
   },
 } as const
