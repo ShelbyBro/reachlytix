@@ -1,3 +1,4 @@
+
 import Layout from "@/components/layout";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -11,7 +12,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Loader2, Mail, MessageSquare } from "lucide-react";
@@ -240,52 +243,50 @@ export default function ManageCampaigns() {
                 {selectedCampaign && (
                   `You're about to send "${selectedCampaign.title}" to ${campaignLeads[selectedCampaign.id]?.length || 0} leads.`
                 )}
-                  <div className="mt-4">
-                    <RadioGroup 
-                      defaultValue={messageType} 
-                      onValueChange={(val) => setMessageType(val as "email" | "sms")}
-                      className="flex flex-col space-y-3 mt-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="email" id="email" />
-                        <Label htmlFor="email" className="flex items-center">
-                          <Mail className="w-4 h-4 mr-2" /> Email
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="sms" id="sms" />
-                        <Label htmlFor="sms" className="flex items-center">
-                          <MessageSquare className="w-4 h-4 mr-2" /> SMS
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
+                <div className="mt-4">
+                  <RadioGroup 
+                    defaultValue={messageType} 
+                    onValueChange={(val) => setMessageType(val as "email" | "sms")}
+                    className="flex flex-col space-y-3 mt-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="email" id="email" />
+                      <Label htmlFor="email" className="flex items-center">
+                        <Mail className="w-4 h-4 mr-2" /> Email
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="sms" id="sms" />
+                      <Label htmlFor="sms" className="flex items-center">
+                        <MessageSquare className="w-4 h-4 mr-2" /> SMS
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
               </DialogDescription>
             </DialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setSelectedCampaign(null)}>
-                  Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  disabled={sendingCampaign}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleSendCampaign();
-                  }}
-                >
-                  {sendingCampaign ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    <>Send Now</>
-                  )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSelectedCampaign(null)}>
+                Cancel
+              </Button>
+              <Button
+                disabled={sendingCampaign}
+                onClick={handleSendCampaign}
+              >
+                {sendingCampaign ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>Send Now</>
+                )}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
     </Layout>
   );
 }
+
