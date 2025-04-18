@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,14 +11,17 @@ import { Campaign, Lead, Script } from "@/types/campaign";
 import { CampaignTable } from "@/components/campaigns/CampaignTable";
 import { SendCampaignDialog } from "@/components/campaigns/SendCampaignDialog";
 
+type CampaignsQueryResult = Campaign[];
+type LeadsQueryResult = Lead[];
+type ScriptQueryResult = Script | null;
+
 export default function ManageCampaignsPage() {
   const { toast } = useToast();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
-  // Fetch campaigns
   const { data: campaigns, isLoading: campaignsLoading, refetch: refetchCampaigns } = useQuery({
     queryKey: ['manage-campaigns'],
-    queryFn: async () => {
+    queryFn: async (): Promise<CampaignsQueryResult> => {
       const { data, error } = await supabase
         .from('campaigns')
         .select('*')
@@ -27,16 +29,15 @@ export default function ManageCampaignsPage() {
       
       if (error) throw error;
       
-      return (data || []) as Campaign[];
+      return (data || []) as CampaignsQueryResult;
     }
   });
 
-  // Fetch leads for a specific campaign when selected
   const { data: leads, isLoading: leadsLoading, refetch: refetchLeads } = useQuery({
     queryKey: ['campaign-leads', selectedCampaign?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<LeadsQueryResult> => {
       if (!selectedCampaign?.id) {
-        return [] as Lead[];
+        return [] as LeadsQueryResult;
       }
       
       const { data, error } = await supabase
@@ -47,15 +48,14 @@ export default function ManageCampaignsPage() {
       
       if (error) throw error;
       
-      return (data || []) as Lead[];
+      return (data || []) as LeadsQueryResult;
     },
     enabled: !!selectedCampaign?.id,
   });
 
-  // Fetch campaign script/content
   const { data: campaignScript } = useQuery({
     queryKey: ['campaign-script', selectedCampaign?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<ScriptQueryResult> => {
       if (!selectedCampaign?.id) {
         return null;
       }
@@ -70,7 +70,7 @@ export default function ManageCampaignsPage() {
         return null;
       }
       
-      return data as Script;
+      return data as ScriptQueryResult;
     },
     enabled: !!selectedCampaign?.id,
   });
@@ -122,7 +122,7 @@ export default function ManageCampaignsPage() {
                     campaign={selectedCampaign}
                     leads={leads || []}
                     leadsLoading={leadsLoading}
-                    campaignScript={campaignScript || null}
+                    campaignScript={campaignScript}
                     onSendSuccess={handleSendSuccess}
                   />
                 )}
