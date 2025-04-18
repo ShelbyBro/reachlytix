@@ -2,6 +2,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/use-user-role";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -9,7 +10,8 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, requiredRoles }: ProtectedRouteProps) {
-  const { user, loading, role } = useAuth();
+  const { user, loading } = useAuth();
+  const { role, roleReady } = useUserRole();
   const location = useLocation();
   const [timeoutReached, setTimeoutReached] = useState(false);
   
@@ -26,7 +28,7 @@ export default function ProtectedRoute({ children, requiredRoles }: ProtectedRou
   }, [loading]);
   
   // Show loading state if still determining auth status and timeout not reached
-  if (loading && !timeoutReached) {
+  if ((loading || !roleReady) && !timeoutReached) {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
