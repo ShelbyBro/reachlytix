@@ -12,6 +12,7 @@ export const useCampaigns = () => {
   const [campaignsLoading, setCampaignsLoading] = useState(true);
   const [campaignLeads, setCampaignLeads] = useState<Record<string, SimpleLead[]>>({});
   const [campaignScripts, setCampaignScripts] = useState<Record<string, SimpleScript>>({});
+  const [fetchAttempted, setFetchAttempted] = useState(false);
 
   const fetchCampaignLeads = async (campaigns: SimpleCampaign[]) => {
     try {
@@ -69,6 +70,7 @@ export const useCampaigns = () => {
   const fetchCampaigns = async () => {
     if (!user) {
       setCampaignsLoading(false);
+      setFetchAttempted(true);
       return;
     }
     
@@ -102,14 +104,21 @@ export const useCampaigns = () => {
       });
     } finally {
       setCampaignsLoading(false);
+      setFetchAttempted(true);
     }
   };
 
   useEffect(() => {
-    if (user) {
+    // Only fetch if user is authenticated and we have role information
+    if (user && role) {
+      console.log("Fetching campaigns with role:", role);
       fetchCampaigns();
     } else {
+      // Mark as not loading if no user
       setCampaignsLoading(false);
+      if (!user) {
+        setFetchAttempted(true);
+      }
     }
   }, [user, role]);
 
@@ -118,6 +127,7 @@ export const useCampaigns = () => {
     campaignsLoading,
     campaignLeads,
     campaignScripts,
+    fetchAttempted,
     refetchCampaigns: fetchCampaigns
   };
 };

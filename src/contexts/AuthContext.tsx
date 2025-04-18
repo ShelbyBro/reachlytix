@@ -62,6 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Set initial session and user
     const getInitialSession = async () => {
       try {
+        setLoading(true);
         const { data } = await supabase.auth.getSession();
         setSession(data.session);
         setUser(data.session?.user ?? null);
@@ -70,6 +71,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const userProfile = await fetchUserProfile(data.session.user.id);
           setProfile(userProfile);
           setRole(userProfile?.role || null);
+          
+          // If profile fetch failed but we have a user, handle gracefully
+          if (!userProfile && data.session?.user) {
+            console.warn("User authenticated but profile not found. Will retry on next load.");
+          }
         }
       } catch (error) {
         console.error("Error getting initial session:", error);
@@ -82,16 +88,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      // First update the basic auth state immediately without waiting for profile fetch
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-
-      if (currentSession?.user) {
-        const userProfile = await fetchUserProfile(currentSession.user.id);
-        setProfile(userProfile);
-        setRole(userProfile?.role || null);
-      } else {
+      
+      // If user signed out, clear profile and role
+      if (!currentSession?.user) {
         setProfile(null);
         setRole(null);
+        setLoading(false);
+        return;
+      }
+      
+      // Then fetch profile information if signed in
+      if (currentSession?.user) {
+        // Use setTimeout to prevent potential deadlock with Supabase client
+        setTimeout(async () => {
+          try {
+            const userProfile = await fetchUserProfile(currentSession.user.id);
+            setProfile(userProfile);
+            setRole(userProfile?.role || null);
+          } catch (profileError) {
+            console.error("Error fetching profile after auth state change:", profileError);
+          } finally {
+            setLoading(false);
+          }
+        }, 0);
       }
 
       if (event === 'SIGNED_IN') {
