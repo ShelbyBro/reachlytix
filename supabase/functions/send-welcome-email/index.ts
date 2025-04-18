@@ -17,7 +17,7 @@ interface LeadPayload {
 // Initialize Resend with API key
 const resendApiKey = Deno.env.get("RESEND_API_KEY");
 if (!resendApiKey) {
-  console.error("Missing RESEND_API_KEY environment variable");
+  console.error("[send-welcome-email] Missing RESEND_API_KEY environment variable");
 }
 const resend = new Resend(resendApiKey);
 
