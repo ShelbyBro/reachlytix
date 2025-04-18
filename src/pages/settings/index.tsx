@@ -1,5 +1,6 @@
 
 import Layout from "@/components/layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Settings() {
   return (
@@ -8,15 +9,19 @@ export default function Settings() {
         <h1 className="text-3xl font-bold mb-6">Settings</h1>
         
         <div className="grid gap-6">
-          <div className="bg-card rounded-lg border p-6">
-            <h2 className="text-xl font-semibold mb-4">Account Settings</h2>
-            <p className="text-muted-foreground">
-              Configure your account preferences and settings.
-            </p>
-            <p className="mt-4 text-sm text-muted-foreground">
-              More settings options coming soon.
-            </p>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Settings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Configure your account preferences and settings.
+              </p>
+              <p className="mt-4 text-sm text-muted-foreground">
+                More settings options coming soon.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </Layout>
