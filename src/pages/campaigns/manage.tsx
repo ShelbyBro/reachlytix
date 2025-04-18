@@ -19,7 +19,7 @@ export default function ManageCampaignsPage() {
   // Fetch campaigns
   const { data: campaigns, isLoading: campaignsLoading, refetch: refetchCampaigns } = useQuery({
     queryKey: ['manage-campaigns'],
-    queryFn: async (): Promise<Campaign[]> => {
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('campaigns')
         .select('*')
@@ -34,8 +34,8 @@ export default function ManageCampaignsPage() {
   // Fetch leads for a specific campaign when selected
   const { data: leads, isLoading: leadsLoading, refetch: refetchLeads } = useQuery({
     queryKey: ['campaign-leads', selectedCampaign?.id],
-    queryFn: async (): Promise<Lead[]> => {
-      if (!selectedCampaign?.id) return [];
+    queryFn: async () => {
+      if (!selectedCampaign?.id) return [] as Lead[];
       
       const { data, error } = await supabase
         .from('leads')
@@ -45,7 +45,7 @@ export default function ManageCampaignsPage() {
       
       if (error) throw error;
       
-      return (data as Lead[]) || [];
+      return (data || []) as Lead[];
     },
     enabled: !!selectedCampaign?.id,
   });
@@ -53,8 +53,8 @@ export default function ManageCampaignsPage() {
   // Fetch campaign script/content
   const { data: campaignScript } = useQuery({
     queryKey: ['campaign-script', selectedCampaign?.id],
-    queryFn: async (): Promise<Script | null> => {
-      if (!selectedCampaign?.id) return null;
+    queryFn: async () => {
+      if (!selectedCampaign?.id) return null as Script | null;
       
       const { data, error } = await supabase
         .from('scripts')
@@ -62,7 +62,7 @@ export default function ManageCampaignsPage() {
         .eq('campaign_id', selectedCampaign.id)
         .single();
       
-      if (error) return null;
+      if (error) return null as Script | null;
       
       return data as Script;
     },
