@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,17 +12,13 @@ import { Campaign, Lead, Script } from "@/types/campaign";
 import { CampaignTable } from "@/components/campaigns/CampaignTable";
 import { SendCampaignDialog } from "@/components/campaigns/SendCampaignDialog";
 
-type CampaignsQueryResult = Campaign[];
-type LeadsQueryResult = Lead[];
-type ScriptQueryResult = Script | null;
-
 export default function ManageCampaignsPage() {
   const { toast } = useToast();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
   const { data: campaigns, isLoading: campaignsLoading, refetch: refetchCampaigns } = useQuery({
     queryKey: ['manage-campaigns'],
-    queryFn: async (): Promise<CampaignsQueryResult> => {
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('campaigns')
         .select('*')
@@ -29,15 +26,16 @@ export default function ManageCampaignsPage() {
       
       if (error) throw error;
       
-      return (data || []) as CampaignsQueryResult;
+      // Simple direct casting to avoid deep type inference
+      return (data as any[] || []) as Campaign[];
     }
   });
 
   const { data: leads, isLoading: leadsLoading, refetch: refetchLeads } = useQuery({
     queryKey: ['campaign-leads', selectedCampaign?.id],
-    queryFn: async (): Promise<LeadsQueryResult> => {
+    queryFn: async () => {
       if (!selectedCampaign?.id) {
-        return [] as LeadsQueryResult;
+        return [] as Lead[];
       }
       
       const { data, error } = await supabase
@@ -48,16 +46,17 @@ export default function ManageCampaignsPage() {
       
       if (error) throw error;
       
-      return (data || []) as LeadsQueryResult;
+      // Simple direct casting to avoid deep type inference
+      return (data as any[] || []) as Lead[];
     },
     enabled: !!selectedCampaign?.id,
   });
 
   const { data: campaignScript } = useQuery({
     queryKey: ['campaign-script', selectedCampaign?.id],
-    queryFn: async (): Promise<ScriptQueryResult> => {
+    queryFn: async () => {
       if (!selectedCampaign?.id) {
-        return null;
+        return null as Script | null;
       }
       
       const { data, error } = await supabase
@@ -67,10 +66,11 @@ export default function ManageCampaignsPage() {
         .single();
       
       if (error) {
-        return null;
+        return null as Script | null;
       }
       
-      return data as ScriptQueryResult;
+      // Simple direct casting to avoid deep type inference
+      return data as Script;
     },
     enabled: !!selectedCampaign?.id,
   });
