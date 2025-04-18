@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,19 +32,25 @@ import {
 import { Loader2, Mail, MoreHorizontal } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
-type Campaign = {
+interface Campaign {
   id: string;
   title: string;
   status: string;
   type: string;
   created_at: string;
-};
+}
 
-type Lead = {
+interface Lead {
   id: string;
   name: string;
   email: string;
-};
+}
+
+interface Script {
+  title: string;
+  content: string;
+  campaign_id: string;
+}
 
 export default function ManageCampaignsPage() {
   const { toast } = useToast();
@@ -97,7 +102,7 @@ export default function ManageCampaignsPage() {
         .single();
       
       if (error) return null;
-      return data;
+      return data as Script;
     },
     enabled: !!selectedCampaign?.id,
   });
