@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +15,11 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import LandingPage from "./pages/landing/LandingPage";
 import UploadPage from "./pages/upload";
 import CampaignsPage from "./pages/campaigns";
+import ManageCampaignsPage from "./pages/campaigns/manage";
+import CreateCampaignPage from "./pages/campaigns/create";
+import AddLeadPage from "./pages/leads/add";
+import AnalyticsPage from "./pages/analytics";
+import LeadGeneratorPage from "./pages/lead-generator";
 import DemoPage from "./pages/demo/DemoPage";
 import ComingSoonPage from "./pages/demo/ComingSoonPage";
 
@@ -45,9 +51,34 @@ const App = () => (
                 <UploadPage />
               </ProtectedRoute>
             } />
+            <Route path="/leads/add" element={
+              <ProtectedRoute>
+                <AddLeadPage />
+              </ProtectedRoute>
+            } />
             <Route path="/campaigns" element={
               <ProtectedRoute>
                 <CampaignsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/campaigns/manage" element={
+              <ProtectedRoute>
+                <ManageCampaignsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/campaigns/create" element={
+              <ProtectedRoute>
+                <CreateCampaignPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/analytics" element={
+              <ProtectedRoute>
+                <AnalyticsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/lead-generator" element={
+              <ProtectedRoute>
+                <LeadGeneratorPage />
               </ProtectedRoute>
             } />
             <Route path="/admin" element={

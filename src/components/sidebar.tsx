@@ -9,7 +9,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
-  LogOut
+  LogOut,
+  UserPlus,
+  Mail,
+  Activity,
+  Search,
+  Wand2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,9 +32,12 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
   
   const clientLinks = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+    { icon: UserPlus, label: "Add Lead", href: "/leads/add" },
     { icon: Upload, label: "Upload Leads", href: "/upload" },
-    { icon: Megaphone, label: "Campaigns", href: "/campaigns" },
-    { icon: BarChart3, label: "Analytics", href: "/analytics" },
+    { icon: Megaphone, label: "Campaign Manager", href: "/campaigns" },
+    { icon: Mail, label: "Create Campaign", href: "/campaigns/create" },
+    { icon: Activity, label: "Analytics", href: "/analytics" },
+    { icon: Wand2, label: "Lead Generator", href: "/lead-generator" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
   
