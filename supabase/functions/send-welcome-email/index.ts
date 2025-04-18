@@ -12,13 +12,10 @@ interface LeadPayload {
   name: string | null
   email: string | null
   phone: string | null
-  source: string | null
-  client_id: string | null
 }
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"))
 
-// This is our React-like template (simplified for Deno edge function)
 const generateEmailHtml = (name: string | null) => {
   return `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
@@ -56,34 +53,29 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Email sent successfully:", emailResponse)
 
     // Log the email send to our database
-    try {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL") || 'https://szkhnwedzwvlqlktgvdp.supabase.co';
-      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-      
-      if (supabaseKey) {
-        const logResponse = await fetch(`${supabaseUrl}/rest/v1/email_logs`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseKey}`,
-            'apikey': `${supabaseKey}`
-          },
-          body: JSON.stringify({
-            lead_id: lead.id,
-            status: 'delivered',
-            response: JSON.stringify(emailResponse),
-          }),
-        });
-        
-        if (!logResponse.ok) {
-          console.error("Failed to log email:", await logResponse.text());
-        }
-      } else {
-        console.warn("SUPABASE_SERVICE_ROLE_KEY not available, skipping email logging");
-      }
-    } catch (logError) {
-      console.error("Error logging email:", logError);
-      // We don't want to fail the response just because logging failed
+    const supabaseUrl = 'https://szkhnwedzwvlqlktgvdp.supabase.co';
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (!supabaseKey) {
+      throw new Error("SUPABASE_SERVICE_ROLE_KEY is required");
+    }
+
+    const logResponse = await fetch(`${supabaseUrl}/rest/v1/email_logs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseKey}`,
+        'apikey': supabaseKey
+      },
+      body: JSON.stringify({
+        lead_id: lead.id,
+        status: 'delivered',
+        response: emailResponse,
+      }),
+    });
+
+    if (!logResponse.ok) {
+      console.error("Failed to log email:", await logResponse.text());
     }
 
     return new Response(JSON.stringify(emailResponse), {
@@ -95,6 +87,31 @@ const handler = async (req: Request): Promise<Response> => {
     })
   } catch (error: any) {
     console.error("Error in send-welcome-email function:", error)
+    
+    // Try to log the error
+    try {
+      const supabaseUrl = 'https://szkhnwedzwvlqlktgvdp.supabase.co';
+      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      
+      if (supabaseKey) {
+        await fetch(`${supabaseUrl}/rest/v1/email_logs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey
+          },
+          body: JSON.stringify({
+            lead_id: (req.json as any)?.id,
+            status: 'failed',
+            response: { error: error.message },
+          }),
+        });
+      }
+    } catch (logError) {
+      console.error("Error logging failure:", logError);
+    }
+
     return new Response(
       JSON.stringify({ error: error.message }),
       {
