@@ -67,7 +67,10 @@ export const useCampaigns = () => {
   };
 
   const fetchCampaigns = async () => {
-    if (!user) return;
+    if (!user) {
+      setCampaignsLoading(false);
+      return;
+    }
     
     try {
       setCampaignsLoading(true);
@@ -105,8 +108,10 @@ export const useCampaigns = () => {
   useEffect(() => {
     if (user) {
       fetchCampaigns();
+    } else {
+      setCampaignsLoading(false);
     }
-  }, [user]);
+  }, [user, role]);
 
   return {
     campaigns,

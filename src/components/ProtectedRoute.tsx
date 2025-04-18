@@ -26,8 +26,14 @@ export default function ProtectedRoute({ children, requiredRoles }: ProtectedRou
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
   
+  // If role is null or undefined, redirect to login page
+  if (!role) {
+    console.error("User authenticated but has no role assigned");
+    return <Navigate to="/auth/login" state={{ from: location }} replace />;
+  }
+  
   // Check for required roles if specified
-  if (requiredRoles && requiredRoles.length > 0 && role) {
+  if (requiredRoles && requiredRoles.length > 0) {
     if (!requiredRoles.includes(role)) {
       // User doesn't have the required role, redirect to dashboard
       return <Navigate to="/dashboard" replace />;

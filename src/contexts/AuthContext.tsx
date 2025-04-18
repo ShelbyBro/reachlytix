@@ -71,6 +71,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setProfile(userProfile);
           setRole(userProfile?.role || null);
         }
+      } catch (error) {
+        console.error("Error getting initial session:", error);
       } finally {
         setLoading(false);
       }
