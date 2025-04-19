@@ -1,6 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { logCampaignSend } from "./campaign-logging";
+import { handleSmsError } from "./sms/handle-sms-error";
+import { sanitizePhoneNumber } from "./sms/format-phone";
 
 export const sendCampaignSMS = async (
   campaignId: string,
@@ -14,12 +16,19 @@ export const sendCampaignSMS = async (
   try {
     console.log(`Initializing ${messageType} campaign "${campaignTitle}" to ${leads.length} leads`);
     
+    // Sanitize test phone if provided
+    const sanitizedTestPhone = testPhone ? sanitizePhoneNumber(testPhone) : undefined;
+    
     const payload = {
       campaignId,
-      leads: isTest ? [] : leads,
+      leads: isTest ? [] : leads.map(lead => ({
+        ...lead,
+        phone: sanitizePhoneNumber(lead.phone)
+      })),
       content,
       isTest,
-      testPhone
+      testPhone: sanitizedTestPhone,
+      messageType
     };
     
     // Call the edge function to send the SMS messages
@@ -49,21 +58,6 @@ export const sendCampaignSMS = async (
       results: data.results
     };
   } catch (error: any) {
-    console.error(`Error sending ${messageType} campaign:`, error);
-    
-    if (!isTest) {
-      // Log the failed attempt
-      await logCampaignSend({
-        campaign_id: campaignId,
-        total_recipients: leads.length,
-        delivery_status: "failed",
-        message_type: messageType
-      });
-    }
-    
-    return {
-      success: false,
-      message: error.message || `Failed to send ${messageType} campaign`
-    };
+    return handleSmsError(error, campaignId, leads, messageType, isTest);
   }
 };
