@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,7 +23,7 @@ import LeadGeneratorPage from "./pages/lead-generator";
 import DemoPage from "./pages/demo/DemoPage";
 import ComingSoonPage from "./pages/demo/ComingSoonPage";
 import SettingsPage from "./pages/settings";
-import VoipDashboard from "./pages/voip/VoipDashboard";
+import VoipPage from "./pages/voip";
 
 const queryClient = new QueryClient();
 
@@ -94,7 +95,7 @@ const App = () => (
             } />
             <Route path="/voip" element={
               <ProtectedRoute>
-                <VoipDashboard />
+                <VoipPage />
               </ProtectedRoute>
             } />
             

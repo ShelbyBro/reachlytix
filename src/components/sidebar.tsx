@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -14,7 +13,8 @@ import {
   Mail,
   Activity,
   Search,
-  Wand2
+  Wand2,
+  Phone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
     { icon: Upload, label: "Upload Leads", href: "/upload" },
     { icon: Megaphone, label: "Campaign Manager", href: "/campaigns" },
     { icon: Mail, label: "Create Campaign", href: "/campaigns/create" },
+    { icon: Phone, label: "VOIP Caller", href: "/voip" },
     { icon: Activity, label: "Analytics", href: "/analytics" },
     { icon: Wand2, label: "Lead Generator", href: "/lead-generator" },
     { icon: Settings, label: "Settings", href: "/settings" },
