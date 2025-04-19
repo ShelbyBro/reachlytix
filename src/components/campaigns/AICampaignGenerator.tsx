@@ -69,10 +69,10 @@ export function AICampaignGenerator({ onGeneratedContent }: AICampaignGeneratorP
       return;
     }
 
-    if (!apiKey && showApiKeyDialog) {
+    if (!apiKey && selectedModel === "openai") {
       toast({
         title: "API Key Required",
-        description: "Please enter a valid API key for the selected AI model.",
+        description: "Please enter a valid API key for OpenAI.",
         variant: "destructive"
       });
       setShowApiKeyDialog(true);
@@ -90,8 +90,9 @@ export function AICampaignGenerator({ onGeneratedContent }: AICampaignGeneratorP
       if (selectedModel === "gemini") {
         const apiKeyToUse = apiKey || 'AIzaSyAXfF5sFm0kmEHGJI780nDA_as6kCsyWMc'; // Fallback to default if not provided
         
+        // Updated Gemini API endpoint and request format
         response = await fetch(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' + apiKeyToUse,
+          'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=' + apiKeyToUse,
           {
             method: 'POST',
             headers: {
@@ -189,6 +190,18 @@ export function AICampaignGenerator({ onGeneratedContent }: AICampaignGeneratorP
         description: error.message || "Failed to generate campaign content. Please try again.",
         variant: "destructive"
       });
+      
+      // If Gemini fails, suggest switching to OpenAI
+      if (selectedModel === "gemini") {
+        toast({
+          title: "Try OpenAI Instead",
+          description: "Gemini API failed. Consider switching to OpenAI in the AI settings.",
+          action: <Button variant="outline" size="sm" onClick={() => {
+            setSelectedModel("openai");
+            setShowApiKeyDialog(true);
+          }}>Switch</Button>
+        });
+      }
     } finally {
       setIsGenerating(false);
     }
