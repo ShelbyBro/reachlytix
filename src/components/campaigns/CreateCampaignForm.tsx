@@ -48,6 +48,9 @@ export function CreateCampaignForm({
     setWhatsappContent(content.whatsapp);
   };
 
+  // Use the editingCampaign ID if available, otherwise use a placeholder
+  const campaignId = editingCampaign?.id || "new-campaign";
+
   return (
     <Card>
       <CardHeader>
@@ -94,6 +97,7 @@ export function CreateCampaignForm({
           onSmsContentChange={setSmsContent}
           onWhatsappContentChange={setWhatsappContent}
           onWhatsappEnabledChange={setWhatsappEnabled}
+          campaignId={campaignId}
         />
 
         <SchedulingField

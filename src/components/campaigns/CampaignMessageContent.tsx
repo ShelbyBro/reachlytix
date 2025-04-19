@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,7 @@ export function CampaignMessageContent({
         messageType={messageType}
         onMessageTypeChange={setMessageType}
         campaignId={campaignId}
+        script={null} // Add the missing script prop with a default value of null
       />
 
       {/* Message Content Area */}
