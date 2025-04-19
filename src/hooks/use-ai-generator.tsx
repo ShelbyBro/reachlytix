@@ -31,29 +31,38 @@ export const useAIGenerator = ({ onGeneratedContent }: UseAIGeneratorProps) => {
     setIsGenerating(true);
     setError(null);
 
-    try {
-      // Generate email content
-      const emailResponse = await supabase.functions.invoke('generate-campaign-content', {
-        body: { businessType, campaignGoal, messageType: 'email' }
-      });
+    const generateForType = async (messageType: 'email' | 'sms' | 'whatsapp') => {
+      try {
+        console.log(`Generating ${messageType} content for ${businessType} with goal: ${campaignGoal}`);
+        
+        const response = await supabase.functions.invoke('generate-campaign-content', {
+          body: { businessType, campaignGoal, messageType }
+        });
 
-      // Generate SMS content
-      const smsResponse = await supabase.functions.invoke('generate-campaign-content', {
-        body: { businessType, campaignGoal, messageType: 'sms' }
-      });
-
-      // Generate WhatsApp content
-      const whatsappResponse = await supabase.functions.invoke('generate-campaign-content', {
-        body: { businessType, campaignGoal, messageType: 'whatsapp' }
-      });
-
-      if (emailResponse.error || smsResponse.error || whatsappResponse.error) {
-        throw new Error('Failed to generate content');
+        console.log(`${messageType} response:`, response);
+        
+        if (response.error) {
+          throw new Error(`Error generating ${messageType}: ${response.error.message}`);
+        }
+        
+        if (!response.data || !response.data.content) {
+          throw new Error(`No content returned for ${messageType}`);
+        }
+        
+        return response.data.content as string;
+      } catch (err: any) {
+        console.error(`Error in ${messageType} generation:`, err);
+        throw new Error(`${messageType} generation failed: ${err.message}`);
       }
+    };
 
-      const emailContent = emailResponse.data.choices[0].message.content;
-      const smsContent = smsResponse.data.choices[0].message.content;
-      const whatsappContent = whatsappResponse.data.choices[0].message.content;
+    try {
+      // Generate all content types in parallel for better performance
+      const [emailContent, smsContent, whatsappContent] = await Promise.all([
+        generateForType('email'),
+        generateForType('sms'),
+        generateForType('whatsapp')
+      ]);
 
       // Extract subject from email content if present
       let email = emailContent;

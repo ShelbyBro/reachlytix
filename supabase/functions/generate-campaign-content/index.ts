@@ -20,6 +20,8 @@ serve(async (req) => {
       throw new Error('OpenAI API key not found');
     }
 
+    console.log(`Generating ${messageType} content for ${businessType} business with goal: ${campaignGoal}`);
+
     const systemPrompt = `You are a professional marketing content writer. Generate ${messageType} content for a ${businessType} business with the goal of ${campaignGoal}. 
     If generating email content, include a subject line prefixed with 'Subject:'.
     If generating SMS content, keep it concise and under 160 characters.
@@ -47,14 +49,37 @@ serve(async (req) => {
       }),
     });
 
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('OpenAI API error:', errorData);
+      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+    }
+
     const data = await response.json();
-    return new Response(JSON.stringify(data), {
+    
+    console.log('OpenAI API response received');
+    
+    // Validate the response structure before returning
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Invalid response structure from OpenAI:', data);
+      throw new Error('Invalid response from OpenAI');
+    }
+
+    return new Response(JSON.stringify({ 
+      success: true,
+      content: data.choices[0].message.content,
+      data: data  // Include full data for debugging if needed
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Campaign content generation error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false, 
+        error: error.message,
+        content: null
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
