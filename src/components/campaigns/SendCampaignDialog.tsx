@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { SimpleCampaign, SimpleLead, SimpleScript } from "@/types/campaign";
@@ -17,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageTypeSelector } from "./MessageTypeSelector";
 import { SendOptionsSelector } from "./SendOptionsSelector";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
 interface SendCampaignDialogProps {
   isOpen: boolean;
