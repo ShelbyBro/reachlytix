@@ -1,10 +1,9 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Wand2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface AICampaignGeneratorProps {
@@ -113,14 +112,17 @@ export function AICampaignGenerator({ onGeneratedContent }: AICampaignGeneratorP
   };
 
   return (
-    <Card className="mt-6">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Wand2 className="h-5 w-5" />
-          AI Assistant – Auto Generate Messages
+    <Card className="mt-6 border-2 border-brand-purple/50 bg-gradient-to-r from-secondary/50 to-secondary/30 shadow-md">
+      <CardHeader className="bg-gradient-to-r from-brand-purple/10 to-transparent pb-3">
+        <CardTitle className="flex items-center gap-2 text-brand-purple">
+          <Sparkles className="h-5 w-5 text-brand-purple" />
+          <span className="font-bold">🎯 AI Assistant Zone</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-4">
+        <div className="text-sm text-muted-foreground">
+          Select your business type and campaign goal to let AI generate message content for your campaign
+        </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <label className="text-sm font-medium">Business Type</label>
@@ -154,7 +156,7 @@ export function AICampaignGenerator({ onGeneratedContent }: AICampaignGeneratorP
         <Button 
           onClick={generateContent} 
           disabled={isGenerating}
-          className="w-full"
+          className="w-full bg-brand-purple hover:bg-brand-purple/90"
         >
           {isGenerating ? (
             <>
@@ -163,7 +165,7 @@ export function AICampaignGenerator({ onGeneratedContent }: AICampaignGeneratorP
             </>
           ) : (
             <>
-              <Wand2 className="mr-2 h-4 w-4" />
+              <Sparkles className="mr-2 h-4 w-4" />
               Generate Messages
             </>
           )}

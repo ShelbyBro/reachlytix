@@ -7,6 +7,7 @@ import { CampaignDetailsFields } from "./CampaignDetailsFields";
 import { CampaignMessageContent } from "./CampaignMessageContent";
 import { AICampaignGenerator } from "./AICampaignGenerator";
 import { SchedulingField } from "./SchedulingField";
+import { Separator } from "@/components/ui/separator";
 
 interface CreateCampaignFormProps {
   onCampaignCreated: () => void;
@@ -57,7 +58,7 @@ export function CreateCampaignForm({
             : "Enter your campaign information and message content below."}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         <CampaignDetailsFields
           campaignName={campaignName}
           description={description}
@@ -65,7 +66,20 @@ export function CreateCampaignForm({
           onDescriptionChange={setDescription}
         />
 
+        {/* Highlight the AI Assistant with a separator */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">Quick Content Generation</span>
+          </div>
+        </div>
+
+        {/* Make AI Generator more prominent */}
         <AICampaignGenerator onGeneratedContent={handleGeneratedContent} />
+
+        <Separator className="my-6" />
 
         <CampaignMessageContent
           messageType={messageType}
