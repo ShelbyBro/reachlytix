@@ -112,9 +112,54 @@ export function useLeadGenerator() {
     }
   }, [validateEmail, validatePhone, toast, user]);
 
+  const generateLeadsWithAI = useCallback(async (prompt: string) => {
+    setIsProcessing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-leads', {
+        body: { prompt }
+      });
+
+      if (error) throw error;
+
+      const generatedContent = data.choices[0].message.content;
+      let generatedLeads: Lead[];
+
+      try {
+        generatedLeads = JSON.parse(generatedContent);
+      } catch (e) {
+        throw new Error('Failed to parse generated leads');
+      }
+
+      const validatedLeads = generatedLeads.map(lead => ({
+        ...lead,
+        status: 'valid',
+        validation_errors: [],
+        source: 'AI Generated'
+      }));
+
+      setLeads(validatedLeads);
+
+      toast({
+        title: "Leads Generated",
+        description: `Successfully generated ${validatedLeads.length} leads using AI.`
+      });
+
+    } catch (error) {
+      console.error('Error generating leads:', error);
+      toast({
+        variant: "destructive",
+        title: "Error Generating Leads",
+        description: error.message || "Failed to generate leads with AI."
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [toast]);
+
   return {
     leads,
     isProcessing,
-    processLeads
+    processLeads,
+    generateLeadsWithAI
   };
 }
