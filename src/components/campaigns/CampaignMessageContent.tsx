@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { MessageTypeSelector } from "./MessageTypeSelector";
 import { TestSmsSection } from "./TestSmsSection";
+import { TemplateSelector } from "./TemplateSelector";
 
 interface CampaignMessageContentProps {
   messageType: "email" | "sms" | "whatsapp";
@@ -38,16 +39,31 @@ export function CampaignMessageContent({
   onWhatsappEnabledChange,
   campaignId
 }: CampaignMessageContentProps) {
+  const handleTemplateSelect = (template: any) => {
+    if (messageType === "email") {
+      onSubjectChange(template.subject || "");
+      onContentChange(template.content);
+    } else if (messageType === "sms") {
+      onSmsContentChange(template.content);
+    } else if (messageType === "whatsapp") {
+      onWhatsappContentChange(template.content);
+    }
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <MessageTypeSelector
         messageType={messageType}
         onMessageTypeChange={setMessageType}
         campaignId={campaignId}
-        script={null} // Add the missing script prop with a default value of null
+        script={null}
       />
 
-      {/* Message Content Area */}
+      <TemplateSelector 
+        messageType={messageType}
+        onTemplateSelect={handleTemplateSelect}
+      />
+
       {messageType === "email" && (
         <>
           <div className="space-y-2">
@@ -106,7 +122,6 @@ export function CampaignMessageContent({
         </>
       )}
 
-      {/* Add Test SMS Section for SMS/WhatsApp types */}
       {(messageType === "sms" || messageType === "whatsapp") && (
         <TestSmsSection
           campaignId={campaignId}

@@ -1,11 +1,9 @@
-
 import { SimpleCampaign } from "@/types/campaign";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useCampaignForm } from "@/hooks/use-campaign-form";
 import { CampaignDetailsFields } from "./CampaignDetailsFields";
 import { CampaignMessageContent } from "./CampaignMessageContent";
-import { AICampaignGenerator } from "./AICampaignGenerator";
 import { SchedulingField } from "./SchedulingField";
 import { Separator } from "@/components/ui/separator";
 
@@ -42,15 +40,6 @@ export function CreateCampaignForm({
     handleSave
   } = useCampaignForm(editingCampaign, onCampaignCreated, onCancel);
 
-  const handleGeneratedContent = (content: { email: string; sms: string; whatsapp: string }) => {
-    setContent(content.email);
-    setSmsContent(content.sms);
-    setWhatsappContent(content.whatsapp);
-  };
-
-  // Use the editingCampaign ID if available, otherwise use a placeholder
-  const campaignId = editingCampaign?.id || "new-campaign";
-
   return (
     <Card>
       <CardHeader>
@@ -68,19 +57,6 @@ export function CreateCampaignForm({
           onCampaignNameChange={setCampaignName}
           onDescriptionChange={setDescription}
         />
-
-        {/* Highlight the AI Assistant with a separator */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">Quick Content Generation</span>
-          </div>
-        </div>
-
-        {/* Make AI Generator more prominent */}
-        <AICampaignGenerator onGeneratedContent={handleGeneratedContent} />
 
         <Separator className="my-6" />
 
