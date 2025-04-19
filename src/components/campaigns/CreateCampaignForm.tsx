@@ -1,4 +1,3 @@
-
 import { SimpleCampaign } from "@/types/campaign";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -46,6 +45,12 @@ export function CreateCampaignForm({
     handleSave
   } = useCampaignForm(editingCampaign, onCampaignCreated, onCancel);
 
+  const handleGeneratedContent = (content: { email: string; sms: string; whatsapp: string }) => {
+    setContent(content.email);
+    setSmsContent(content.sms);
+    setWhatsappContent(content.whatsapp);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -63,6 +68,8 @@ export function CreateCampaignForm({
           onCampaignNameChange={setCampaignName}
           onDescriptionChange={setDescription}
         />
+
+        <AICampaignGenerator onGeneratedContent={handleGeneratedContent} />
 
         <Tabs
           defaultValue="email"
