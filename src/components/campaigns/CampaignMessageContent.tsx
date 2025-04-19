@@ -1,10 +1,10 @@
-
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Mail, MessageSquare } from "lucide-react";
-import { EmailContentFields } from "./EmailContentFields";
+import { MessageTypeSelector } from "./MessageTypeSelector";
+import { TestSmsSection } from "./TestSmsSection";
 
 interface CampaignMessageContentProps {
   messageType: "email" | "sms" | "whatsapp";
@@ -19,6 +19,7 @@ interface CampaignMessageContentProps {
   onSmsContentChange: (value: string) => void;
   onWhatsappContentChange: (value: string) => void;
   onWhatsappEnabledChange: (value: boolean) => void;
+  campaignId: string;
 }
 
 export function CampaignMessageContent({
@@ -33,86 +34,83 @@ export function CampaignMessageContent({
   onContentChange,
   onSmsContentChange,
   onWhatsappContentChange,
-  onWhatsappEnabledChange
+  onWhatsappEnabledChange,
+  campaignId
 }: CampaignMessageContentProps) {
   return (
-    <Tabs
-      defaultValue="email"
-      value={messageType}
-      onValueChange={(value) => setMessageType(value as "email" | "sms" | "whatsapp")}
-      className="w-full"
-    >
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="email" className="flex items-center gap-2">
-          <Mail className="h-4 w-4" /> Email
-        </TabsTrigger>
-        <TabsTrigger value="sms" className="flex items-center gap-2">
-          <MessageSquare className="h-4 w-4" /> SMS
-        </TabsTrigger>
-        <TabsTrigger value="whatsapp" className="flex items-center gap-2">
-          <MessageSquare className="h-4 w-4" /> WhatsApp
-        </TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="email" className="pt-4">
-        <EmailContentFields
-          subject={subject}
-          content={content}
-          onSubjectChange={onSubjectChange}
-          onContentChange={onContentChange}
-        />
-      </TabsContent>
-      
-      <TabsContent value="sms" className="pt-4 space-y-4">
+    <div className="space-y-4">
+      <MessageTypeSelector
+        messageType={messageType}
+        onMessageTypeChange={setMessageType}
+        campaignId={campaignId}
+      />
+
+      {/* Message Content Area */}
+      {messageType === "email" && (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="subject">Subject</Label>
+            <Input
+              id="subject"
+              placeholder="Subject"
+              value={subject}
+              onChange={(e) => onSubjectChange(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="content">Email Content</Label>
+            <Textarea
+              id="content"
+              placeholder="Email Content"
+              value={content}
+              onChange={(e) => onContentChange(e.target.value)}
+              rows={5}
+            />
+          </div>
+        </>
+      )}
+
+      {messageType === "sms" && (
         <div className="space-y-2">
           <Label htmlFor="smsContent">SMS Content</Label>
           <Textarea
             id="smsContent"
-            placeholder="Enter your SMS message (160 characters recommended for single SMS)"
+            placeholder="SMS Content"
             value={smsContent}
             onChange={(e) => onSmsContentChange(e.target.value)}
             rows={5}
           />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Keep messages brief for best delivery</span>
-            <span>{smsContent.length}/160 characters</span>
+        </div>
+      )}
+
+      {messageType === "whatsapp" && (
+        <>
+          <div className="flex items-center space-x-2">
+            <Switch id="whatsappEnabled" checked={whatsappEnabled} onCheckedChange={onWhatsappEnabledChange} />
+            <Label htmlFor="whatsappEnabled">Enable WhatsApp</Label>
           </div>
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="whatsapp" className="pt-4 space-y-4">
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="whatsapp-active"
-            checked={whatsappEnabled}
-            onCheckedChange={onWhatsappEnabledChange}
-          />
-          <Label htmlFor="whatsapp-active">Enable WhatsApp messaging</Label>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="whatsappContent">WhatsApp Message</Label>
-          <Textarea
-            id="whatsappContent"
-            placeholder="Enter your WhatsApp message content"
-            value={whatsappContent}
-            onChange={(e) => onWhatsappContentChange(e.target.value)}
-            rows={5}
-            disabled={!whatsappEnabled}
-            className={!whatsappEnabled ? "opacity-50" : ""}
-          />
           {whatsappEnabled && (
-            <p className="text-xs text-muted-foreground">
-              You can include text formatting, emojis, and longer content in WhatsApp messages
-            </p>
+            <div className="space-y-2">
+              <Label htmlFor="whatsappContent">WhatsApp Content</Label>
+              <Textarea
+                id="whatsappContent"
+                placeholder="WhatsApp Content"
+                value={whatsappContent}
+                onChange={(e) => onWhatsappContentChange(e.target.value)}
+                rows={5}
+              />
+            </div>
           )}
-          {!whatsappEnabled && (
-            <p className="text-xs text-amber-600">
-              Enable WhatsApp messaging to edit this content
-            </p>
-          )}
-        </div>
-      </TabsContent>
-    </Tabs>
+        </>
+      )}
+
+      {/* Add Test SMS Section for SMS/WhatsApp types */}
+      {(messageType === "sms" || messageType === "whatsapp") && (
+        <TestSmsSection
+          campaignId={campaignId}
+          messageType={messageType}
+        />
+      )}
+    </div>
   );
 }

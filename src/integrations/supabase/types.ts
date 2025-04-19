@@ -285,6 +285,7 @@ export type Database = {
       }
       scripts: {
         Row: {
+          campaign_id: string | null
           client_id: string | null
           content: string | null
           created_at: string | null
@@ -293,6 +294,7 @@ export type Database = {
           type: string | null
         }
         Insert: {
+          campaign_id?: string | null
           client_id?: string | null
           content?: string | null
           created_at?: string | null
@@ -301,6 +303,7 @@ export type Database = {
           type?: string | null
         }
         Update: {
+          campaign_id?: string | null
           client_id?: string | null
           content?: string | null
           created_at?: string | null
@@ -308,7 +311,15 @@ export type Database = {
           title?: string | null
           type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "scripts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sms_logs: {
         Row: {
