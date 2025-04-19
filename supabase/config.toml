@@ -1,6 +1,8 @@
 
-# This file is used by Supabase CLI to configure the project
 project_id = "szkhnwedzwvlqlktgvdp"
 
 [functions.send-campaign-sms]
+verify_jwt = false
+
+[functions.generate-campaign-content]
 verify_jwt = false
