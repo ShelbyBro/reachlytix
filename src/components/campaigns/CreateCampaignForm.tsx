@@ -1,3 +1,4 @@
+
 import { SimpleCampaign } from "@/types/campaign";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -37,6 +38,7 @@ export function CreateCampaignForm({
     setWhatsappContent,
     messageType,
     setMessageType,
+    campaignId, // Add this line to extract campaignId
     handleSave
   } = useCampaignForm(editingCampaign, onCampaignCreated, onCancel);
 
@@ -73,7 +75,7 @@ export function CreateCampaignForm({
           onSmsContentChange={setSmsContent}
           onWhatsappContentChange={setWhatsappContent}
           onWhatsappEnabledChange={setWhatsappEnabled}
-          campaignId={campaignId}
+          campaignId={campaignId} // Pass campaignId here
         />
 
         <SchedulingField

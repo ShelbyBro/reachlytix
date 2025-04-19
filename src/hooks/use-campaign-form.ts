@@ -14,6 +14,9 @@ export const useCampaignForm = (
   const { fetchScript } = useCampaignScript();
   const { handleSave: saveHandler } = useCampaignSave(editingCampaign, onSuccess);
 
+  // Add a campaignId to the hook's return value
+  const campaignId = editingCampaign?.id || "";
+
   useEffect(() => {
     if (editingCampaign?.script_id) {
       fetchScript(editingCampaign.script_id).then(script => {
@@ -45,7 +48,7 @@ export const useCampaignForm = (
 
   return {
     ...formState,
+    campaignId, // Include campaignId in the returned object
     handleSave,
   };
 };
-
