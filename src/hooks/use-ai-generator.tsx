@@ -128,7 +128,7 @@ export const useAIGenerator = ({ onGeneratedContent }: UseAIGeneratorProps) => {
         toast({
           title: "Partial Content Generated",
           description: `Some content was generated successfully, but there were issues: ${failures.join(', ')}`,
-          variant: "warning"
+          variant: "default" // Changed from "warning" to "default"
         });
       } else {
         toast({
