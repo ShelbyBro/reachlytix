@@ -45,6 +45,39 @@ export type Database = {
         }
         Relationships: []
       }
+      call_logs: {
+        Row: {
+          agent_id: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          number: string
+          status: string
+          timestamp: string | null
+          type: Database["public"]["Enums"]["call_type"]
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          number: string
+          status?: string
+          timestamp?: string | null
+          type: Database["public"]["Enums"]["call_type"]
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          number?: string
+          status?: string
+          timestamp?: string | null
+          type?: Database["public"]["Enums"]["call_type"]
+        }
+        Relationships: []
+      }
       campaign_logs: {
         Row: {
           campaign_id: string
@@ -477,6 +510,7 @@ export type Database = {
     Enums: {
       action_type: "email" | "sms"
       automation_status: "active" | "paused"
+      call_type: "inbound" | "outbound"
       trigger_type: "source" | "campaign" | "time_delay"
       user_role: "admin" | "client" | "agent"
     }
@@ -612,6 +646,7 @@ export const Constants = {
     Enums: {
       action_type: ["email", "sms"],
       automation_status: ["active", "paused"],
+      call_type: ["inbound", "outbound"],
       trigger_type: ["source", "campaign", "time_delay"],
       user_role: ["admin", "client", "agent"],
     },
