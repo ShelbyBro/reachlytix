@@ -18,12 +18,19 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
   
+  console.log("📱 SMS edge function called");
+  
   try {
-    const { campaignId, leads, content, isTest, testPhone, twilioCredentials } = await req.json();
-    console.log(`Processing SMS request for campaign ${campaignId}, ${leads?.length || 0} leads, isTest: ${isTest}`);
+    const { campaignId, leads, content, isTest, testPhone, messageType, twilioCredentials } = await req.json();
+    console.log(`Processing ${messageType || 'SMS'} request for campaign ${campaignId}, ${leads?.length || 0} leads, isTest: ${isTest}`);
+    
+    if (isTest && testPhone) {
+      console.log(`Test message will be sent to: ${testPhone}`);
+    }
     
     // Validate required parameters
     if (!campaignId || (!leads && !isTest) || !content) {
+      console.error("Missing required parameters");
       return new Response(
         JSON.stringify({ success: false, error: 'Missing required parameters' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -38,28 +45,23 @@ serve(async (req) => {
     try {
       if (twilioCredentials && twilioCredentials.accountSid && twilioCredentials.authToken && twilioCredentials.phoneNumber) {
         console.log("Using manually provided Twilio credentials");
-        const twilio = await import("https://esm.sh/twilio@4.19.3");
-        twilioClient = twilio.default(twilioCredentials.accountSid, twilioCredentials.authToken);
-        twilioPhoneNumber = twilioCredentials.phoneNumber;
+        const twilioConfig = initTwilioClient(twilioCredentials);
+        twilioClient = twilioConfig.client;
+        twilioPhoneNumber = twilioConfig.phoneNumber;
       } else {
         console.log("Using environment Twilio credentials");
         const twilioConfig = initTwilioClient();
         twilioClient = twilioConfig.client;
         twilioPhoneNumber = twilioConfig.phoneNumber;
       }
-      
-      // Test Twilio credentials with a simple verification
-      if (!twilioClient) {
-        throw new Error("Failed to initialize Twilio client");
-      }
     } catch (error) {
       console.error("Error initializing Twilio:", error);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "Failed to initialize Twilio client. Please check your credentials."
+          error: `Failed to initialize Twilio client: ${error.message}`
         }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -72,7 +74,7 @@ serve(async (req) => {
     
     if (isTest && testPhone) {
       const sanitizedPhone = sanitizePhoneNumber(testPhone);
-      console.log(`Sending test SMS to ${sanitizedPhone} using Twilio number ${twilioPhoneNumber}`);
+      console.log(`Sending test ${messageType || 'SMS'} to ${sanitizedPhone} using Twilio number ${twilioPhoneNumber}`);
       
       try {
         const message = await twilioClient.messages.create({
@@ -81,7 +83,7 @@ serve(async (req) => {
           to: sanitizedPhone
         });
         
-        console.log("Test SMS sent successfully:", message.sid);
+        console.log(`Test ${messageType || 'SMS'} sent successfully:`, message.sid);
         
         await logSmsMessage(supabase, {
           campaignId,
@@ -99,7 +101,7 @@ serve(async (req) => {
           sid: message.sid
         });
       } catch (error) {
-        console.error("Failed to send test SMS:", error);
+        console.error(`Failed to send test ${messageType || 'SMS'}:`, error);
         
         await logSmsMessage(supabase, {
           campaignId,

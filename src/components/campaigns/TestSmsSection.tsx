@@ -104,6 +104,7 @@ export function TestSmsSection({ campaignId, messageType }: TestSmsSectionProps)
                 value={twilioCredentials.accountSid}
                 onChange={(e) => setTwilioCredentials({...twilioCredentials, accountSid: e.target.value})}
                 placeholder="AC..."
+                defaultValue="AC8dba2692e0ad1e1e67e0f2cc48f9fc92"
               />
             </div>
             <div className="grid gap-2">
@@ -113,6 +114,7 @@ export function TestSmsSection({ campaignId, messageType }: TestSmsSectionProps)
                 type="password"
                 value={twilioCredentials.authToken}
                 onChange={(e) => setTwilioCredentials({...twilioCredentials, authToken: e.target.value})}
+                defaultValue="262ed07dd168db47bfae57405f11c4a9"
               />
             </div>
             <div className="grid gap-2">
@@ -122,6 +124,7 @@ export function TestSmsSection({ campaignId, messageType }: TestSmsSectionProps)
                 value={twilioCredentials.phoneNumber}
                 onChange={(e) => setTwilioCredentials({...twilioCredentials, phoneNumber: e.target.value})}
                 placeholder="+1234567890"
+                defaultValue="+18597808093"
               />
             </div>
           </div>

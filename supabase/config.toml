@@ -3,4 +3,4 @@
 project_id = "szkhnwedzwvlqlktgvdp"
 
 [functions.send-campaign-sms]
-verify_jwt = true
+verify_jwt = false

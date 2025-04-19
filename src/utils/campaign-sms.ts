@@ -31,12 +31,28 @@ export const sendCampaignSMS = async (
       messageType
     };
     
+    console.log("Calling send-campaign-sms edge function with payload:", 
+      JSON.stringify({
+        ...payload,
+        content: content.substring(0, 20) + (content.length > 20 ? '...' : '')
+      })
+    );
+    
     // Call the edge function to send the SMS messages
     const { data, error } = await supabase.functions.invoke('send-campaign-sms', {
       body: payload
     });
     
-    if (error) throw error;
+    if (error) {
+      console.error("Edge function error:", error);
+      throw new Error(`Edge function error: ${error.message || 'Unknown error'}`);
+    }
+    
+    console.log("Edge function response:", data);
+    
+    if (!data || !data.results) {
+      throw new Error("Invalid response from edge function");
+    }
     
     if (!isTest) {
       // Log the campaign send

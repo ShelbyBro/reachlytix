@@ -37,10 +37,11 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
     setSendingTestSms(true);
 
     // Always use the fixed test message content
-    const testMessage = "This is a test SMS from Reachlytix - 🚀";
+    const testMessage = content || "This is a test SMS from Reachlytix - 🚀";
 
     try {
-      console.log("Sending test SMS to:", testPhone);
+      console.log(`Sending test ${messageType} to:`, testPhone);
+      console.log(`Using Twilio credentials:`, showCredentialsForm ? 'Custom' : 'Environment variables');
       
       const { data, error } = await supabase.functions.invoke("send-campaign-sms", {
         body: {
@@ -55,21 +56,26 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
       });
 
       if (error) {
-        console.error("Error sending test SMS:", error);
-        throw error;
+        console.error(`Error sending test ${messageType}:`, error);
+        throw new Error(`Edge function error: ${error.message}`);
       }
 
-      console.log("Test SMS response:", data);
+      if (!data || !data.success) {
+        console.error(`Test ${messageType} failed:`, data);
+        throw new Error(data?.error || `Failed to send test ${messageType}`);
+      }
+
+      console.log(`Test ${messageType} response:`, data);
 
       toast({
         title: "Test message sent",
         description: `Test ${messageType} message sent to ${testPhone}`
       });
     } catch (error: any) {
-      console.error("Error sending test SMS:", error);
+      console.error(`Error sending test ${messageType}:`, error);
       
       // Check if it might be a Twilio credentials issue
-      const errorMessage = error.message || "Failed to send test message.";
+      const errorMessage = error.message || `Failed to send test ${messageType}.`;
       const isTwilioError = errorMessage.toLowerCase().includes('twilio') || 
                             errorMessage.toLowerCase().includes('unauthorized') ||
                             errorMessage.toLowerCase().includes('credentials');
