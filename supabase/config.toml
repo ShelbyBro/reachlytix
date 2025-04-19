@@ -4,4 +4,3 @@ project_id = "szkhnwedzwvlqlktgvdp"
 
 [functions.send-campaign-sms]
 verify_jwt = false
-

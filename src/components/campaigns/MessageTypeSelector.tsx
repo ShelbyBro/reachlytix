@@ -6,7 +6,7 @@ import { Mail, MessageSquare, Send } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Phone, Loader2, TestTube2 } from "lucide-react";
+import { Phone, Loader2 } from "lucide-react";
 import { useTestSMS } from "@/hooks/use-test-sms";
 
 interface MessageTypeSelectorProps {
@@ -78,7 +78,7 @@ export function MessageTypeSelector({
               <Button 
                 variant="default" 
                 size="sm" 
-                onClick={() => handleSendTestSMS()}
+                onClick={() => handleSendTestSMS(script?.content || undefined)}
                 disabled={sendingTestSms}
                 className="whitespace-nowrap"
               >
