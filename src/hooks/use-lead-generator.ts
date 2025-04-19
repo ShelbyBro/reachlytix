@@ -121,15 +121,18 @@ export function useLeadGenerator() {
 
       if (error) throw error;
 
+      // OpenAI returns a choices array, so we need to parse the content differently
       const generatedContent = data.choices[0].message.content;
       let generatedLeads: Lead[];
 
       try {
+        // Attempt to parse the generated content as JSON
         generatedLeads = JSON.parse(generatedContent);
       } catch (e) {
-        throw new Error('Failed to parse generated leads');
+        throw new Error('Failed to parse generated leads. The AI might not have returned a valid JSON array.');
       }
 
+      // Validate and prepare leads
       const validatedLeads = generatedLeads.map(lead => ({
         ...lead,
         status: 'valid',

@@ -27,17 +27,18 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-3.5-turbo',
         messages: [
           {
             role: 'system',
-            content: 'You are a lead generator assistant. Generate realistic leads with name, email, phone, and source fields. Format as JSON array.'
+            content: 'You are a professional lead generator. Generate a JSON array of realistic leads with fields: name, email, phone, and source. Ensure the data looks professional and believable.'
           },
           {
             role: 'user',
-            content: prompt
+            content: `Generate leads for: ${prompt}`
           }
         ],
+        response_format: { type: "json_object" }
       }),
     });
 
@@ -46,6 +47,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
+    console.error('Lead generation error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
