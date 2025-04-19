@@ -25,7 +25,12 @@ serve(async (req) => {
     let requestBody;
     try {
       requestBody = await req.json();
-      console.log("Request payload:", JSON.stringify(requestBody, null, 2));
+      console.log("Request payload:", JSON.stringify({
+        ...requestBody,
+        content: requestBody.content ? 
+          (requestBody.content.substring(0, 20) + (requestBody.content.length > 20 ? '...' : '')) : 
+          'No content'
+      }, null, 2));
     } catch (parseError) {
       console.error("Failed to parse request body:", parseError);
       return new Response(
@@ -52,21 +57,35 @@ serve(async (req) => {
     }
     
     // Validate required parameters
-    if (!campaignId || (!leads?.length && !isTest) || !content) {
-      const missingParams = [];
-      if (!campaignId) missingParams.push('campaignId');
-      if (!leads?.length && !isTest) missingParams.push('leads');
-      if (!content) missingParams.push('content');
-      if (isTest && !testPhone) missingParams.push('testPhone');
-      
-      console.error(`Missing required parameters: ${missingParams.join(', ')}`);
+    if (!campaignId) {
+      console.error("Missing campaignId parameter");
       return new Response(
-        JSON.stringify({ success: false, error: `Missing required parameters: ${missingParams.join(', ')}` }),
+        JSON.stringify({ success: false, error: "Missing campaignId parameter" }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if ((!leads?.length && !isTest) || (!testPhone && isTest)) {
+      const errorMessage = isTest ? 
+        "Missing testPhone parameter for test message" : 
+        "No leads provided for campaign";
+      
+      console.error(errorMessage);
+      return new Response(
+        JSON.stringify({ success: false, error: errorMessage }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (!content) {
+      console.error("Missing content parameter");
+      return new Response(
+        JSON.stringify({ success: false, error: "No message content provided" }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const messageContent = content || "Thank you for joining Reachlytix. Stay tuned for offers!";
+    const messageContent = content;
     
     // Initialize Twilio with either provided credentials or env variables
     let twilioClient, twilioPhoneNumber;
@@ -75,14 +94,40 @@ serve(async (req) => {
       if (twilioCredentials && typeof twilioCredentials === 'object' && 
           twilioCredentials.accountSid && twilioCredentials.authToken && twilioCredentials.phoneNumber) {
         console.log("Using manually provided Twilio credentials");
+        console.log(`Account SID: ${twilioCredentials.accountSid.substring(0, 5)}...`);
+        console.log(`From phone number: ${twilioCredentials.phoneNumber}`);
+        
         const twilioConfig = initTwilioClient(twilioCredentials);
         twilioClient = twilioConfig.client;
         twilioPhoneNumber = twilioConfig.phoneNumber;
       } else {
         console.log("Using environment Twilio credentials");
+        const envAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID') || '';
+        const envAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN') || '';
+        const envPhoneNumber = Deno.env.get('TWILIO_PHONE_NUMBER') || '';
+        
+        console.log(`Env Account SID: ${envAccountSid ? envAccountSid.substring(0, 5) + '...' : 'Not set'}`);
+        console.log(`Env Auth Token: ${envAuthToken ? 'Present' : 'Not set'}`);
+        console.log(`Env Phone Number: ${envPhoneNumber || 'Not set'}`);
+        
+        if (!envAccountSid || !envAuthToken || !envPhoneNumber) {
+          throw new Error(`Missing Twilio environment variables: ${
+            [
+              !envAccountSid ? 'TWILIO_ACCOUNT_SID' : '',
+              !envAuthToken ? 'TWILIO_AUTH_TOKEN' : '',
+              !envPhoneNumber ? 'TWILIO_PHONE_NUMBER' : ''
+            ].filter(Boolean).join(', ')
+          }`);
+        }
+        
         const twilioConfig = initTwilioClient();
         twilioClient = twilioConfig.client;
         twilioPhoneNumber = twilioConfig.phoneNumber;
+      }
+      
+      // Validate Twilio client was initialized
+      if (!twilioClient) {
+        throw new Error('Failed to initialize Twilio client');
       }
     } catch (error) {
       console.error("Error initializing Twilio:", error);
@@ -110,6 +155,11 @@ serve(async (req) => {
         // Send the test message using Twilio
         let message;
         try {
+          // Validate phone number
+          if (!sanitizedPhone || !sanitizedPhone.startsWith('+')) {
+            throw new Error(`Invalid phone number format: ${sanitizedPhone}. Must start with + and country code.`);
+          }
+          
           message = await twilioClient.messages.create({
             body: messageContent,
             from: twilioPhoneNumber,
@@ -136,6 +186,7 @@ serve(async (req) => {
           });
         } catch (twilioError) {
           console.error(`Failed to send test ${messageType || 'SMS'} via Twilio:`, twilioError);
+          console.error(`Twilio error details:`, JSON.stringify(twilioError, null, 2));
           
           // Log the failed test message
           await logSmsMessage(supabase, {
@@ -153,6 +204,28 @@ serve(async (req) => {
             status: 'failed',
             error: twilioError.message
           });
+          
+          // Return specific error for test message
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: `Twilio error: ${twilioError.message}`,
+              details: twilioError.code ? `Error code: ${twilioError.code}` : undefined,
+              results: {
+                totalSent: 0,
+                totalFailed: 1,
+                messages: [{
+                  phone: sanitizedPhone,
+                  status: 'failed',
+                  error: twilioError.message
+                }]
+              }
+            }),
+            { 
+              status: 400, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
         }
       } catch (testError) {
         console.error(`Error in test SMS process:`, testError);
@@ -170,11 +243,29 @@ serve(async (req) => {
         if (!lead.phone) {
           console.log(`Skipping lead ${lead.id}: No phone number`);
           results.failed++;
+          results.messages.push({
+            leadId: lead.id,
+            status: 'failed',
+            error: 'No phone number provided'
+          });
           continue;
         }
         
         try {
           const sanitizedPhone = sanitizePhoneNumber(lead.phone);
+          console.log(`Processing lead ${lead.id} with phone ${sanitizedPhone}`);
+          
+          if (!sanitizedPhone || !sanitizedPhone.startsWith('+')) {
+            console.error(`Invalid phone format for lead ${lead.id}: ${sanitizedPhone}`);
+            results.failed++;
+            results.messages.push({
+              leadId: lead.id,
+              phone: lead.phone,
+              status: 'failed',
+              error: 'Invalid phone number format'
+            });
+            continue;
+          }
           
           try {
             const message = await twilioClient.messages.create({
@@ -182,6 +273,8 @@ serve(async (req) => {
               from: twilioPhoneNumber,
               to: sanitizedPhone
             });
+            
+            console.log(`SMS sent to lead ${lead.id} with SID: ${message.sid}`);
             
             await logSmsMessage(supabase, {
               campaignId,
@@ -200,6 +293,8 @@ serve(async (req) => {
               sid: message.sid
             });
           } catch (twilioError) {
+            console.error(`Twilio error for lead ${lead.id}:`, twilioError);
+            
             await logSmsMessage(supabase, {
               campaignId,
               leadId: lead.id,
@@ -220,6 +315,11 @@ serve(async (req) => {
         } catch (leadError) {
           console.error(`Error processing lead ${lead.id}:`, leadError);
           results.failed++;
+          results.messages.push({
+            leadId: lead.id,
+            status: 'failed',
+            error: leadError.message || 'Unknown error'
+          });
         }
       }
     }
@@ -238,7 +338,7 @@ serve(async (req) => {
     // Send the response
     return new Response(
       JSON.stringify({ 
-        success: true, 
+        success: results.success > 0, 
         results: {
           totalSent: results.success,
           totalFailed: results.failed,
@@ -254,7 +354,11 @@ serve(async (req) => {
     console.error('Error processing SMS request:', error);
     
     return new Response(
-      JSON.stringify({ success: false, error: error.message || 'Unknown error' }),
+      JSON.stringify({ 
+        success: false, 
+        error: error.message || 'Unknown error',
+        details: error.stack || 'No stack trace available'
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

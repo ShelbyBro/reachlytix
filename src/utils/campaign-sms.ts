@@ -50,8 +50,12 @@ export const sendCampaignSMS = async (
     
     console.log("Edge function response:", data);
     
-    if (!data || !data.results) {
-      throw new Error("Invalid response from edge function");
+    if (!data) {
+      throw new Error("No response from edge function");
+    }
+    
+    if (!data.success) {
+      throw new Error(data.error || "Failed to send message");
     }
     
     if (!isTest) {
@@ -59,7 +63,7 @@ export const sendCampaignSMS = async (
       await logCampaignSend({
         campaign_id: campaignId,
         total_recipients: leads.length,
-        delivery_status: data.results.totalFailed > 0 ? "partial" : "sent",
+        delivery_status: data.results?.totalFailed > 0 ? "partial" : "sent",
         message_type: messageType
       });
     }
@@ -68,8 +72,8 @@ export const sendCampaignSMS = async (
       success: true,
       message: isTest
         ? `Test ${messageType} sent successfully!`
-        : `${messageType.toUpperCase()} campaign sent to ${data.results.totalSent} leads successfully!${
-            data.results.totalFailed > 0 ? ` (${data.results.totalFailed} failed)` : ''
+        : `${messageType.toUpperCase()} campaign sent to ${data.results?.totalSent} leads successfully!${
+            data.results?.totalFailed > 0 ? ` (${data.results.totalFailed} failed)` : ''
           }`,
       results: data.results
     };

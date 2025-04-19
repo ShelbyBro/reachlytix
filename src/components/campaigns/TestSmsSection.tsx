@@ -29,7 +29,8 @@ export function TestSmsSection({ campaignId, messageType }: TestSmsSectionProps)
     showCredentialsForm,
     setShowCredentialsForm,
     twilioCredentials,
-    setTwilioCredentials
+    setTwilioCredentials,
+    errorDetails
   } = useTestSMS(campaignId, messageType);
 
   return (
@@ -70,6 +71,13 @@ export function TestSmsSection({ campaignId, messageType }: TestSmsSectionProps)
               )}
             </Button>
           </div>
+          {errorDetails && (
+            <Alert variant="destructive" className="mt-2">
+              <AlertDescription className="text-xs">
+                {errorDetails}
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="flex justify-between">
             <p className="text-xs text-muted-foreground">
               A test message with predefined content will be sent to verify your configuration.

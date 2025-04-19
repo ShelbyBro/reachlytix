@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "whatsapp") => {
   const [testPhone, setTestPhone] = useState<string>("");
   const [sendingTestSms, setSendingTestSms] = useState<boolean>(false);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const { toast } = useToast();
   
   // For handling manually entered Twilio credentials if needed
@@ -17,6 +18,9 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
   const [showCredentialsForm, setShowCredentialsForm] = useState<boolean>(false);
 
   const handleSendTestSMS = async (content?: string) => {
+    // Clear previous error details
+    setErrorDetails(null);
+    
     // Skip if not SMS or WhatsApp message type
     if (messageType === "email") {
       toast({
@@ -56,13 +60,27 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
       });
 
       if (error) {
-        console.error(`Error sending test ${messageType}:`, error);
+        console.error(`Edge function error when sending test ${messageType}:`, error);
         throw new Error(`Edge function error: ${error.message}`);
       }
 
       if (!data || !data.success) {
         console.error(`Test ${messageType} failed:`, data);
-        throw new Error(data?.error || `Failed to send test ${messageType}`);
+        
+        // Extract detailed error information if available
+        let errorMessage = data?.error || `Failed to send test ${messageType}`;
+        if (data?.details) {
+          setErrorDetails(data.details);
+        }
+        
+        if (data?.results?.messages && data.results.messages.length > 0) {
+          const firstMessage = data.results.messages[0];
+          if (firstMessage.error) {
+            errorMessage = firstMessage.error;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
 
       console.log(`Test ${messageType} response:`, data);
@@ -76,11 +94,17 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
       
       // Check if it might be a Twilio credentials issue
       const errorMessage = error.message || `Failed to send test ${messageType}.`;
+      
+      // Extract any additional details if available
+      if (error.details) {
+        setErrorDetails(error.details);
+      }
+      
       const isTwilioError = errorMessage.toLowerCase().includes('twilio') || 
                           errorMessage.toLowerCase().includes('unauthorized') ||
                           errorMessage.toLowerCase().includes('credentials');
       
-      if (isTwilioError) {
+      if (isTwilioError && !showCredentialsForm) {
         setShowCredentialsForm(true);
         toast({
           variant: "destructive",
@@ -107,6 +131,7 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
     showCredentialsForm,
     setShowCredentialsForm,
     twilioCredentials,
-    setTwilioCredentials
+    setTwilioCredentials,
+    errorDetails
   };
 };
