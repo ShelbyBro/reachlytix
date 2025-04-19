@@ -3,8 +3,9 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, AlertCircle } from "lucide-react";
 import { useAIGenerator } from '@/hooks/use-ai-generator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface AICampaignGeneratorProps {
   onGeneratedContent: (content: {
@@ -16,7 +17,7 @@ interface AICampaignGeneratorProps {
 
 const businessTypes = [
   "E-commerce", "SaaS", "Real Estate", "Healthcare",
-  "Professional Services", "Retail", "Education", "Other"
+  "Professional Services", "Retail", "Education", "Dental", "Other"
 ];
 
 const campaignGoals = [
@@ -29,6 +30,14 @@ export function AICampaignGenerator({ onGeneratedContent }: AICampaignGeneratorP
   const [campaignGoal, setCampaignGoal] = useState("");
 
   const { isGenerating, error, generateContent } = useAIGenerator({ onGeneratedContent });
+  
+  const isValid = businessType.trim() !== "" && campaignGoal.trim() !== "";
+
+  const handleGenerate = () => {
+    if (isValid) {
+      generateContent(businessType, campaignGoal);
+    }
+  };
 
   return (
     <Card className="mt-6 border-2 border-brand-purple/50 bg-gradient-to-r from-secondary/50 to-secondary/30 shadow-md">
@@ -74,15 +83,15 @@ export function AICampaignGenerator({ onGeneratedContent }: AICampaignGeneratorP
         </div>
 
         {error && (
-          <div className="bg-destructive/10 text-destructive p-3 rounded-md">
-            <p className="font-medium">Error generating content</p>
-            <p className="text-sm">{error}</p>
-          </div>
+          <Alert variant="destructive" className="mt-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="ml-2">{error}</AlertDescription>
+          </Alert>
         )}
 
         <Button 
-          onClick={() => generateContent(businessType, campaignGoal)} 
-          disabled={isGenerating}
+          onClick={handleGenerate} 
+          disabled={isGenerating || !isValid}
           className="w-full bg-brand-purple hover:bg-brand-purple/90"
         >
           {isGenerating ? (
@@ -97,6 +106,10 @@ export function AICampaignGenerator({ onGeneratedContent }: AICampaignGeneratorP
             </>
           )}
         </Button>
+
+        {!isValid && businessType !== "" && (
+          <p className="text-xs text-amber-500">Please select both a business type and campaign goal to continue</p>
+        )}
       </CardContent>
     </Card>
   );

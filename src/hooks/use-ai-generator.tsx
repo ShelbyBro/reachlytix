@@ -42,10 +42,24 @@ export const useAIGenerator = ({ onGeneratedContent }: UseAIGeneratorProps) => {
         console.log(`${messageType} response:`, response);
         
         if (response.error) {
-          throw new Error(`Error generating ${messageType}: ${response.error.message}`);
+          console.error(`Error from edge function for ${messageType}:`, response.error);
+          throw new Error(`Error generating ${messageType}: ${response.error.message || 'Unknown error'}`);
         }
         
-        if (!response.data || !response.data.content) {
+        if (!response.data) {
+          throw new Error(`No data returned for ${messageType}`);
+        }
+        
+        if (response.data.error) {
+          console.error(`Error in response data for ${messageType}:`, response.data.error);
+          throw new Error(`Error with ${messageType} generation: ${response.data.error}`);
+        }
+
+        if (!response.data.success) {
+          throw new Error(`Failed to generate ${messageType}: ${response.data.error || 'Unknown error'}`);
+        }
+        
+        if (!response.data.content) {
           throw new Error(`No content returned for ${messageType}`);
         }
         
@@ -58,28 +72,70 @@ export const useAIGenerator = ({ onGeneratedContent }: UseAIGeneratorProps) => {
 
     try {
       // Generate all content types in parallel for better performance
-      const [emailContent, smsContent, whatsappContent] = await Promise.all([
+      const results = await Promise.allSettled([
         generateForType('email'),
         generateForType('sms'),
         generateForType('whatsapp')
       ]);
+      
+      // Extract results and handle any failures
+      const [emailResult, smsResult, whatsappResult] = results;
+      
+      let emailContent = '';
+      let smsContent = '';
+      let whatsappContent = '';
+      let hasSuccessfulGeneration = false;
+      let failures = [];
+
+      if (emailResult.status === 'fulfilled') {
+        emailContent = emailResult.value;
+        hasSuccessfulGeneration = true;
+      } else {
+        failures.push(`Email: ${emailResult.reason.message}`);
+      }
+
+      if (smsResult.status === 'fulfilled') {
+        smsContent = smsResult.value;
+        hasSuccessfulGeneration = true;
+      } else {
+        failures.push(`SMS: ${smsResult.reason.message}`);
+      }
+
+      if (whatsappResult.status === 'fulfilled') {
+        whatsappContent = whatsappResult.value;
+        hasSuccessfulGeneration = true;
+      } else {
+        failures.push(`WhatsApp: ${whatsappResult.reason.message}`);
+      }
+
+      if (!hasSuccessfulGeneration) {
+        throw new Error(`All content generation failed: ${failures.join(', ')}`);
+      }
 
       // Extract subject from email content if present
       let email = emailContent;
-      if (email.includes('Subject:')) {
+      if (email && email.includes('Subject:')) {
         email = email.replace(/Subject:.*\n/, '').trim();
       }
 
       onGeneratedContent({
-        email,
-        sms: smsContent,
-        whatsapp: whatsappContent
+        email: email || '',
+        sms: smsContent || '',
+        whatsapp: whatsappContent || ''
       });
 
-      toast({
-        title: "Content Generated",
-        description: "AI has generated your campaign messages.",
-      });
+      if (failures.length > 0) {
+        toast({
+          title: "Partial Content Generated",
+          description: `Some content was generated successfully, but there were issues: ${failures.join(', ')}`,
+          variant: "warning"
+        });
+      } else {
+        toast({
+          title: "Content Generated",
+          description: "AI has generated your campaign messages.",
+        });
+      }
 
     } catch (error: any) {
       console.error('Error generating content:', error);

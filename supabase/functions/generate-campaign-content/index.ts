@@ -16,7 +16,14 @@ serve(async (req) => {
     const { businessType, campaignGoal, messageType } = await req.json();
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
+    // Validate input parameters
+    if (!businessType || !campaignGoal || !messageType) {
+      console.error('Missing required parameters:', { businessType, campaignGoal, messageType });
+      throw new Error('Missing required parameters: businessType, campaignGoal, or messageType');
+    }
+
     if (!openAIApiKey) {
+      console.error('OpenAI API key not found');
       throw new Error('OpenAI API key not found');
     }
 
@@ -34,7 +41,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini', // Using an updated model that's available
         messages: [
           {
             role: 'system',
@@ -52,23 +59,39 @@ serve(async (req) => {
     if (!response.ok) {
       const errorData = await response.json();
       console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+      throw new Error(`OpenAI API error: ${errorData.error?.message || JSON.stringify(errorData) || 'Unknown error'}`);
     }
 
     const data = await response.json();
     
-    console.log('OpenAI API response received');
+    console.log('OpenAI API response received:', JSON.stringify(data).substring(0, 200) + '...');
     
-    // Validate the response structure before returning
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error('Invalid response structure from OpenAI:', data);
-      throw new Error('Invalid response from OpenAI');
+    // Detailed validation of the response structure
+    if (!data) {
+      throw new Error('Empty response from OpenAI');
     }
+    
+    if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+      console.error('Invalid response structure from OpenAI (no choices array):', data);
+      throw new Error('Invalid response from OpenAI: No choices returned');
+    }
+    
+    if (!data.choices[0] || !data.choices[0].message) {
+      console.error('Invalid response structure from OpenAI (no message in first choice):', data.choices);
+      throw new Error('Invalid response from OpenAI: No message in response');
+    }
+    
+    if (!data.choices[0].message.content) {
+      console.error('Invalid response structure from OpenAI (no content in message):', data.choices[0].message);
+      throw new Error('Invalid response from OpenAI: No content in message');
+    }
+
+    const content = data.choices[0].message.content.trim();
+    console.log(`Generated content (first 100 chars): ${content.substring(0, 100)}...`);
 
     return new Response(JSON.stringify({ 
       success: true,
-      content: data.choices[0].message.content,
-      data: data  // Include full data for debugging if needed
+      content: content
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -77,7 +100,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message,
+        error: error.message || 'Unknown error occurred',
         content: null
       }),
       { 
