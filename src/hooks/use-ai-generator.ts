@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,28 @@ export const useAIGenerator = ({ onGeneratedContent }: UseAIGeneratorProps) => {
   const [apiKey, setApiKey] = useState("");
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const handleOpenAIFallback = () => {
+    setSelectedModel("openai");
+  };
+
+  const handleErrorToast = () => {
+    if (selectedModel === "gemini") {
+      toast({
+        title: "Try OpenAI Instead",
+        description: "Gemini API failed. Consider switching to OpenAI in the AI settings.",
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleOpenAIFallback}
+          >
+            Switch
+          </Button>
+        )
+      });
+    }
+  };
 
   const generateContent = async (businessType: string, campaignGoal: string) => {
     if (!businessType || !campaignGoal) {
@@ -132,15 +153,7 @@ export const useAIGenerator = ({ onGeneratedContent }: UseAIGeneratorProps) => {
         variant: "destructive"
       });
       
-      if (selectedModel === "gemini") {
-        toast({
-          title: "Try OpenAI Instead",
-          description: "Gemini API failed. Consider switching to OpenAI in the AI settings.",
-          action: <Button variant="outline" size="sm" onClick={() => {
-            setSelectedModel("openai");
-          }}>Switch</Button>
-        });
-      }
+      handleErrorToast();
     } finally {
       setIsGenerating(false);
     }
