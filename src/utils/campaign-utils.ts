@@ -34,7 +34,10 @@ export const updateCampaignStatus = async (campaignId: string, status: string): 
   try {
     const { error } = await supabase
       .from('campaigns')
-      .update({ status })
+      .update({ 
+        status, 
+        schedule_status: status === 'sent' ? 'completed' : 'failed'
+      })
       .eq('id', campaignId);
 
     if (error) throw error;
@@ -97,11 +100,12 @@ export const sendCampaignSMS = async (
   campaignId: string,
   campaignTitle: string,
   content: string,
-  leads: any[]
+  leads: any[],
+  messageType: string = "sms"
 ): Promise<{ success: boolean; message: string }> => {
   try {
     // For demo purposes, we'll simulate sending SMS
-    console.log(`Sending SMS campaign "${campaignTitle}" to ${leads.length} leads`);
+    console.log(`Sending ${messageType} campaign "${campaignTitle}" to ${leads.length} leads`);
     console.log("Content:", content);
     
     // Simulate successful sending
@@ -112,7 +116,7 @@ export const sendCampaignSMS = async (
       campaign_id: campaignId,
       total_recipients: leads.length,
       delivery_status: "sent",
-      message_type: "sms"
+      message_type: messageType
     });
     
     // Update campaign status to sent
@@ -120,22 +124,72 @@ export const sendCampaignSMS = async (
     
     return {
       success: true,
-      message: `SMS campaign sent to ${leads.length} leads successfully!`
+      message: `${messageType.toUpperCase()} campaign sent to ${leads.length} leads successfully!`
     };
   } catch (error: any) {
-    console.error("Error sending SMS campaign:", error);
+    console.error(`Error sending ${messageType} campaign:`, error);
     
     // Log the failed attempt
     await logCampaignSend({
       campaign_id: campaignId,
       total_recipients: leads.length,
       delivery_status: "failed",
-      message_type: "sms"
+      message_type: messageType
     });
     
     return {
       success: false,
-      message: error.message || "Failed to send SMS campaign"
+      message: error.message || `Failed to send ${messageType} campaign`
     };
   }
+};
+
+// Analytics mock data generators
+export const generateMockAnalytics = (startDate: Date, endDate: Date, messageType: string = 'email') => {
+  const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const dataPoints = Math.min(days, 30); // Cap at 30 data points to avoid overcrowding
+  
+  const emailsOverTime = [];
+  let totalSent = 0;
+  let totalDelivered = 0;
+  let totalOpened = 0;
+  let totalClicked = 0;
+  
+  for (let i = 0; i < dataPoints; i++) {
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + Math.floor(i * days / dataPoints));
+    
+    const sentCount = Math.floor(Math.random() * 50) + 10;
+    const deliveredCount = Math.floor(sentCount * (0.9 + Math.random() * 0.1));
+    const openedCount = Math.floor(deliveredCount * (0.3 + Math.random() * 0.4));
+    const clickedCount = Math.floor(openedCount * (0.1 + Math.random() * 0.3));
+    
+    emailsOverTime.push({
+      date: date.toISOString().split('T')[0],
+      sent: sentCount,
+      delivered: deliveredCount,
+      opened: openedCount,
+      clicked: clickedCount,
+      type: messageType
+    });
+    
+    totalSent += sentCount;
+    totalDelivered += deliveredCount;
+    totalOpened += openedCount;
+    totalClicked += clickedCount;
+  }
+  
+  return {
+    overTime: emailsOverTime,
+    totals: {
+      sent: totalSent,
+      delivered: totalDelivered,
+      failed: totalSent - totalDelivered,
+      opened: totalOpened,
+      clicked: totalClicked,
+      openRate: totalOpened / totalDelivered,
+      clickRate: totalClicked / totalDelivered,
+      conversionRate: totalClicked * 0.15 / totalDelivered, // Assuming 15% of clicks convert
+    }
+  };
 };

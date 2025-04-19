@@ -15,11 +15,28 @@ export const useCampaignForm = (
   const [content, setContent] = useState("");
   const [description, setDescription] = useState("");
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
+  const [messageType, setMessageType] = useState<"email" | "sms" | "whatsapp">("email");
+  const [smsContent, setSmsContent] = useState("");
+  const [whatsappEnabled, setWhatsappEnabled] = useState(false);
+  const [whatsappContent, setWhatsappContent] = useState("");
 
   useEffect(() => {
     if (editingCampaign) {
       setCampaignName(editingCampaign.title || "");
       setDescription(editingCampaign.description || "");
+      
+      // Set message type based on campaign type if available
+      if (editingCampaign.type) {
+        if (editingCampaign.type === "sms") {
+          setMessageType("sms");
+        } else if (editingCampaign.type === "whatsapp") {
+          setMessageType("whatsapp");
+          setWhatsappEnabled(true);
+        } else {
+          setMessageType("email");
+        }
+      }
+      
       if (editingCampaign.scheduled_at) {
         setScheduledDate(new Date(editingCampaign.scheduled_at));
       }
@@ -43,18 +60,49 @@ export const useCampaignForm = (
     }
 
     if (script) {
-      setSubject(script.title || "");
-      setContent(script.content || "");
+      if (script.type === "sms") {
+        setSmsContent(script.content || "");
+      } else if (script.type === "whatsapp") {
+        setWhatsappContent(script.content || "");
+        setWhatsappEnabled(true);
+      } else {
+        setSubject(script.title || "");
+        setContent(script.content || "");
+      }
     }
   };
 
   const handleSave = async () => {
     try {
-      if (!campaignName || !subject || !content) {
+      // Validate based on the selected message type
+      if (!campaignName) {
         toast({
           variant: "destructive",
-          title: "Missing information",
-          description: "Please fill out all required fields."
+          title: "Missing campaign name",
+          description: "Please enter a name for your campaign."
+        });
+        return;
+      }
+
+      if (messageType === "email" && (!subject || !content)) {
+        toast({
+          variant: "destructive",
+          title: "Missing email content",
+          description: "Please enter both subject and content for your email."
+        });
+        return;
+      } else if (messageType === "sms" && !smsContent) {
+        toast({
+          variant: "destructive",
+          title: "Missing SMS content",
+          description: "Please enter content for your SMS message."
+        });
+        return;
+      } else if (messageType === "whatsapp" && (!whatsappEnabled || !whatsappContent)) {
+        toast({
+          variant: "destructive",
+          title: "WhatsApp not configured",
+          description: "Please enable WhatsApp and enter message content."
         });
         return;
       }
@@ -81,11 +129,27 @@ export const useCampaignForm = (
   const updateCampaign = async () => {
     if (!editingCampaign) return;
 
+    // Determine the content and type based on selected message type
+    let scriptTitle = subject;
+    let scriptContent = content;
+    let scriptType = "email";
+
+    if (messageType === "sms") {
+      scriptTitle = "SMS Message";
+      scriptContent = smsContent;
+      scriptType = "sms";
+    } else if (messageType === "whatsapp" && whatsappEnabled) {
+      scriptTitle = "WhatsApp Message";
+      scriptContent = whatsappContent;
+      scriptType = "whatsapp";
+    }
+
     const { error: scriptError } = await supabase
       .from("scripts")
       .update({
-        title: subject,
-        content: content,
+        title: scriptTitle,
+        content: scriptContent,
+        type: scriptType
       })
       .eq("id", editingCampaign.script_id);
 
@@ -97,6 +161,7 @@ export const useCampaignForm = (
         title: campaignName,
         description: description,
         scheduled_at: scheduledDate?.toISOString(),
+        type: messageType,
       })
       .eq("id", editingCampaign.id);
 
@@ -109,12 +174,27 @@ export const useCampaignForm = (
   };
 
   const createCampaign = async () => {
+    // Determine the content and type based on selected message type
+    let scriptTitle = subject;
+    let scriptContent = content;
+    let scriptType = "email";
+
+    if (messageType === "sms") {
+      scriptTitle = "SMS Message";
+      scriptContent = smsContent;
+      scriptType = "sms";
+    } else if (messageType === "whatsapp" && whatsappEnabled) {
+      scriptTitle = "WhatsApp Message";
+      scriptContent = whatsappContent;
+      scriptType = "whatsapp";
+    }
+
     const { data: scriptData, error: scriptError } = await supabase
       .from("scripts")
       .insert({
-        title: subject,
-        content: content,
-        type: "email"
+        title: scriptTitle,
+        content: scriptContent,
+        type: scriptType
       })
       .select();
 
@@ -128,7 +208,8 @@ export const useCampaignForm = (
         title: campaignName,
         description: description,
         status: "draft",
-        type: "email",
+        schedule_status: "draft",
+        type: messageType,
         script_id: newScript.id,
         scheduled_at: scheduledDate?.toISOString(),
       })
@@ -148,6 +229,10 @@ export const useCampaignForm = (
     setContent("");
     setDescription("");
     setScheduledDate(undefined);
+    setMessageType("email");
+    setSmsContent("");
+    setWhatsappEnabled(false);
+    setWhatsappContent("");
   };
 
   return {
@@ -161,6 +246,14 @@ export const useCampaignForm = (
     setDescription,
     scheduledDate,
     setScheduledDate,
+    messageType,
+    setMessageType,
+    smsContent,
+    setSmsContent,
+    whatsappEnabled,
+    setWhatsappEnabled,
+    whatsappContent,
+    setWhatsappContent,
     handleSave
   };
 };

@@ -6,7 +6,17 @@ import { sendCampaignEmails, sendCampaignSMS } from "@/utils/campaign-utils";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Mail, MessageSquare, Loader2 } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { 
+  Mail, 
+  MessageSquare, 
+  CalendarIcon, 
+  Loader2, 
+  Clock,
+  Send as SendIcon,
+  CalendarCheck
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +25,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SendCampaignDialogProps {
   isOpen: boolean;
@@ -35,7 +52,10 @@ export function SendCampaignDialog({
 }: SendCampaignDialogProps) {
   const { toast } = useToast();
   const [sendingCampaign, setSendingCampaign] = useState(false);
-  const [messageType, setMessageType] = useState<"email" | "sms">("email");
+  const [messageType, setMessageType] = useState<"email" | "sms" | "whatsapp">("email");
+  const [sendMode, setSendMode] = useState<"now" | "schedule">("now");
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
+  const [scheduledTime, setScheduledTime] = useState("12:00");
 
   const handleSendCampaign = async () => {
     if (!campaign) return;
@@ -60,9 +80,46 @@ export function SendCampaignDialog({
       return;
     }
     
+    if (sendMode === "schedule" && !scheduledDate) {
+      toast({
+        variant: "destructive",
+        title: "Missing schedule",
+        description: "Please select a date to schedule this campaign."
+      });
+      return;
+    }
+
     setSendingCampaign(true);
     
     try {
+      if (sendMode === "schedule") {
+        // Format the scheduled date and time for storage
+        const scheduledDateTime = new Date(scheduledDate!);
+        const [hours, minutes] = scheduledTime.split(':').map(Number);
+        scheduledDateTime.setHours(hours, minutes);
+
+        // Update the campaign with scheduled time
+        const { error: scheduleError } = await supabase
+          .from("campaigns")
+          .update({
+            scheduled_at: scheduledDateTime.toISOString(),
+            schedule_status: "scheduled"
+          })
+          .eq("id", campaignId);
+
+        if (scheduleError) throw scheduleError;
+
+        toast({
+          title: "Campaign Scheduled",
+          description: `Campaign scheduled for ${format(scheduledDateTime, "PPP")} at ${scheduledTime}`
+        });
+
+        onSendSuccess();
+        onClose();
+        return;
+      }
+      
+      // Immediate send mode
       let result;
       
       if (messageType === "email") {
@@ -73,12 +130,21 @@ export function SendCampaignDialog({
           script?.content || "",
           leads
         );
-      } else {
+      } else if (messageType === "sms") {
         result = await sendCampaignSMS(
           campaignId,
           campaign.title,
           script?.content || "Default SMS message",
           leads
+        );
+      } else { // whatsapp
+        // Use the same function as SMS for now - can be replaced with a WhatsApp-specific function later
+        result = await sendCampaignSMS(
+          campaignId,
+          campaign.title,
+          script?.content || "Default WhatsApp message",
+          leads,
+          "whatsapp" // Pass message type as whatsapp
         );
       }
       
@@ -106,35 +172,117 @@ export function SendCampaignDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Send Campaign</DialogTitle>
           <DialogDescription>
             {campaign && (
               `You're about to send "${campaign.title}" to ${leads.length} leads.`
             )}
-            <div className="mt-4">
-              <RadioGroup 
-                defaultValue={messageType} 
-                onValueChange={(val) => setMessageType(val as "email" | "sms")}
-                className="flex flex-col space-y-3 mt-2"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="email" id="email" />
-                  <Label htmlFor="email" className="flex items-center">
-                    <Mail className="w-4 h-4 mr-2" /> Email
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="sms" id="sms" />
-                  <Label htmlFor="sms" className="flex items-center">
-                    <MessageSquare className="w-4 h-4 mr-2" /> SMS
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
           </DialogDescription>
         </DialogHeader>
+
+        <Tabs defaultValue="messageType" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="messageType">Message Type</TabsTrigger>
+            <TabsTrigger value="sendOptions">Send Options</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="messageType" className="space-y-4">
+            <RadioGroup 
+              value={messageType} 
+              onValueChange={(val) => setMessageType(val as "email" | "sms" | "whatsapp")}
+              className="flex flex-col space-y-3"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="email" id="email" />
+                <Label htmlFor="email" className="flex items-center">
+                  <Mail className="w-4 h-4 mr-2" /> Email
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="sms" id="sms" />
+                <Label htmlFor="sms" className="flex items-center">
+                  <MessageSquare className="w-4 h-4 mr-2" /> SMS
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="whatsapp" id="whatsapp" />
+                <Label htmlFor="whatsapp" className="flex items-center">
+                  <MessageSquare className="w-4 h-4 mr-2" /> WhatsApp
+                </Label>
+              </div>
+            </RadioGroup>
+          </TabsContent>
+          
+          <TabsContent value="sendOptions" className="space-y-4">
+            <RadioGroup 
+              value={sendMode} 
+              onValueChange={(val) => setSendMode(val as "now" | "schedule")}
+              className="flex flex-col space-y-3"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="now" id="now" />
+                <Label htmlFor="now" className="flex items-center">
+                  <SendIcon className="w-4 h-4 mr-2" /> Send Now
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="schedule" id="schedule" />
+                <Label htmlFor="schedule" className="flex items-center">
+                  <CalendarCheck className="w-4 h-4 mr-2" /> Schedule Send
+                </Label>
+              </div>
+            </RadioGroup>
+            
+            {sendMode === "schedule" && (
+              <div className="space-y-4 pl-6 pt-2">
+                <div className="space-y-2">
+                  <Label>Select Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {scheduledDate ? (
+                          format(scheduledDate, "PPP")
+                        ) : (
+                          <span>Select a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={scheduledDate}
+                        onSelect={setScheduledDate}
+                        initialFocus
+                        disabled={(date) => date < new Date()}
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Select Time</Label>
+                  <div className="flex items-center">
+                    <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="time"
+                      value={scheduledTime}
+                      onChange={(e) => setScheduledTime(e.target.value)}
+                      className="border rounded p-2 w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancel
@@ -142,14 +290,27 @@ export function SendCampaignDialog({
           <Button
             disabled={sendingCampaign}
             onClick={handleSendCampaign}
+            className="gap-2"
           >
             {sendingCampaign ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Sending...
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {sendMode === "schedule" ? "Scheduling..." : "Sending..."}
               </>
             ) : (
-              <>Send Now</>
+              <>
+                {sendMode === "schedule" ? (
+                  <>
+                    <CalendarCheck className="h-4 w-4" />
+                    Schedule
+                  </>
+                ) : (
+                  <>
+                    <SendIcon className="h-4 w-4" />
+                    Send Now
+                  </>
+                )}
+              </>
             )}
           </Button>
         </DialogFooter>

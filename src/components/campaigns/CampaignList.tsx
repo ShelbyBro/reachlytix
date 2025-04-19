@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { formatDate } from "@/utils/campaign-utils";
 import { SimpleCampaign, SimpleLead } from "@/types/campaign";
 import { Button } from "@/components/ui/button";
-import { Mail, Pencil, Trash2 } from "lucide-react";
+import { Mail, Pencil, Trash2, Calendar } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -56,12 +56,15 @@ export function CampaignList({
         return 'bg-green-100 text-green-800';
       case 'scheduled':
         return 'bg-yellow-100 text-yellow-800';
+      case 'sent':
+        return 'bg-blue-100 text-blue-800';
       case 'completed':
         return 'bg-gray-100 text-gray-800';
       case 'failed':
         return 'bg-red-100 text-red-800';
+      case 'draft':
       default:
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -81,6 +84,7 @@ export function CampaignList({
             <SelectItem value="draft">Draft</SelectItem>
             <SelectItem value="scheduled">Scheduled</SelectItem>
             <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="sent">Sent</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
             <SelectItem value="failed">Failed</SelectItem>
           </SelectContent>
@@ -114,7 +118,12 @@ export function CampaignList({
               </TableCell>
               <TableCell>{formatDate(campaign.created_at)}</TableCell>
               <TableCell>
-                {campaign.scheduled_at ? formatDate(campaign.scheduled_at) : '-'}
+                {campaign.scheduled_at ? (
+                  <div className="flex items-center">
+                    <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
+                    {formatDate(campaign.scheduled_at)}
+                  </div>
+                ) : '-'}
               </TableCell>
               <TableCell>{campaignLeads[campaign.id]?.length || 0}</TableCell>
               <TableCell className="text-right">
@@ -174,6 +183,15 @@ export function CampaignList({
               </TableCell>
             </TableRow>
           ))}
+          {filteredCampaigns.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                {campaignsLoading 
+                  ? "Loading campaigns..." 
+                  : "No campaigns found matching the selected filter."}
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </div>

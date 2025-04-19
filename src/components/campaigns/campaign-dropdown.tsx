@@ -6,9 +6,19 @@ import { SimpleCampaign } from "@/types/campaign";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-export const CampaignDropdown = () => {
+interface CampaignDropdownProps {
+  onCampaignChange?: (id: string) => void;
+  value?: string;
+  readOnly?: boolean;
+}
+
+export const CampaignDropdown = ({ 
+  onCampaignChange, 
+  value, 
+  readOnly = false 
+}: CampaignDropdownProps) => {
   const [campaigns, setCampaigns] = useState<SimpleCampaign[]>([]);
-  const [selectedCampaign, setSelectedCampaign] = useState<string>("");
+  const [selectedCampaign, setSelectedCampaign] = useState<string>(value || "");
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
@@ -22,7 +32,7 @@ export const CampaignDropdown = () => {
           .from("campaigns")
           .select("*")
           .order("created_at", { ascending: false })
-          .limit(10);
+          .limit(20);
         
         if (error) throw error;
         setCampaigns(data as SimpleCampaign[]);
@@ -36,18 +46,32 @@ export const CampaignDropdown = () => {
     fetchCampaigns();
   }, [user]);
 
+  useEffect(() => {
+    if (value) {
+      setSelectedCampaign(value);
+    }
+  }, [value]);
+
   const handleCampaignChange = (value: string) => {
     setSelectedCampaign(value);
+    if (onCampaignChange) {
+      onCampaignChange(value);
+    }
   };
 
   return (
     <div className="space-y-2">
       <Label htmlFor="campaign">Assign to Campaign</Label>
-      <Select value={selectedCampaign} onValueChange={handleCampaignChange}>
+      <Select 
+        value={selectedCampaign} 
+        onValueChange={handleCampaignChange} 
+        disabled={readOnly || isLoading}
+      >
         <SelectTrigger className="w-full" id="campaign">
           <SelectValue placeholder={isLoading ? "Loading campaigns..." : "Select a campaign"} />
         </SelectTrigger>
         <SelectContent>
+          <SelectItem value="">Unassigned</SelectItem>
           {campaigns.map((campaign) => (
             <SelectItem key={campaign.id} value={campaign.id}>
               {campaign.title}
@@ -60,6 +84,9 @@ export const CampaignDropdown = () => {
           )}
         </SelectContent>
       </Select>
+      <p className="text-xs text-muted-foreground">
+        {selectedCampaign ? "Leads will be assigned to the selected campaign" : "Leads will remain unassigned"}
+      </p>
     </div>
   );
 };

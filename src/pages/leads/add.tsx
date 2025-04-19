@@ -12,6 +12,11 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function AddLeadsPage() {
   const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
+
+  const handleCampaignChange = (campaignId: string) => {
+    setSelectedCampaignId(campaignId);
+  };
 
   const handleGenerateLeads = async (filters: any) => {
     if (!user) {
@@ -41,7 +46,8 @@ export default function AddLeadsPage() {
           .from('cleaned_leads')
           .insert(data.leads.map((lead: any) => ({
             ...lead,
-            client_id: user.id
+            client_id: user.id,
+            campaign_id: selectedCampaignId || null  // Assign leads to the selected campaign if any
           })));
 
         if (insertError) throw insertError;
@@ -81,7 +87,7 @@ export default function AddLeadsPage() {
           <div className="space-y-4">
             <CSVUploader />
 
-            <CampaignDropdown />
+            <CampaignDropdown onCampaignChange={handleCampaignChange} value={selectedCampaignId} />
 
             <div className="flex justify-between items-center mt-6">
               <div className="space-x-2">
