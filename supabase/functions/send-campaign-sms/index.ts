@@ -21,7 +21,30 @@ serve(async (req) => {
   console.log("📱 SMS edge function called");
   
   try {
-    const { campaignId, leads, content, isTest, testPhone, messageType, twilioCredentials } = await req.json();
+    // Safely parse the JSON body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+      console.log("Request payload:", JSON.stringify(requestBody, null, 2));
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid request format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Safely destructure the request body with default values
+    const {
+      campaignId = null,
+      leads = [],
+      content = "",
+      isTest = false,
+      testPhone = null,
+      messageType = "sms",
+      twilioCredentials = null
+    } = requestBody;
+    
     console.log(`Processing ${messageType || 'SMS'} request for campaign ${campaignId}, ${leads?.length || 0} leads, isTest: ${isTest}`);
     
     if (isTest && testPhone) {
@@ -29,10 +52,16 @@ serve(async (req) => {
     }
     
     // Validate required parameters
-    if (!campaignId || (!leads && !isTest) || !content) {
-      console.error("Missing required parameters");
+    if (!campaignId || (!leads?.length && !isTest) || !content) {
+      const missingParams = [];
+      if (!campaignId) missingParams.push('campaignId');
+      if (!leads?.length && !isTest) missingParams.push('leads');
+      if (!content) missingParams.push('content');
+      if (isTest && !testPhone) missingParams.push('testPhone');
+      
+      console.error(`Missing required parameters: ${missingParams.join(', ')}`);
       return new Response(
-        JSON.stringify({ success: false, error: 'Missing required parameters' }),
+        JSON.stringify({ success: false, error: `Missing required parameters: ${missingParams.join(', ')}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -43,7 +72,8 @@ serve(async (req) => {
     let twilioClient, twilioPhoneNumber;
     
     try {
-      if (twilioCredentials && twilioCredentials.accountSid && twilioCredentials.authToken && twilioCredentials.phoneNumber) {
+      if (twilioCredentials && typeof twilioCredentials === 'object' && 
+          twilioCredentials.accountSid && twilioCredentials.authToken && twilioCredentials.phoneNumber) {
         console.log("Using manually provided Twilio credentials");
         const twilioConfig = initTwilioClient(twilioCredentials);
         twilioClient = twilioConfig.client;
@@ -59,7 +89,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `Failed to initialize Twilio client: ${error.message}`
+          error: `Failed to initialize Twilio client: ${error.message || 'Unknown error'}`
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -73,53 +103,69 @@ serve(async (req) => {
     };
     
     if (isTest && testPhone) {
-      const sanitizedPhone = sanitizePhoneNumber(testPhone);
-      console.log(`Sending test ${messageType || 'SMS'} to ${sanitizedPhone} using Twilio number ${twilioPhoneNumber}`);
-      
       try {
-        const message = await twilioClient.messages.create({
-          body: messageContent,
-          from: twilioPhoneNumber,
-          to: sanitizedPhone
-        });
+        const sanitizedPhone = sanitizePhoneNumber(testPhone);
+        console.log(`Sending test ${messageType || 'SMS'} to ${sanitizedPhone} using Twilio number ${twilioPhoneNumber}`);
         
-        console.log(`Test ${messageType || 'SMS'} sent successfully:`, message.sid);
-        
-        await logSmsMessage(supabase, {
-          campaignId,
-          leadId: null,
-          phone: sanitizedPhone,
-          message: messageContent,
-          status: 'sent',
-          sid: message.sid
-        });
-        
-        results.success = 1;
-        results.messages.push({
-          phone: sanitizedPhone,
-          status: 'sent',
-          sid: message.sid
-        });
-      } catch (error) {
-        console.error(`Failed to send test ${messageType || 'SMS'}:`, error);
-        
-        await logSmsMessage(supabase, {
-          campaignId,
-          leadId: null,
-          phone: sanitizedPhone,
-          message: messageContent,
-          status: 'failed',
-          error: error.message
-        });
-        
-        results.failed = 1;
-        results.messages.push({
-          phone: sanitizedPhone,
-          status: 'failed',
-          error: error.message
-        });
+        // Send the test message using Twilio
+        let message;
+        try {
+          message = await twilioClient.messages.create({
+            body: messageContent,
+            from: twilioPhoneNumber,
+            to: sanitizedPhone
+          });
+          
+          console.log(`Test ${messageType || 'SMS'} sent successfully:`, message.sid);
+          
+          // Log the successful test message
+          await logSmsMessage(supabase, {
+            campaignId,
+            leadId: null,
+            phone: sanitizedPhone,
+            message: messageContent,
+            status: 'sent',
+            sid: message.sid
+          });
+          
+          results.success = 1;
+          results.messages.push({
+            phone: sanitizedPhone,
+            status: 'sent',
+            sid: message.sid
+          });
+        } catch (twilioError) {
+          console.error(`Failed to send test ${messageType || 'SMS'} via Twilio:`, twilioError);
+          
+          // Log the failed test message
+          await logSmsMessage(supabase, {
+            campaignId,
+            leadId: null,
+            phone: sanitizedPhone,
+            message: messageContent,
+            status: 'failed',
+            error: twilioError.message
+          });
+          
+          results.failed = 1;
+          results.messages.push({
+            phone: sanitizedPhone,
+            status: 'failed',
+            error: twilioError.message
+          });
+        }
+      } catch (testError) {
+        console.error(`Error in test SMS process:`, testError);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: `Error in test SMS process: ${testError.message || 'Unknown error'}`
+          }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
-    } else {
+    } else if (leads && Array.isArray(leads)) {
+      // Process bulk campaign messages
       for (const lead of leads) {
         if (!lead.phone) {
           console.log(`Skipping lead ${lead.id}: No phone number`);
@@ -127,56 +173,67 @@ serve(async (req) => {
           continue;
         }
         
-        const sanitizedPhone = sanitizePhoneNumber(lead.phone);
-        
         try {
-          const message = await twilioClient.messages.create({
-            body: messageContent,
-            from: twilioPhoneNumber,
-            to: sanitizedPhone
-          });
+          const sanitizedPhone = sanitizePhoneNumber(lead.phone);
           
-          await logSmsMessage(supabase, {
-            campaignId,
-            leadId: lead.id,
-            phone: sanitizedPhone,
-            message: messageContent,
-            status: 'sent',
-            sid: message.sid
-          });
-          
-          results.success++;
-          results.messages.push({
-            leadId: lead.id,
-            phone: sanitizedPhone,
-            status: 'sent',
-            sid: message.sid
-          });
-        } catch (error) {
-          await logSmsMessage(supabase, {
-            campaignId,
-            leadId: lead.id,
-            phone: sanitizedPhone,
-            message: messageContent,
-            status: 'failed',
-            error: error.message
-          });
-          
+          try {
+            const message = await twilioClient.messages.create({
+              body: messageContent,
+              from: twilioPhoneNumber,
+              to: sanitizedPhone
+            });
+            
+            await logSmsMessage(supabase, {
+              campaignId,
+              leadId: lead.id,
+              phone: sanitizedPhone,
+              message: messageContent,
+              status: 'sent',
+              sid: message.sid
+            });
+            
+            results.success++;
+            results.messages.push({
+              leadId: lead.id,
+              phone: sanitizedPhone,
+              status: 'sent',
+              sid: message.sid
+            });
+          } catch (twilioError) {
+            await logSmsMessage(supabase, {
+              campaignId,
+              leadId: lead.id,
+              phone: sanitizedPhone,
+              message: messageContent,
+              status: 'failed',
+              error: twilioError.message
+            });
+            
+            results.failed++;
+            results.messages.push({
+              leadId: lead.id,
+              phone: sanitizedPhone,
+              status: 'failed',
+              error: twilioError.message
+            });
+          }
+        } catch (leadError) {
+          console.error(`Error processing lead ${lead.id}:`, leadError);
           results.failed++;
-          results.messages.push({
-            leadId: lead.id,
-            phone: sanitizedPhone,
-            status: 'failed',
-            error: error.message
-          });
         }
       }
     }
     
     // Update campaign status in database if not a test
     if (!isTest) {
-      await updateCampaignStatus(supabase, campaignId, results.failed > 0);
+      try {
+        await updateCampaignStatus(supabase, campaignId, results.failed > 0);
+      } catch (updateError) {
+        console.error('Failed to update campaign status:', updateError);
+      }
     }
+    
+    console.log(`SMS operation completed: ${results.success} successful, ${results.failed} failed`);
     
     // Send the response
     return new Response(
@@ -197,7 +254,7 @@ serve(async (req) => {
     console.error('Error processing SMS request:', error);
     
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: error.message || 'Unknown error' }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
