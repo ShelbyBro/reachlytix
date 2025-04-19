@@ -7,26 +7,31 @@ export const initTwilioClient = (customCredentials?: any) => {
   const authToken = customCredentials?.authToken || Deno.env.get('TWILIO_AUTH_TOKEN') || '';
   const twilioPhoneNumber = customCredentials?.phoneNumber || Deno.env.get('TWILIO_PHONE_NUMBER') || '';
   
-  // Log which credentials we're using (without exposing sensitive data)
-  console.log("Twilio configuration:");
+  // Enhanced logging
+  console.log("Initializing Twilio client:");
   console.log("- Using account SID:", accountSid ? `${accountSid.substring(0, 5)}...` : "Not provided");
   console.log("- Auth token provided:", authToken ? "Yes" : "No");
   console.log("- Phone number:", twilioPhoneNumber || "Not provided");
   
   if (!accountSid || !authToken || !twilioPhoneNumber) {
-    console.log("⚠️ Missing one or more Twilio environment variables");
-    throw new Error("Missing Twilio credentials: Please ensure TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER are set.");
+    const missingVars = [];
+    if (!accountSid) missingVars.push("TWILIO_ACCOUNT_SID");
+    if (!authToken) missingVars.push("TWILIO_AUTH_TOKEN");
+    if (!twilioPhoneNumber) missingVars.push("TWILIO_PHONE_NUMBER");
+    
+    const errorMsg = `Missing Twilio credentials: ${missingVars.join(", ")}`;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
   }
   
   try {
     const client = twilio(accountSid, authToken);
-    
     return {
       client,
       phoneNumber: twilioPhoneNumber
     };
   } catch (error) {
     console.error("Error initializing Twilio client:", error);
-    throw new Error("Failed to initialize Twilio client: " + error.message);
+    throw new Error(`Failed to initialize Twilio client: ${error.message}`);
   }
 };

@@ -53,7 +53,7 @@ export function TestSmsSection({ campaignId, messageType }: TestSmsSectionProps)
             />
             <Button 
               variant="default"
-              onClick={() => handleSendTestSMS()}
+              onClick={() => handleSendTestSMS("This is a test SMS from Reachlytix - 🚀")}
               disabled={sendingTestSms}
               className="whitespace-nowrap"
             >
@@ -133,7 +133,7 @@ export function TestSmsSection({ campaignId, messageType }: TestSmsSectionProps)
             <Button onClick={() => {
               setShowCredentialsForm(false);
               // Try to send the test again with the new credentials
-              handleSendTestSMS();
+              handleSendTestSMS("This is a test SMS from Reachlytix - 🚀");
             }}>Save & Test</Button>
           </DialogFooter>
         </DialogContent>

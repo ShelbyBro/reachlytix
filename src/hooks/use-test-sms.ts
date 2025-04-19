@@ -10,9 +10,9 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
   
   // For handling manually entered Twilio credentials if needed
   const [twilioCredentials, setTwilioCredentials] = useState({
-    accountSid: "",
-    authToken: "",
-    phoneNumber: "",
+    accountSid: "AC8dba2692e0ad1e1e67e0f2cc48f9fc92",
+    authToken: "262ed07dd168db47bfae57405f11c4a9",
+    phoneNumber: "+18597808093",
   });
   const [showCredentialsForm, setShowCredentialsForm] = useState<boolean>(false);
 
@@ -77,8 +77,8 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
       // Check if it might be a Twilio credentials issue
       const errorMessage = error.message || `Failed to send test ${messageType}.`;
       const isTwilioError = errorMessage.toLowerCase().includes('twilio') || 
-                            errorMessage.toLowerCase().includes('unauthorized') ||
-                            errorMessage.toLowerCase().includes('credentials');
+                          errorMessage.toLowerCase().includes('unauthorized') ||
+                          errorMessage.toLowerCase().includes('credentials');
       
       if (isTwilioError) {
         setShowCredentialsForm(true);
