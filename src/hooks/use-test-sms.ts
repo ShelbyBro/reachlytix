@@ -7,6 +7,14 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
   const [testPhone, setTestPhone] = useState<string>("");
   const [sendingTestSms, setSendingTestSms] = useState<boolean>(false);
   const { toast } = useToast();
+  
+  // For handling manually entered Twilio credentials if needed
+  const [twilioCredentials, setTwilioCredentials] = useState({
+    accountSid: "",
+    authToken: "",
+    phoneNumber: "",
+  });
+  const [showCredentialsForm, setShowCredentialsForm] = useState<boolean>(false);
 
   const handleSendTestSMS = async (content?: string) => {
     // Skip if not SMS or WhatsApp message type
@@ -32,17 +40,26 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
     const testMessage = "This is a test SMS from Reachlytix - 🚀";
 
     try {
+      console.log("Sending test SMS to:", testPhone);
+      
       const { data, error } = await supabase.functions.invoke("send-campaign-sms", {
         body: {
           campaignId,
           content: testMessage,
           isTest: true,
           testPhone,
-          messageType
+          messageType,
+          // Include manual credentials if provided
+          twilioCredentials: showCredentialsForm ? twilioCredentials : undefined
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error sending test SMS:", error);
+        throw error;
+      }
+
+      console.log("Test SMS response:", data);
 
       toast({
         title: "Test message sent",
@@ -50,11 +67,27 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
       });
     } catch (error: any) {
       console.error("Error sending test SMS:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to send test message."
-      });
+      
+      // Check if it might be a Twilio credentials issue
+      const errorMessage = error.message || "Failed to send test message.";
+      const isTwilioError = errorMessage.toLowerCase().includes('twilio') || 
+                            errorMessage.toLowerCase().includes('unauthorized') ||
+                            errorMessage.toLowerCase().includes('credentials');
+      
+      if (isTwilioError) {
+        setShowCredentialsForm(true);
+        toast({
+          variant: "destructive",
+          title: "Twilio credentials error",
+          description: "Please check your Twilio credentials and try again."
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: errorMessage
+        });
+      }
     } finally {
       setSendingTestSms(false);
     }
@@ -64,6 +97,10 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
     testPhone,
     setTestPhone,
     sendingTestSms,
-    handleSendTestSMS
+    handleSendTestSMS,
+    showCredentialsForm,
+    setShowCredentialsForm,
+    twilioCredentials,
+    setTwilioCredentials
   };
 };
