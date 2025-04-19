@@ -8,7 +8,7 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
   const [sendingTestSms, setSendingTestSms] = useState<boolean>(false);
   const { toast } = useToast();
 
-  const handleSendTestSMS = async (content: string) => {
+  const handleSendTestSMS = async (content?: string) => {
     // Skip if not SMS or WhatsApp message type
     if (messageType === "email") {
       toast({
@@ -28,11 +28,14 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
 
     setSendingTestSms(true);
 
+    // Always use the fixed test message content
+    const testMessage = "This is a test SMS from Reachlytix - 🚀";
+
     try {
       const { data, error } = await supabase.functions.invoke("send-campaign-sms", {
         body: {
           campaignId,
-          content,
+          content: testMessage,
           isTest: true,
           testPhone,
           messageType

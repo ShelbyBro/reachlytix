@@ -2,7 +2,7 @@
 import React from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Mail, MessageSquare } from "lucide-react";
+import { Mail, MessageSquare, Send } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -57,26 +57,28 @@ export function MessageTypeSelector({
       </RadioGroup>
       
       {(messageType === "sms" || messageType === "whatsapp") && (
-        <Alert className="mt-4 bg-blue-50">
+        <Alert className="mt-4 bg-blue-50 border-blue-200">
           <Phone className="h-4 w-4" />
           <AlertTitle>SMS Marketing System</AlertTitle>
           <AlertDescription>
             Send SMS messages to all leads in this campaign. Messages will be sent from your Twilio number.
           </AlertDescription>
           
-          <div className="mt-4">
+          <div className="mt-4 border-t border-blue-100 pt-3">
+            <Label htmlFor="test-phone" className="font-medium text-sm mb-2 block">Test SMS Before Sending Campaign</Label>
             <div className="flex items-center space-x-2 mt-2">
               <Input
+                id="test-phone"
                 type="tel"
                 value={testPhone}
                 onChange={(e) => setTestPhone(e.target.value)}
-                placeholder="Test phone number"
+                placeholder="Enter phone number (e.g. +8801841984046)"
                 className="flex-1"
               />
               <Button 
-                variant="outline" 
+                variant="default" 
                 size="sm" 
-                onClick={() => handleSendTestSMS(script?.content || "")}
+                onClick={() => handleSendTestSMS()}
                 disabled={sendingTestSms}
                 className="whitespace-nowrap"
               >
@@ -87,12 +89,15 @@ export function MessageTypeSelector({
                   </>
                 ) : (
                   <>
-                    <TestTube2 className="mr-2 h-4 w-4" />
+                    <Send className="mr-2 h-4 w-4" />
                     Test SMS
                   </>
                 )}
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              A test message will be sent using the Twilio number without affecting campaign logs.
+            </p>
           </div>
         </Alert>
       )}
