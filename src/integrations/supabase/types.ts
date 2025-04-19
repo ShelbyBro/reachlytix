@@ -310,6 +310,57 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_logs: {
+        Row: {
+          campaign_id: string | null
+          created_at: string
+          error: string | null
+          id: string
+          lead_id: string | null
+          message: string
+          phone: string
+          sid: string | null
+          status: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          lead_id?: string | null
+          message: string
+          phone: string
+          sid?: string | null
+          status: string
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          lead_id?: string | null
+          message?: string
+          phone?: string
+          sid?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_logs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sms_logs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_clients: {
         Row: {
           assigned_at: string | null

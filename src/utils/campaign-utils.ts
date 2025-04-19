@@ -101,41 +101,59 @@ export const sendCampaignSMS = async (
   campaignTitle: string,
   content: string,
   leads: any[],
-  messageType: string = "sms"
-): Promise<{ success: boolean; message: string }> => {
+  messageType: string = "sms",
+  isTest: boolean = false,
+  testPhone?: string
+): Promise<{ success: boolean; message: string; results?: any }> => {
   try {
-    // For demo purposes, we'll simulate sending SMS
-    console.log(`Sending ${messageType} campaign "${campaignTitle}" to ${leads.length} leads`);
-    console.log("Content:", content);
+    console.log(`Initializing ${messageType} campaign "${campaignTitle}" to ${leads.length} leads`);
     
-    // Simulate successful sending
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const payload = {
+      campaignId,
+      leads: isTest ? [] : leads,
+      content,
+      isTest,
+      testPhone
+    };
     
-    // Log the campaign send
-    await logCampaignSend({
-      campaign_id: campaignId,
-      total_recipients: leads.length,
-      delivery_status: "sent",
-      message_type: messageType
+    // Call the edge function to send the SMS messages
+    const { data, error } = await supabase.functions.invoke('send-campaign-sms', {
+      body: payload
     });
     
-    // Update campaign status to sent
-    await updateCampaignStatus(campaignId, "sent");
+    if (error) throw error;
+    
+    if (!isTest) {
+      // Log the campaign send
+      await logCampaignSend({
+        campaign_id: campaignId,
+        total_recipients: leads.length,
+        delivery_status: data.results.totalFailed > 0 ? "partial" : "sent",
+        message_type: messageType
+      });
+    }
     
     return {
       success: true,
-      message: `${messageType.toUpperCase()} campaign sent to ${leads.length} leads successfully!`
+      message: isTest
+        ? `Test ${messageType} sent successfully!`
+        : `${messageType.toUpperCase()} campaign sent to ${data.results.totalSent} leads successfully!${
+            data.results.totalFailed > 0 ? ` (${data.results.totalFailed} failed)` : ''
+          }`,
+      results: data.results
     };
   } catch (error: any) {
     console.error(`Error sending ${messageType} campaign:`, error);
     
-    // Log the failed attempt
-    await logCampaignSend({
-      campaign_id: campaignId,
-      total_recipients: leads.length,
-      delivery_status: "failed",
-      message_type: messageType
-    });
+    if (!isTest) {
+      // Log the failed attempt
+      await logCampaignSend({
+        campaign_id: campaignId,
+        total_recipients: leads.length,
+        delivery_status: "failed",
+        message_type: messageType
+      });
+    }
     
     return {
       success: false,

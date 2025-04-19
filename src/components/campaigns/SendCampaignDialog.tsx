@@ -15,7 +15,9 @@ import {
   Loader2, 
   Clock,
   Send as SendIcon,
-  CalendarCheck
+  CalendarCheck,
+  Phone,
+  TestTube2
 } from "lucide-react";
 import {
   Dialog,
@@ -31,6 +33,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; 
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SendCampaignDialogProps {
@@ -56,6 +60,8 @@ export function SendCampaignDialog({
   const [sendMode, setSendMode] = useState<"now" | "schedule">("now");
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
   const [scheduledTime, setScheduledTime] = useState("12:00");
+  const [sendingTestSms, setSendingTestSms] = useState(false);
+  const [testPhone, setTestPhone] = useState("+18597808093");
 
   const handleSendCampaign = async () => {
     if (!campaign) return;
@@ -130,21 +136,14 @@ export function SendCampaignDialog({
           script?.content || "",
           leads
         );
-      } else if (messageType === "sms") {
+      } else {
+        // SMS or WhatsApp
         result = await sendCampaignSMS(
           campaignId,
           campaign.title,
-          script?.content || "Default SMS message",
-          leads
-        );
-      } else { // whatsapp
-        // Use the same function as SMS for now - can be replaced with a WhatsApp-specific function later
-        result = await sendCampaignSMS(
-          campaignId,
-          campaign.title,
-          script?.content || "Default WhatsApp message",
+          script?.content || "Thank you for joining Reachlytix. Stay tuned for offers!",
           leads,
-          "whatsapp" // Pass message type as whatsapp
+          messageType
         );
       }
       
@@ -167,6 +166,40 @@ export function SendCampaignDialog({
       });
     } finally {
       setSendingCampaign(false);
+    }
+  };
+
+  const handleSendTestSMS = async () => {
+    if (!campaign || !testPhone) return;
+    
+    setSendingTestSms(true);
+    
+    try {
+      const result = await sendCampaignSMS(
+        campaign.id,
+        campaign.title,
+        script?.content || "Thank you for joining Reachlytix. Stay tuned for offers!",
+        [],
+        messageType,
+        true,
+        testPhone
+      );
+      
+      toast({
+        variant: result.success ? "default" : "destructive",
+        title: result.success ? "Test SMS Sent" : "Test SMS Failed",
+        description: result.message
+      });
+      
+    } catch (error: any) {
+      console.error("Error sending test SMS:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to send test SMS."
+      });
+    } finally {
+      setSendingTestSms(false);
     }
   };
 
@@ -213,6 +246,47 @@ export function SendCampaignDialog({
                 </Label>
               </div>
             </RadioGroup>
+            
+            {(messageType === "sms" || messageType === "whatsapp") && (
+              <Alert className="mt-4 bg-blue-50">
+                <Phone className="h-4 w-4" />
+                <AlertTitle>SMS Marketing System</AlertTitle>
+                <AlertDescription>
+                  Send SMS messages to all leads in this campaign. Messages will be sent from your Twilio number.
+                </AlertDescription>
+                
+                <div className="mt-4">
+                  <div className="flex items-center space-x-2 mt-2">
+                    <Input
+                      type="tel"
+                      value={testPhone}
+                      onChange={(e) => setTestPhone(e.target.value)}
+                      placeholder="Test phone number"
+                      className="flex-1"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleSendTestSMS}
+                      disabled={sendingTestSms}
+                      className="whitespace-nowrap"
+                    >
+                      {sendingTestSms ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Testing...
+                        </>
+                      ) : (
+                        <>
+                          <TestTube2 className="mr-2 h-4 w-4" />
+                          Test SMS
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </Alert>
+            )}
           </TabsContent>
           
           <TabsContent value="sendOptions" className="space-y-4">
@@ -306,8 +380,22 @@ export function SendCampaignDialog({
                   </>
                 ) : (
                   <>
-                    <SendIcon className="h-4 w-4" />
-                    Send Now
+                    {messageType === "email" ? (
+                      <>
+                        <Mail className="h-4 w-4" />
+                        Send Email
+                      </>
+                    ) : messageType === "sms" ? (
+                      <>
+                        <MessageSquare className="h-4 w-4" />
+                        Send SMS Now
+                      </>
+                    ) : (
+                      <>
+                        <MessageSquare className="h-4 w-4" />
+                        Send WhatsApp
+                      </>
+                    )}
                   </>
                 )}
               </>
