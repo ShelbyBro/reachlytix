@@ -94,12 +94,20 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+        "glow": "glow 2s ease-in-out infinite alternate",
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
-			}
+				'accordion-up': 'accordion-up 0.2s ease-out',
+        "glow": "glow 2s ease-in-out infinite alternate",
+			},
+      keyframes: {
+        glow: {
+          "0%": { boxShadow: "0 0 15px rgba(155,135,245,0.5)" },
+          "100%": { boxShadow: "0 0 25px rgba(155,135,245,0.8)" }
+        },
+      },
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
