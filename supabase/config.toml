@@ -6,3 +6,6 @@ verify_jwt = false
 
 [functions.generate-campaign-content]
 verify_jwt = false
+
+[functions.make-call]
+verify_jwt = true
