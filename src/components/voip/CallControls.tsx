@@ -1,5 +1,6 @@
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils"; // Add this import
 import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 
 interface CallControlsProps {
