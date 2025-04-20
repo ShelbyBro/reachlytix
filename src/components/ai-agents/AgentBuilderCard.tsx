@@ -8,10 +8,18 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { LoaderIcon, Check } from "lucide-react";
+import { LoaderIcon } from "lucide-react";
 import { MyAgentList } from "./MyAgentList";
 import { greetingScriptPresets, voiceStyles, businessTypes } from "./agent-constants";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 
+// Ensure authenticated users only
 export function AgentBuilderCard() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -24,14 +32,12 @@ export function AgentBuilderCard() {
   const [loading, setLoading] = useState(false);
 
   // Auto-update greeting script on dropdown changes
-  const handleVoiceStyleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
+  const handleVoiceStyleChange = (value: string) => {
     setVoiceStyle(value);
     setGreetingScript(greetingScriptPresets[value][businessType] || "");
   };
 
-  const handleBusinessTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
+  const handleBusinessTypeChange = (value: string) => {
     setBusinessType(value);
     setGreetingScript(greetingScriptPresets[voiceStyle][value] || "");
   };
@@ -91,12 +97,23 @@ export function AgentBuilderCard() {
       });
     } else {
       toast({
-        title: "Agent Saved!",
+        title: "Agent saved successfully!",
         description: "Your AI calling agent has been created.",
       });
       resetForm();
     }
   };
+
+  // Hide if not logged in
+  if (!user) {
+    return (
+      <div className="w-full max-w-2xl mt-8 flex items-center justify-center">
+        <Card className="p-8 opacity-60 text-center">
+          <div className="text-lg font-semibold">Please log in to create your AI Agent.</div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-2xl">
@@ -122,31 +139,33 @@ export function AgentBuilderCard() {
           <div className="flex gap-4 flex-col sm:flex-row">
             <div className="flex-1">
               <Label htmlFor="voice-style">Voice Style</Label>
-              <select
-                id="voice-style"
-                className="w-full mt-1 px-3 py-2 rounded-md border"
-                value={voiceStyle}
-                onChange={handleVoiceStyleChange}
-                disabled={loading}
-              >
-                {voiceStyles.map(vs => (
-                  <option key={vs.value} value={vs.value}>{vs.label}</option>
-                ))}
-              </select>
+              <Select value={voiceStyle} onValueChange={handleVoiceStyleChange disabled={loading}>
+                <SelectTrigger id="voice-style">
+                  <SelectValue placeholder="Select voice style" />
+                </SelectTrigger>
+                <SelectContent>
+                  {voiceStyles.map(vs => (
+                    <SelectItem key={vs.value} value={vs.value}>
+                      {vs.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex-1">
               <Label htmlFor="business-type">Business Type</Label>
-              <select
-                id="business-type"
-                className="w-full mt-1 px-3 py-2 rounded-md border"
-                value={businessType}
-                onChange={handleBusinessTypeChange}
-                disabled={loading}
-              >
-                {businessTypes.map(bt => (
-                  <option key={bt.value} value={bt.value}>{bt.label}</option>
-                ))}
-              </select>
+              <Select value={businessType} onValueChange={handleBusinessTypeChange} disabled={loading}>
+                <SelectTrigger id="business-type">
+                  <SelectValue placeholder="Select business type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {businessTypes.map(bt => (
+                    <SelectItem key={bt.value} value={bt.value}>
+                      {bt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div>

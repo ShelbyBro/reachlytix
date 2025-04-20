@@ -5,7 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Pen, Trash } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type Agent = {
   id: string;
@@ -16,7 +17,7 @@ type Agent = {
   created_at: string | null;
 };
 
-// Define an interface for the database response
+// Database response shape
 interface AgentDBResponse {
   id: string;
   client_id: string | null;
@@ -34,7 +35,7 @@ export function MyAgentList() {
   const { user } = useAuth();
   const userId = user?.id;
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["ai_agents_custom", userId],
     queryFn: async () => {
       if (!userId) return [];
@@ -44,15 +45,14 @@ export function MyAgentList() {
         .eq("client_id", userId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      
-      // Transform the data to match the Agent type
+      // Map to Agent
       return (data ?? []).map((agent: AgentDBResponse): Agent => ({
         id: agent.id,
         name: agent.name || "Unnamed Agent",
         voice_style: agent.voice_style || "Default",
         business_type: agent.business_type || "Default",
         greeting_script: agent.greeting_script || "No greeting script",
-        created_at: agent.created_at
+        created_at: agent.created_at,
       })) as Agent[];
     },
     enabled: !!userId,
@@ -83,7 +83,28 @@ export function MyAgentList() {
                   <div className="font-bold text-lg">{agent.name}</div>
                   <Badge variant="secondary" className="capitalize">{agent.voice_style}</Badge>
                   <Badge variant="outline" className="capitalize">{agent.business_type}</Badge>
-                  <div className="ml-auto text-xs text-muted-foreground">{agent.created_at ? new Date(agent.created_at).toLocaleString() : ""}</div>
+                  <div className="ml-auto text-xs text-muted-foreground">
+                    {agent.created_at ? new Date(agent.created_at).toLocaleString() : ""}
+                  </div>
+                  {/* Action buttons */}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="ml-2"
+                    aria-label="Edit Agent"
+                    tabIndex={-1}
+                  >
+                    <Pen className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="ml-1"
+                    aria-label="Delete Agent"
+                    tabIndex={-1}
+                  >
+                    <Trash className="w-4 h-4 text-red-500" />
+                  </Button>
                 </div>
                 <div className="italic text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
                   {agent.greeting_script}
