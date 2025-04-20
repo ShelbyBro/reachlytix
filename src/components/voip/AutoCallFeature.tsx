@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AutoCallFeature() {
   const [isLoading, setIsLoading] = useState(false);
@@ -72,29 +73,42 @@ export function AutoCallFeature() {
     setIsLoading(true);
 
     try {
-      // Test with hardcoded data first as requested
-      const testLeads = [
-        { name: "Bruce", phone: "+8801700000000" }
-      ];
+      // Get the file content as text
+      const fileContent = await file.text();
+      
+      // Process the CSV content to extract leads
+      const leads = await processCSV(fileContent);
+      
+      if (leads.length === 0) {
+        throw new Error("No valid leads found in CSV");
+      }
+      
+      // Get the current session for the auth token
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      
+      if (!accessToken) {
+        throw new Error("No authentication token available. Please log in again.");
+      }
 
-      // Using direct fetch with correct headers and URL
+      // Send the leads to the autocall-batch edge function
       const response = await fetch("https://szkhnwedzwvlqlktgvdp.supabase.co/functions/v1/autocall-batch", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-          "apikey": SUPABASE_ANON_KEY
+          "Authorization": `Bearer ${accessToken}`
         },
-        body: JSON.stringify(testLeads),
+        body: JSON.stringify(leads),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(`API error: ${errorData.error || response.statusText}`);
       }
 
       toast({
         title: "Success",
-        description: "Auto Call campaign started!",
+        description: `Auto Call campaign started with ${leads.length} leads!`,
       });
       
       // Reset the file input
@@ -106,7 +120,7 @@ export function AutoCallFeature() {
       console.error("Auto-call error:", error);
       toast({
         title: "Error",
-        description: "Failed to trigger Auto Call. Please try again.",
+        description: `Failed to trigger Auto Call: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -122,20 +136,26 @@ export function AutoCallFeature() {
         { name: "Test Lead", phone: "+8801841984046" }
       ];
 
-      // Using direct fetch with correct headers and URL
+      // Get the current session for the auth token
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      
+      if (!accessToken) {
+        throw new Error("No authentication token available. Please log in again.");
+      }
+
       const response = await fetch("https://szkhnwedzwvlqlktgvdp.supabase.co/functions/v1/autocall-batch", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-          "apikey": SUPABASE_ANON_KEY
+          "Authorization": `Bearer ${accessToken}`
         },
         body: JSON.stringify(testData),
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        const errorData = await response.json();
+        throw new Error(`API error: ${errorData.error || response.statusText}`);
       }
 
       toast({
@@ -205,6 +225,3 @@ export function AutoCallFeature() {
     </Card>
   );
 }
-
-// Supabase anon key - hardcoded since we're not using environment variables
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6a2hud2Vkend2bHFsa3RndmRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4MTQ4NjYsImV4cCI6MjA2MDM5MDg2Nn0.upSWAVArksac-MgW6u5BW5kTHKnmCD6vMDP7e0MUUlo";
