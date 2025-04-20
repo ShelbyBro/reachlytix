@@ -73,7 +73,7 @@ export function AutoCallFeature() {
         throw new Error("No valid leads found in CSV");
       }
 
-      const { error } = await supabase.functions.invoke("auto-call-batch", {
+      const { error } = await supabase.functions.invoke("autocall-batch", {
         body: leads,
       });
 
@@ -81,7 +81,7 @@ export function AutoCallFeature() {
 
       toast({
         title: "Success",
-        description: "✅ Auto-call batch sent successfully!",
+        description: "Auto Call campaign started!",
       });
       
       // Reset the file input
@@ -93,7 +93,7 @@ export function AutoCallFeature() {
       console.error("Auto-call error:", error);
       toast({
         title: "Error",
-        description: "❌ Failed to start auto call campaign. " + (error as Error).message,
+        description: "Failed to trigger Auto Call. Please try again.",
         variant: "destructive",
       });
     } finally {

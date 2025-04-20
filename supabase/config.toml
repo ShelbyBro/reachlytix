@@ -9,3 +9,7 @@ verify_jwt = false
 
 [functions.make-call]
 verify_jwt = true
+
+[functions.autocall-batch]
+verify_jwt = true
+
