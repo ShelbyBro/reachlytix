@@ -1,4 +1,5 @@
 
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +25,9 @@ import DemoPage from "./pages/demo/DemoPage";
 import ComingSoonPage from "./pages/demo/ComingSoonPage";
 import SettingsPage from "./pages/settings";
 import VoipPage from "./pages/voip";
+
+// Lazy load AI Agents page
+const AiAgentsPage = lazy(() => import("./pages/ai-agents"));
 
 const queryClient = new QueryClient();
 
@@ -102,8 +106,9 @@ const App = () => (
             {/* NEW: AI Agents page */}
             <Route path="/ai-agents" element={
               <ProtectedRoute>
-                {/** Only for signed-in users */}
-                {<import('./pages/ai-agents').then(mod => <mod.default />)} {/* this is only for code splitting, fallback to direct usage if needed */}
+                <Suspense fallback={<div className="p-8 flex justify-center">Loading...</div>}>
+                  <AiAgentsPage />
+                </Suspense>
               </ProtectedRoute>
             } />
 
