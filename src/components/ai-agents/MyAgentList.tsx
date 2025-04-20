@@ -16,6 +16,20 @@ type Agent = {
   created_at: string | null;
 };
 
+// Define an interface for the database response
+interface AgentDBResponse {
+  id: string;
+  client_id: string | null;
+  name?: string;
+  voice_style?: string;
+  business_type?: string;
+  greeting_script?: string;
+  campaign_id?: string | null;
+  notes?: string | null;
+  status?: string | null;
+  created_at: string | null;
+}
+
 export function MyAgentList() {
   const { user } = useAuth();
   const userId = user?.id;
@@ -30,7 +44,16 @@ export function MyAgentList() {
         .eq("client_id", userId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Agent[];
+      
+      // Transform the data to match the Agent type
+      return (data ?? []).map((agent: AgentDBResponse): Agent => ({
+        id: agent.id,
+        name: agent.name || "Unnamed Agent",
+        voice_style: agent.voice_style || "Default",
+        business_type: agent.business_type || "Default",
+        greeting_script: agent.greeting_script || "No greeting script",
+        created_at: agent.created_at
+      })) as Agent[];
     },
     enabled: !!userId,
   });

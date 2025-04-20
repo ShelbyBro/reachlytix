@@ -93,7 +93,6 @@ export function AgentBuilderCard() {
       toast({
         title: "Agent Saved!",
         description: "Your AI calling agent has been created.",
-        icon: <Check className="text-green-600" />,
       });
       resetForm();
     }
