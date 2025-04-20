@@ -12,9 +12,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
-// Supabase anon key - hardcoded since we're not using environment variables
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6a2hud2Vkend2bHFsa3RndmRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4MTQ4NjYsImV4cCI6MjA2MDM5MDg2Nn0.upSWAVArksac-MgW6u5BW5kTHKnmCD6vMDP7e0MUUlo";
-
 export function AutoCallFeature() {
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -75,14 +72,12 @@ export function AutoCallFeature() {
     setIsLoading(true);
 
     try {
-      const text = await file.text();
-      const leads = await processCSV(text);
+      // Test with hardcoded data first as requested
+      const testLeads = [
+        { name: "Bruce", phone: "+8801700000000" }
+      ];
 
-      if (leads.length === 0) {
-        throw new Error("No valid leads found in CSV");
-      }
-
-      // Use direct fetch instead of supabase.functions.invoke
+      // Using direct fetch with correct headers and URL
       const response = await fetch("https://szkhnwedzwvlqlktgvdp.supabase.co/functions/v1/autocall-batch", {
         method: "POST",
         headers: {
@@ -90,7 +85,7 @@ export function AutoCallFeature() {
           "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
           "apikey": SUPABASE_ANON_KEY
         },
-        body: JSON.stringify(leads),
+        body: JSON.stringify(testLeads),
       });
 
       if (!response.ok) {
@@ -119,6 +114,46 @@ export function AutoCallFeature() {
     }
   };
 
+  // Add a separate test function that can be used for direct testing
+  const testAutocall = async () => {
+    setIsLoading(true);
+    try {
+      const testData = [
+        { name: "Test Lead", phone: "+8801841984046" }
+      ];
+
+      // Using direct fetch with correct headers and URL
+      const response = await fetch("https://szkhnwedzwvlqlktgvdp.supabase.co/functions/v1/autocall-batch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "apikey": SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify(testData),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      toast({
+        title: "Test Successful",
+        description: "Auto Call test was successful!",
+      });
+    } catch (error) {
+      console.error("Test auto-call error:", error);
+      toast({
+        title: "Test Error",
+        description: `Failed to test Auto Call: ${error instanceof Error ? error.message : "Unknown error"}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Card className="mt-6">
       <CardHeader>
@@ -133,30 +168,43 @@ export function AutoCallFeature() {
           onChange={handleFileChange}
           className={file ? "border-primary" : ""}
         />
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                onClick={handleUpload} 
-                disabled={!file || isLoading}
-                className="w-full"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Start Auto Call Campaign"
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Upload a CSV with name and phone columns to auto-call leads one by one.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div className="flex flex-col space-y-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={handleUpload} 
+                  disabled={!file || isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Start Auto Call Campaign"
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Upload a CSV with name and phone columns to auto-call leads one by one.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <Button 
+            onClick={testAutocall}
+            variant="outline"
+            disabled={isLoading}
+          >
+            Test Function With Sample Data
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
 }
+
+// Supabase anon key - hardcoded since we're not using environment variables
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6a2hud2Vkend2bHFsa3RndmRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4MTQ4NjYsImV4cCI6MjA2MDM5MDg2Nn0.upSWAVArksac-MgW6u5BW5kTHKnmCD6vMDP7e0MUUlo";
