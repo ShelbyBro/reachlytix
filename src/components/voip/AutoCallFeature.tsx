@@ -10,8 +10,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+
+// Supabase anon key - hardcoded since we're not using environment variables
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6a2hud2Vkend2bHFsa3RndmRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4MTQ4NjYsImV4cCI6MjA2MDM5MDg2Nn0.upSWAVArksac-MgW6u5BW5kTHKnmCD6vMDP7e0MUUlo";
 
 export function AutoCallFeature() {
   const [isLoading, setIsLoading] = useState(false);
@@ -73,11 +75,20 @@ export function AutoCallFeature() {
         throw new Error("No valid leads found in CSV");
       }
 
-      const { error } = await supabase.functions.invoke("autocall-batch", {
-        body: leads,
+      // Use direct fetch instead of supabase.functions.invoke
+      const response = await fetch("https://szkhnwedzwvlqlktgvdp.supabase.co/functions/v1/autocall-batch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "apikey": SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify(leads),
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       toast({
         title: "Success",
