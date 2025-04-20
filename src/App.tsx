@@ -98,7 +98,15 @@ const App = () => (
                 <VoipPage />
               </ProtectedRoute>
             } />
-            
+
+            {/* NEW: AI Agents page */}
+            <Route path="/ai-agents" element={
+              <ProtectedRoute>
+                {/** Only for signed-in users */}
+                {<import('./pages/ai-agents').then(mod => <mod.default />)} {/* this is only for code splitting, fallback to direct usage if needed */}
+              </ProtectedRoute>
+            } />
+
             {/* Add a catch-all redirect for auth paths */}
             <Route path="/logout" element={<Navigate to="/" replace />} />
             
