@@ -14,7 +14,8 @@ import {
   Activity,
   Search,
   Wand2,
-  Phone
+  Phone,
+  Bot
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
     { icon: Megaphone, label: "Campaign Manager", href: "/campaigns" },
     { icon: Mail, label: "Create Campaign", href: "/campaigns/create" },
     { icon: Phone, label: "VOIP Caller", href: "/voip" },
+    { icon: Bot, label: "AI Agent Zone", href: "/ai-agents" },
     { icon: Activity, label: "Analytics", href: "/analytics" },
     { icon: Wand2, label: "Lead Generator", href: "/lead-generator" },
     { icon: Settings, label: "Settings", href: "/settings" },
