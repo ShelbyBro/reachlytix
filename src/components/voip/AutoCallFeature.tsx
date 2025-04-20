@@ -35,9 +35,16 @@ export function AutoCallFeature() {
 
   const processCSV = async (text: string) => {
     const lines = text.split("\n");
-    const headers = lines[0].toLowerCase().split(",");
-    const nameIndex = headers.indexOf("name");
-    const phoneIndex = headers.indexOf("phone");
+    
+    // Handle empty file
+    if (lines.length === 0) {
+      throw new Error("CSV file is empty");
+    }
+    
+    // Get headers and find name and phone indices
+    const headers = lines[0].toLowerCase().split(",").map(h => h.trim());
+    const nameIndex = headers.findIndex(h => h === "name");
+    const phoneIndex = headers.findIndex(h => h === "phone");
 
     if (nameIndex === -1 || phoneIndex === -1) {
       throw new Error("CSV must include 'name' and 'phone' columns");
@@ -47,10 +54,10 @@ export function AutoCallFeature() {
       .slice(1)
       .filter(line => line.trim())
       .map(line => {
-        const values = line.split(",");
+        const values = line.split(",").map(v => v.trim());
         return {
-          name: values[nameIndex].trim(),
-          phone: values[phoneIndex].trim(),
+          name: values[nameIndex],
+          phone: values[phoneIndex],
         };
       });
   };
