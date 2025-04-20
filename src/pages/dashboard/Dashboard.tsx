@@ -1,15 +1,13 @@
 
-import Layout from "@/components/layout";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect, useState, Suspense } from "react";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { DashboardAdminNotice } from "@/components/dashboard/DashboardAdminNotice";
-import { StatsCards } from "@/components/dashboard/StatsCards";
-import { FeatureCards } from "@/components/dashboard/FeatureCards";
-import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
-import { CampaignTabs } from "@/components/dashboard/CampaignTabs";
-import { LoadingState } from "@/components/dashboard/LoadingState";
-import { DashboardErrorBoundary } from "@/components/dashboard/DashboardErrorBoundary";
+import { useEffect, useState } from "react";
+import Layout from "@/components/layout";
+import { DashboardHeader } from "./components/DashboardHeader";
+import { DashboardAdminNotice } from "./components/DashboardAdminNotice";
+import { DashboardStatsCards } from "./components/DashboardStatsCards";
+import { DashboardFeatureCards } from "./components/DashboardFeatureCards";
+import { DashboardCharts } from "./components/DashboardCharts";
+import { DashboardCampaignTabs } from "./components/DashboardCampaignTabs";
 
 export default function Dashboard() {
   const { profile, role } = useAuth();
@@ -27,30 +25,10 @@ export default function Dashboard() {
       <section id="client-login">
         <DashboardHeader greeting={greeting} role={role} />
         <DashboardAdminNotice role={role} />
-
-        <DashboardErrorBoundary fallback={<LoadingState className="mb-6" />}>
-          <Suspense fallback={<LoadingState className="mb-6" />}>
-            <StatsCards />
-          </Suspense>
-        </DashboardErrorBoundary>
-
-        <DashboardErrorBoundary fallback={<LoadingState className="mb-6" />}>
-          <Suspense fallback={<LoadingState className="mb-6" />}>
-            <FeatureCards />
-          </Suspense>
-        </DashboardErrorBoundary>
-
-        <DashboardErrorBoundary fallback={<LoadingState className="mb-6" />}>
-          <Suspense fallback={<LoadingState className="mb-6" />}>
-            <DashboardCharts />
-          </Suspense>
-        </DashboardErrorBoundary>
-
-        <DashboardErrorBoundary fallback={<LoadingState className="mb-6" />}>
-          <Suspense fallback={<LoadingState className="mb-6" />}>
-            <CampaignTabs />
-          </Suspense>
-        </DashboardErrorBoundary>
+        <DashboardStatsCards />
+        <DashboardFeatureCards />
+        <DashboardCharts />
+        <DashboardCampaignTabs />
       </section>
     </Layout>
   );
