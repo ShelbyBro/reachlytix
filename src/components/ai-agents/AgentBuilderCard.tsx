@@ -139,7 +139,7 @@ export function AgentBuilderCard() {
           <div className="flex gap-4 flex-col sm:flex-row">
             <div className="flex-1">
               <Label htmlFor="voice-style">Voice Style</Label>
-              <Select value={voiceStyle} onValueChange={handleVoiceStyleChange disabled={loading}>
+              <Select value={voiceStyle} onValueChange={handleVoiceStyleChange} disabled={loading}>
                 <SelectTrigger id="voice-style">
                   <SelectValue placeholder="Select voice style" />
                 </SelectTrigger>
