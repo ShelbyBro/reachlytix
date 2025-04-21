@@ -1,12 +1,10 @@
-
 import React from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Mail, MessageSquare, Send, Bot } from "lucide-react";
+import { Mail, MessageSquare, Send, Bot, Phone, Loader2 } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Phone, Loader2 } from "lucide-react";
 import { useTestSMS } from "@/hooks/use-test-sms";
 
 interface MessageTypeSelectorProps {
@@ -22,15 +20,12 @@ export function MessageTypeSelector({
   campaignId,
   script
 }: MessageTypeSelectorProps) {
-  // Ensure we only pass valid SMS-related message types to useTestSMS
-  const smsMessageType = messageType === "ai" ? "sms" : messageType;
-  
   const { 
     testPhone, 
     setTestPhone, 
     sendingTestSms, 
     handleSendTestSMS 
-  } = useTestSMS(campaignId, smsMessageType);
+  } = useTestSMS(campaignId, messageType);
 
   return (
     <div className="space-y-4">
@@ -64,7 +59,7 @@ export function MessageTypeSelector({
           </Label>
         </div>
       </RadioGroup>
-      
+
       {(messageType === "sms" || messageType === "whatsapp") && (
         <Alert className="mt-4 bg-blue-50 border-blue-200">
           <Phone className="h-4 w-4" />
@@ -81,7 +76,7 @@ export function MessageTypeSelector({
                 type="tel"
                 value={testPhone}
                 onChange={(e) => setTestPhone(e.target.value)}
-                placeholder="Enter phone number (e.g. +8801841984046)"
+                placeholder="Enter phone number (e.g. +8801XXXXXXX)"
                 className="flex-1"
               />
               <Button 
@@ -108,6 +103,16 @@ export function MessageTypeSelector({
               A test message will be sent using the Twilio number without affecting campaign logs.
             </p>
           </div>
+        </Alert>
+      )}
+
+      {messageType === "ai" && (
+        <Alert className="mt-4 bg-purple-50 border-purple-200">
+          <Bot className="h-4 w-4" />
+          <AlertTitle>AI Agent Campaign</AlertTitle>
+          <AlertDescription>
+            This campaign will be executed by an AI calling agent. Make sure your campaign script and agent setup are complete.
+          </AlertDescription>
         </Alert>
       )}
     </div>
