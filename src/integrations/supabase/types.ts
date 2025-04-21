@@ -9,6 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_agent_logs: {
+        Row: {
+          agent_id: string
+          created_at: string
+          id: string
+          phone: string
+          script: string
+          status: string
+          timestamp: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          id?: string
+          phone: string
+          script: string
+          status?: string
+          timestamp?: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          id?: string
+          phone?: string
+          script?: string
+          status?: string
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_logs_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_agents: {
         Row: {
           campaign_id: string | null
