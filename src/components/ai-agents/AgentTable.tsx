@@ -79,6 +79,7 @@ export function AgentTable() {
         onOpenChange={setDialogOpen}
         onConfirm={handleStartCampaign}
         loading={loading}
+        agentName={selectedAgent?.name || ""}
       />
 
       <Table>
