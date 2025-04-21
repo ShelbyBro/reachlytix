@@ -13,3 +13,6 @@ verify_jwt = true
 [functions.autocall-batch]
 verify_jwt = true
 
+[functions.smart-scrape]
+verify_jwt = false
+
