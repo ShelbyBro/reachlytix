@@ -1,8 +1,7 @@
-
 import React from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Mail, MessageSquare, Send } from "lucide-react";
+import { Mail, MessageSquare, Send, Bot } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,8 +9,8 @@ import { Phone, Loader2 } from "lucide-react";
 import { useTestSMS } from "@/hooks/use-test-sms";
 
 interface MessageTypeSelectorProps {
-  messageType: "email" | "sms" | "whatsapp";
-  onMessageTypeChange: (type: "email" | "sms" | "whatsapp") => void;
+  messageType: "email" | "sms" | "whatsapp" | "ai";
+  onMessageTypeChange: (type: "email" | "sms" | "whatsapp" | "ai") => void;
   campaignId: string;
   script: { content?: string } | null;
 }
@@ -33,7 +32,7 @@ export function MessageTypeSelector({
     <div className="space-y-4">
       <RadioGroup 
         value={messageType} 
-        onValueChange={(val) => onMessageTypeChange(val as "email" | "sms" | "whatsapp")}
+        onValueChange={(val) => onMessageTypeChange(val as "email" | "sms" | "whatsapp" | "ai")}
         className="flex flex-col space-y-3"
       >
         <div className="flex items-center space-x-2">
@@ -52,6 +51,12 @@ export function MessageTypeSelector({
           <RadioGroupItem value="whatsapp" id="whatsapp" />
           <Label htmlFor="whatsapp" className="flex items-center">
             <MessageSquare className="w-4 h-4 mr-2" /> WhatsApp
+          </Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="ai" id="ai" />
+          <Label htmlFor="ai" className="flex items-center">
+            <Bot className="w-4 h-4 mr-2" /> AI Agent
           </Label>
         </div>
       </RadioGroup>

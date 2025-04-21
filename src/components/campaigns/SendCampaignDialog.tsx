@@ -9,9 +9,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageTypeSelector } from "./MessageTypeSelector";
-import { SendOptionsSelector } from "./SendOptionsSelector";
 import { DialogActions } from "./send-dialog/DialogActions";
+import { MessageTypeTab } from "./send-dialog/MessageTypeTab";
+import { SendOptionsTab } from "./send-dialog/SendOptionsTab";
 import { useSendCampaign } from "./send-dialog/useSendCampaign";
 
 interface SendCampaignDialogProps {
@@ -71,7 +71,7 @@ export function SendCampaignDialog({
           </TabsList>
           
           <TabsContent value="messageType">
-            <MessageTypeSelector
+            <MessageTypeTab
               messageType={messageType}
               onMessageTypeChange={setMessageType}
               campaignId={campaign?.id || ""}
@@ -80,7 +80,7 @@ export function SendCampaignDialog({
           </TabsContent>
           
           <TabsContent value="sendOptions">
-            <SendOptionsSelector
+            <SendOptionsTab
               sendMode={sendMode}
               onSendModeChange={setSendMode}
               scheduledDate={scheduledDate}
