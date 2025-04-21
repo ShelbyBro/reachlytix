@@ -40,30 +40,21 @@ export function AgentTable() {
     try {
       console.log("Starting campaign for agent:", selectedAgent.name);
       
-      const response = await fetch(
-        "https://szkhnwedzwvlqlktgvdp.supabase.co/functions/v1/start-agent-campaign",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6a2hud2Vkend2bHFsa3RndmRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4MTQ4NjYsImV4cCI6MjA2MDM5MDg2Nn0.upSWAVArksac-MgW6u5BW5kTHKnmCD6vMDP7e0MUUlo",
-            "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6a2hud2Vkend2bHFsa3RndmRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4MTQ4NjYsImV4cCI6MjA2MDM5MDg2Nn0.upSWAVArksac-MgW6u5BW5kTHKnmCD6vMDP7e0MUUlo"
-          },
-          body: JSON.stringify({
-            agentName: selectedAgent.name,
-            script: selectedAgent.greeting_script,
-            voiceStyle: selectedAgent.voice_style,
-            businessType: selectedAgent.business_type
-          }),
+      // Instead of using raw fetch, use Supabase's function invoker
+      const { data, error } = await supabase.functions.invoke('start-agent-campaign', {
+        body: {
+          agentName: selectedAgent.name,
+          script: selectedAgent.greeting_script,
+          voiceStyle: selectedAgent.voice_style,
+          businessType: selectedAgent.business_type
         }
-      );
+      });
 
-      console.log("Response status:", response.status);
+      console.log("Response data:", data);
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error(`Failed to start campaign: ${response.status} ${errorText}`);
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw new Error(`Failed to start campaign: ${error.message}`);
       }
 
       toast({
