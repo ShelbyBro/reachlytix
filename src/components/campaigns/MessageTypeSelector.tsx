@@ -1,3 +1,4 @@
+
 import React from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -21,12 +22,15 @@ export function MessageTypeSelector({
   campaignId,
   script
 }: MessageTypeSelectorProps) {
+  // Ensure we only pass valid SMS-related message types to useTestSMS
+  const smsMessageType = messageType === "ai" ? "sms" : messageType;
+  
   const { 
     testPhone, 
     setTestPhone, 
     sendingTestSms, 
     handleSendTestSMS 
-  } = useTestSMS(campaignId, messageType);
+  } = useTestSMS(campaignId, smsMessageType);
 
   return (
     <div className="space-y-4">
