@@ -77,6 +77,7 @@ export function AgentTable() {
         onConfirm={handleStartCampaign}
         loading={loading}
         agentName={selectedAgent?.name || ""}
+        agentId={selectedAgent?.id || ""}
       />
 
       <Table>

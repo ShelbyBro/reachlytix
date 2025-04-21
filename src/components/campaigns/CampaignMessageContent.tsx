@@ -9,8 +9,8 @@ import { TestSmsSection } from "./TestSmsSection";
 import { TemplateSelector } from "./TemplateSelector";
 
 interface CampaignMessageContentProps {
-  messageType: "email" | "sms" | "whatsapp";
-  setMessageType: (type: "email" | "sms" | "whatsapp") => void;
+  messageType: "email" | "sms" | "whatsapp" | "ai";
+  setMessageType: (type: "email" | "sms" | "whatsapp" | "ai") => void;
   subject: string;
   content: string;
   smsContent: string;

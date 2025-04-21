@@ -1,9 +1,10 @@
+
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { SimpleCampaign, SimpleLead, SimpleScript } from "@/types/campaign";
 import { sendCampaignEmails, sendCampaignSMS } from "@/utils/campaign-utils";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mail, MessageSquare, CalendarCheck } from "lucide-react";
+import { Loader2, Mail, MessageSquare, CalendarCheck, Bot } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -37,7 +38,7 @@ export function SendCampaignDialog({
 }: SendCampaignDialogProps) {
   const { toast } = useToast();
   const [sendingCampaign, setSendingCampaign] = useState(false);
-  const [messageType, setMessageType] = useState<"email" | "sms" | "whatsapp">("email");
+  const [messageType, setMessageType] = useState<"email" | "sms" | "whatsapp" | "ai">("email");
   const [sendMode, setSendMode] = useState<"now" | "schedule">("now");
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
   const [scheduledTime, setScheduledTime] = useState("12:00");
@@ -56,7 +57,7 @@ export function SendCampaignDialog({
       return;
     }
     
-    if (!script && messageType === "email") {
+    if (!script && messageType !== "ai") {
       toast({
         variant: "destructive",
         title: "No content",
@@ -101,41 +102,42 @@ export function SendCampaignDialog({
         onClose();
         return;
       }
+      
       if (messageType === "ai") {
-  console.log("🔥 AI Campaign Triggered", campaign?.id); // debug log
+        console.log("🔥 AI Campaign Triggered", campaign?.id); // debug log
 
-  try {
-    const { error } = await supabase
-      .from("campaigns")
-      .update({
-        status: "running",
-        started_at: new Date().toISOString()
-      })
-      .eq("id", campaign.id);
+        try {
+          const { error } = await supabase
+            .from("campaigns")
+            .update({
+              status: "running",
+              started_at: new Date().toISOString()
+            })
+            .eq("id", campaign.id);
 
-    if (error) {
-      console.error("🔥 Supabase Error:", error); // debug log
-      throw error;
-    }
+          if (error) {
+            console.error("🔥 Supabase Error:", error); // debug log
+            throw error;
+          }
 
-    toast({
-      title: "AI Agent Campaign Started",
-      description: `${campaign.title} is now running with the AI agent.`,
-    });
+          toast({
+            title: "AI Agent Campaign Started",
+            description: `${campaign.title} is now running with the AI agent.`,
+          });
 
-    onSendSuccess();
-    onClose();
-    return;
-  } catch (err: any) {
-    toast({
-      variant: "destructive",
-      title: "Failed to Start AI Campaign",
-      description: err.message || "An unknown error occurred.",
-    });
-    setSendingCampaign(false);
-    return;
-  }
-}
+          onSendSuccess();
+          onClose();
+          return;
+        } catch (err: any) {
+          toast({
+            variant: "destructive",
+            title: "Failed to Start AI Campaign",
+            description: err.message || "An unknown error occurred.",
+          });
+          setSendingCampaign(false);
+          return;
+        }
+      }
 
       let result;
       
@@ -200,7 +202,7 @@ export function SendCampaignDialog({
           <TabsContent value="messageType">
             <MessageTypeSelector
               messageType={messageType}
-              onMessageTypeChange={setMessageType}
+              onMessageTypeChange={(type) => setMessageType(type)}
               campaignId={campaign?.id || ""}
               script={script}
             />
@@ -251,10 +253,15 @@ export function SendCampaignDialog({
                         <MessageSquare className="h-4 w-4" />
                         Send SMS Now
                       </>
-                    ) : (
+                    ) : messageType === "whatsapp" ? (
                       <>
                         <MessageSquare className="h-4 w-4" />
                         Send WhatsApp
+                      </>
+                    ) : (
+                      <>
+                        <Bot className="h-4 w-4" />
+                        Start AI Campaign
                       </>
                     )}
                   </>

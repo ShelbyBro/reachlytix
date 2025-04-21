@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -103,6 +104,7 @@ export function MyAgentList() {
         onConfirm={handleStartCampaign}
         loading={loading}
         agentName={selectedAgent?.name || ""}
+        agentId={selectedAgent?.id || ""}
       />
 
       <div className="mt-2">
