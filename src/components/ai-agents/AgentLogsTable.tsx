@@ -68,8 +68,8 @@ export function AgentLogsTable() {
                 {new Date(log.timestamp).toLocaleString()}
               </TableCell>
             </TableRow>
-          </TableBody>
-        </Table>
+          ))}
+        </TableBody>
       </Table>
     </div>
   );
