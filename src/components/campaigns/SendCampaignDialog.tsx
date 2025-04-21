@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { SimpleCampaign, SimpleLead, SimpleScript } from "@/types/campaign";
@@ -41,6 +42,42 @@ export function SendCampaignDialog({
   const [sendMode, setSendMode] = useState<"now" | "schedule">("now");
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
   const [scheduledTime, setScheduledTime] = useState("12:00");
+
+  const handleStartCampaign = async () => {
+    if (!campaign) return;
+    
+    setSendingCampaign(true);
+    
+    try {
+      // Update campaign status to "running" in Supabase
+      const { error } = await supabase
+        .from("campaigns")
+        .update({ status: "running" })
+        .eq("id", campaign.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Campaign Started",
+        description: `Campaign "${campaign.title}" has been started successfully.`
+      });
+      
+      // Call the onSendSuccess callback to refresh campaigns
+      onSendSuccess();
+      
+      // Close the dialog
+      onClose();
+    } catch (error: any) {
+      console.error("Error starting campaign:", error);
+      toast({
+        variant: "destructive",
+        title: "Start Campaign Failed",
+        description: error.message || "Failed to start the campaign. Please try again."
+      });
+    } finally {
+      setSendingCampaign(false);
+    }
+  };
 
   const handleSendCampaign = async () => {
     if (!campaign) return;
@@ -189,7 +226,9 @@ export function SendCampaignDialog({
           </Button>
           <Button
             disabled={sendingCampaign}
-            onClick={handleSendCampaign}
+            onClick={messageType === "email" || messageType === "sms" || messageType === "whatsapp" 
+              ? handleSendCampaign 
+              : handleStartCampaign}
             className="gap-2"
           >
             {sendingCampaign ? (
