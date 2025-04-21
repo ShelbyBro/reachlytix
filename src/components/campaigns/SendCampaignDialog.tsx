@@ -3,7 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { SimpleCampaign, SimpleLead, SimpleScript } from "@/types/campaign";
 import { sendCampaignEmails, sendCampaignSMS } from "@/utils/campaign-utils";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mail, MessageSquare, CalendarCheck, Bot } from "lucide-react";
+import { Loader2, Mail, MessageSquare, CalendarCheck } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -37,16 +37,16 @@ export function SendCampaignDialog({
 }: SendCampaignDialogProps) {
   const { toast } = useToast();
   const [sendingCampaign, setSendingCampaign] = useState(false);
-  const [messageType, setMessageType] = useState<"email" | "sms" | "whatsapp" | "ai">("email");
+  const [messageType, setMessageType] = useState<"email" | "sms" | "whatsapp">("email");
   const [sendMode, setSendMode] = useState<"now" | "schedule">("now");
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
   const [scheduledTime, setScheduledTime] = useState("12:00");
 
   const handleSendCampaign = async () => {
     if (!campaign) return;
-
+    
     const campaignId = campaign.id;
-
+    
     if (!leads.length) {
       toast({
         variant: "destructive",
@@ -55,7 +55,7 @@ export function SendCampaignDialog({
       });
       return;
     }
-
+    
     if (!script && messageType === "email") {
       toast({
         variant: "destructive",
@@ -64,7 +64,7 @@ export function SendCampaignDialog({
       });
       return;
     }
-
+    
     if (sendMode === "schedule" && !scheduledDate) {
       toast({
         variant: "destructive",
@@ -75,9 +75,8 @@ export function SendCampaignDialog({
     }
 
     setSendingCampaign(true);
-
+    
     try {
-      // 🧠 Scheduled campaigns
       if (sendMode === "schedule") {
         const scheduledDateTime = new Date(scheduledDate!);
         const [hours, minutes] = scheduledTime.split(':').map(Number);
@@ -102,35 +101,48 @@ export function SendCampaignDialog({
         onClose();
         return;
       }
-
-      // 🤖 AI Agent Campaign Logic
       if (messageType === "ai") {
-        const { error: aiError } = await supabase
-          .from("campaigns")
-          .update({
-            status: "running",
-            started_at: new Date().toISOString()
-          })
-          .eq("id", campaignId);
+  console.log("🔥 AI Campaign Triggered", campaign?.id); // debug log
 
-        if (aiError) throw aiError;
+  try {
+    const { error } = await supabase
+      .from("campaigns")
+      .update({
+        status: "running",
+        started_at: new Date().toISOString()
+      })
+      .eq("id", campaign.id);
 
-        toast({
-          title: "AI Agent Campaign Started",
-          description: `${campaign.title} is now running with the AI agent.`,
-        });
+    if (error) {
+      console.error("🔥 Supabase Error:", error); // debug log
+      throw error;
+    }
 
-        onSendSuccess();
-        onClose();
-        return;
-      }
+    toast({
+      title: "AI Agent Campaign Started",
+      description: `${campaign.title} is now running with the AI agent.`,
+    });
 
-      // 📧 Email or 📲 SMS/WhatsApp
+    onSendSuccess();
+    onClose();
+    return;
+  } catch (err: any) {
+    toast({
+      variant: "destructive",
+      title: "Failed to Start AI Campaign",
+      description: err.message || "An unknown error occurred.",
+    });
+    setSendingCampaign(false);
+    return;
+  }
+}
+
       let result;
+      
       if (messageType === "email") {
         result = await sendCampaignEmails(
-          campaignId,
-          campaign.title,
+          campaignId, 
+          campaign.title, 
           script?.title || "No Subject",
           script?.content || "",
           leads
@@ -144,13 +156,13 @@ export function SendCampaignDialog({
           messageType
         );
       }
-
+      
       toast({
         variant: result.success ? "default" : "destructive",
         title: result.success ? "Success" : "Error",
         description: result.message
       });
-
+      
       if (result.success) {
         onSendSuccess();
         onClose();
@@ -173,7 +185,9 @@ export function SendCampaignDialog({
         <DialogHeader>
           <DialogTitle>Send Campaign</DialogTitle>
           <DialogDescription>
-            {campaign && `You're about to send "${campaign.title}" to ${leads.length} leads.`}
+            {campaign && (
+              `You're about to send "${campaign.title}" to ${leads.length} leads.`
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -182,7 +196,7 @@ export function SendCampaignDialog({
             <TabsTrigger value="messageType">Message Type</TabsTrigger>
             <TabsTrigger value="sendOptions">Send Options</TabsTrigger>
           </TabsList>
-
+          
           <TabsContent value="messageType">
             <MessageTypeSelector
               messageType={messageType}
@@ -191,7 +205,7 @@ export function SendCampaignDialog({
               script={script}
             />
           </TabsContent>
-
+          
           <TabsContent value="sendOptions">
             <SendOptionsSelector
               sendMode={sendMode}
@@ -216,11 +230,7 @@ export function SendCampaignDialog({
             {sendingCampaign ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {sendMode === "schedule"
-                  ? "Scheduling..."
-                  : messageType === "ai"
-                  ? "Starting AI Agent..."
-                  : "Sending..."}
+                {sendMode === "schedule" ? "Scheduling..." : "Sending..."}
               </>
             ) : (
               <>
@@ -229,20 +239,24 @@ export function SendCampaignDialog({
                     <CalendarCheck className="h-4 w-4" />
                     Schedule
                   </>
-                ) : messageType === "email" ? (
-                  <>
-                    <Mail className="h-4 w-4" />
-                    Send Email
-                  </>
-                ) : messageType === "sms" || messageType === "whatsapp" ? (
-                  <>
-                    <MessageSquare className="h-4 w-4" />
-                    {messageType === "sms" ? "Send SMS Now" : "Send WhatsApp"}
-                  </>
                 ) : (
                   <>
-                    <Bot className="h-4 w-4" />
-                    Start AI Agent
+                    {messageType === "email" ? (
+                      <>
+                        <Mail className="h-4 w-4" />
+                        Send Email
+                      </>
+                    ) : messageType === "sms" ? (
+                      <>
+                        <MessageSquare className="h-4 w-4" />
+                        Send SMS Now
+                      </>
+                    ) : (
+                      <>
+                        <MessageSquare className="h-4 w-4" />
+                        Send WhatsApp
+                      </>
+                    )}
                   </>
                 )}
               </>
