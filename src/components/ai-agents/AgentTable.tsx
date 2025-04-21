@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -93,11 +94,11 @@ export function AgentTable() {
         <TableBody>
           {agents.map((agent) => (
             <TableRow key={agent.id}>
-              <TableCell>{agent.name}</TableCell>
-              <TableCell>{agent.voice_style}</TableCell>
-              <TableCell>{agent.business_type}</TableCell>
+              <TableCell>{agent.name || "Unnamed Agent"}</TableCell>
+              <TableCell>{agent.voice_style || "Default"}</TableCell>
+              <TableCell>{agent.business_type || "Default"}</TableCell>
               <TableCell>
-                {new Date(agent.created_at).toLocaleString()}
+                {agent.created_at ? new Date(agent.created_at).toLocaleString() : ""}
               </TableCell>
               <TableCell>
                 <Button

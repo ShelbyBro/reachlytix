@@ -20,6 +20,7 @@ export function AgentLogsTable() {
         .select(`
           *,
           ai_agents (
+            id,
             name
           )
         `)

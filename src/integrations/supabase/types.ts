@@ -49,28 +49,40 @@ export type Database = {
       }
       ai_agents: {
         Row: {
+          business_type: string | null
           campaign_id: string | null
           client_id: string | null
           created_at: string | null
+          greeting_script: string | null
           id: string
+          name: string | null
           notes: string | null
           status: string | null
+          voice_style: string | null
         }
         Insert: {
+          business_type?: string | null
           campaign_id?: string | null
           client_id?: string | null
           created_at?: string | null
+          greeting_script?: string | null
           id?: string
+          name?: string | null
           notes?: string | null
           status?: string | null
+          voice_style?: string | null
         }
         Update: {
+          business_type?: string | null
           campaign_id?: string | null
           client_id?: string | null
           created_at?: string | null
+          greeting_script?: string | null
           id?: string
+          name?: string | null
           notes?: string | null
           status?: string | null
+          voice_style?: string | null
         }
         Relationships: [
           {
