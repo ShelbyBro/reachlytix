@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,27 +38,17 @@ export function AgentTable() {
 
     setLoading(true);
     try {
-      const response = await fetch(
-        "https://szkhnwedzwvlqlktgvdp.supabase.co/functions/v1/start-agent-campaign",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${supabase.auth.session()?.access_token ?? ""}`,
-          },
-          body: JSON.stringify({
-            agentName: selectedAgent.name,
-            script: selectedAgent.greeting_script,
-            voiceStyle: selectedAgent.voice_style,
-            businessType: selectedAgent.business_type,
-          }),
+      // Using Supabase functions.invoke which handles auth automatically
+      const { data, error } = await supabase.functions.invoke('start-agent-campaign', {
+        body: {
+          agentName: selectedAgent.name,
+          script: selectedAgent.greeting_script,
+          voiceStyle: selectedAgent.voice_style,
+          businessType: selectedAgent.business_type,
         }
-      );
+      });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
+      if (error) throw new Error(error.message || "Failed to start campaign");
 
       toast({
         title: `Campaign started for ${selectedAgent.name}!`,
