@@ -16,6 +16,7 @@ type StartCampaignDialogProps = {
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   loading?: boolean;
+  agentName: string;
 };
 
 export function StartCampaignDialog({
@@ -23,6 +24,7 @@ export function StartCampaignDialog({
   onOpenChange,
   onConfirm,
   loading = false,
+  agentName,
 }: StartCampaignDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -30,7 +32,7 @@ export function StartCampaignDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Start AI Agent Campaign</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to trigger this AI agent to start a call?
+            Are you sure you want to start a campaign with {agentName || "this agent"}?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
