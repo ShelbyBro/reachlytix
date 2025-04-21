@@ -39,16 +39,19 @@ export function AgentTable() {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://szkhnwedzwvlqlktgvdp.supabase.co/functions/v1/start-ai-agent-call",
+        "https://szkhnwedzwvlqlktgvdp.supabase.co/functions/v1/start-agent-campaign",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6a2hud2Vkend2bHFsa3RndmRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4MTQ4NjYsImV4cCI6MjA2MDM5MDg2Nn0.upSWAVArksac-MgW6u5BW5kTHKnmCD6vMDP7e0MUUlo",
+            "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6a2hud2Vkend2bHFsa3RndmRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4MTQ4NjYsImV4cCI6MjA2MDM5MDg2Nn0.upSWAVArksac-MgW6u5BW5kTHKnmCD6vMDP7e0MUUlo"
           },
           body: JSON.stringify({
-            agent_id: selectedAgent.id,
+            agentName: selectedAgent.name,
             script: selectedAgent.greeting_script,
-            phone: "+11234567890", // This should be configured per agent or campaign
+            voiceStyle: selectedAgent.voice_style,
+            businessType: selectedAgent.business_type
           }),
         }
       );
@@ -56,7 +59,7 @@ export function AgentTable() {
       if (!response.ok) throw new Error("Failed to start campaign");
 
       toast({
-        title: "Campaign Started",
+        title: `Campaign started for ${selectedAgent.name}!`,
         description: "Your AI agent campaign has been initiated successfully.",
       });
 
@@ -64,7 +67,7 @@ export function AgentTable() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to start the campaign. Please try again.",
+        description: "Failed to start agent campaign. Please try again.",
         variant: "destructive",
       });
     } finally {
