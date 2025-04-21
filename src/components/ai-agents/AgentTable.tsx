@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +20,7 @@ export function AgentTable() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { data: agents = [] } = useQuery({
+  const { data: agents = [], refetch } = useQuery({
     queryKey: ["agents"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -35,39 +34,43 @@ export function AgentTable() {
 
   const handleStartCampaign = async () => {
     if (!selectedAgent) return;
-    
+
     setLoading(true);
     try {
-      console.log("Starting campaign for agent:", selectedAgent.name);
-      
-      // Instead of using raw fetch, use Supabase's function invoker
-      const { data, error } = await supabase.functions.invoke('start-agent-campaign', {
-        body: {
-          agentName: selectedAgent.name,
-          script: selectedAgent.greeting_script,
-          voiceStyle: selectedAgent.voice_style,
-          businessType: selectedAgent.business_type
+      const response = await fetch(
+        "https://szkhnwedzwvlqlktgvdp.supabase.co/functions/v1/start-agent-campaign",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${supabase.auth.session()?.access_token ?? ""}`,
+          },
+          body: JSON.stringify({
+            agentName: selectedAgent.name,
+            script: selectedAgent.greeting_script,
+            voiceStyle: selectedAgent.voice_style,
+            businessType: selectedAgent.business_type,
+          }),
         }
-      });
+      );
 
-      console.log("Response data:", data);
-      
-      if (error) {
-        console.error("Supabase function error:", error);
-        throw new Error(`Failed to start campaign: ${error.message}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       toast({
         title: `Campaign started for ${selectedAgent.name}!`,
-        description: "Your AI agent campaign has been initiated successfully.",
+        description: "The AI Agent has begun its mission 🚀",
       });
 
       setDialogOpen(false);
-    } catch (error) {
-      console.error("Campaign start error:", error);
+      refetch();
+    } catch (error: any) {
+      console.error("Campaign Start Error:", error);
       toast({
-        title: "Error",
-        description: "Failed to start agent campaign. Please try again.",
+        title: "Failed to Start Campaign",
+        description: error?.message || "Unexpected error occurred.",
         variant: "destructive",
       });
     } finally {
