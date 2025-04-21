@@ -10,7 +10,7 @@ export const useCampaignFormState = (editingCampaign: SimpleCampaign | null = nu
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(
     editingCampaign?.scheduled_at ? new Date(editingCampaign.scheduled_at) : undefined
   );
-  const [messageType, setMessageType] = useState<"email" | "sms" | "whatsapp">("email");
+  const [messageType, setMessageType] = useState<"email" | "sms" | "whatsapp" | "ai">("email");
   const [smsContent, setSmsContent] = useState("");
   const [whatsappEnabled, setWhatsappEnabled] = useState(false);
   const [whatsappContent, setWhatsappContent] = useState("");
@@ -36,4 +36,3 @@ export const useCampaignFormState = (editingCampaign: SimpleCampaign | null = nu
     setWhatsappContent,
   };
 };
-

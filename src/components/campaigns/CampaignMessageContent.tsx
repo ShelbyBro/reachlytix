@@ -7,6 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { MessageTypeSelector } from "./MessageTypeSelector";
 import { TestSmsSection } from "./TestSmsSection";
 import { TemplateSelector } from "./TemplateSelector";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Bot } from "lucide-react";
 
 interface CampaignMessageContentProps {
   messageType: "email" | "sms" | "whatsapp" | "ai";
@@ -59,10 +61,12 @@ export function CampaignMessageContent({
         script={null}
       />
 
-      <TemplateSelector 
-        messageType={messageType}
-        onTemplateSelect={handleTemplateSelect}
-      />
+      {messageType !== "ai" && (
+        <TemplateSelector 
+          messageType={messageType as "email" | "sms" | "whatsapp"}
+          onTemplateSelect={handleTemplateSelect}
+        />
+      )}
 
       {messageType === "email" && (
         <>
@@ -120,6 +124,16 @@ export function CampaignMessageContent({
             </div>
           )}
         </>
+      )}
+
+      {messageType === "ai" && (
+        <Alert className="bg-purple-50 border-purple-200">
+          <Bot className="h-4 w-4" />
+          <AlertTitle>AI Agent Campaign</AlertTitle>
+          <AlertDescription>
+            This campaign will be executed by an AI calling agent. Your leads will be contacted automatically by phone using an AI voice assistant.
+          </AlertDescription>
+        </Alert>
       )}
 
       {(messageType === "sms" || messageType === "whatsapp") && (

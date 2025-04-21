@@ -3,7 +3,10 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "whatsapp") => {
+export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "whatsapp" | "ai") => {
+  // Convert "ai" type to "sms" for compatibility with the API
+  const apiMessageType = messageType === "ai" ? "sms" : messageType;
+  
   const [testPhone, setTestPhone] = useState<string>("");
   const [sendingTestSms, setSendingTestSms] = useState<boolean>(false);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
@@ -22,7 +25,7 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
     setErrorDetails(null);
     
     // Skip if not SMS or WhatsApp message type
-    if (messageType === "email") {
+    if (apiMessageType === "email") {
       toast({
         description: "Email testing is not available in this interface.",
       });
@@ -44,7 +47,7 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
     const testMessage = content || "This is a test SMS from Reachlytix - 🚀";
 
     try {
-      console.log(`Sending test ${messageType} to:`, testPhone);
+      console.log(`Sending test ${apiMessageType} to:`, testPhone);
       console.log(`Using Twilio credentials:`, showCredentialsForm ? 'Custom' : 'Environment variables');
       
       const { data, error } = await supabase.functions.invoke("send-campaign-sms", {
@@ -53,22 +56,22 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
           content: testMessage,
           isTest: true,
           testPhone,
-          messageType,
+          messageType: apiMessageType,
           // Include manual credentials if provided
           twilioCredentials: showCredentialsForm ? twilioCredentials : undefined
         }
       });
 
       if (error) {
-        console.error(`Edge function error when sending test ${messageType}:`, error);
+        console.error(`Edge function error when sending test ${apiMessageType}:`, error);
         throw new Error(`Edge function error: ${error.message}`);
       }
 
       if (!data || !data.success) {
-        console.error(`Test ${messageType} failed:`, data);
+        console.error(`Test ${apiMessageType} failed:`, data);
         
         // Extract detailed error information if available
-        let errorMessage = data?.error || `Failed to send test ${messageType}`;
+        let errorMessage = data?.error || `Failed to send test ${apiMessageType}`;
         if (data?.details) {
           setErrorDetails(data.details);
         }
@@ -83,17 +86,17 @@ export const useTestSMS = (campaignId: string, messageType: "email" | "sms" | "w
         throw new Error(errorMessage);
       }
 
-      console.log(`Test ${messageType} response:`, data);
+      console.log(`Test ${apiMessageType} response:`, data);
 
       toast({
         title: "Test message sent",
-        description: `Test ${messageType} message sent to ${testPhone}`
+        description: `Test ${messageType === "ai" ? "AI" : apiMessageType} message sent to ${testPhone}`
       });
     } catch (error: any) {
-      console.error(`Error sending test ${messageType}:`, error);
+      console.error(`Error sending test ${apiMessageType}:`, error);
       
       // Check if it might be a Twilio credentials issue
-      const errorMessage = error.message || `Failed to send test ${messageType}.`;
+      const errorMessage = error.message || `Failed to send test ${apiMessageType}.`;
       
       // Extract any additional details if available
       if (error.details) {
