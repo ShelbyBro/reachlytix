@@ -40,7 +40,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
     { icon: Phone, label: "VOIP Caller", href: "/voip" },
     { icon: Bot, label: "AI Agent Zone", href: "/ai-agents" },
     { icon: Activity, label: "Analytics", href: "/analytics" },
-    { icon: Wand2, label: "Lead Generator", href: "/lead-generator" },
+    { icon: Search, label: "Lead Generator", href: "/lead-generator" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
   
