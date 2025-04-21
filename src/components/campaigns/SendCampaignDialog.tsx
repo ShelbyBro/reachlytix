@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { SimpleCampaign, SimpleLead, SimpleScript } from "@/types/campaign";
 import { sendCampaignEmails, sendCampaignSMS } from "@/utils/campaign-utils";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mail, MessageSquare, CalendarCheck } from "lucide-react";
+import { Loader2, Mail, MessageSquare, CalendarCheck, Bot } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -38,41 +38,40 @@ export function SendCampaignDialog({
 }: SendCampaignDialogProps) {
   const { toast } = useToast();
   const [sendingCampaign, setSendingCampaign] = useState(false);
-  const [messageType, setMessageType] = useState<"email" | "sms" | "whatsapp">("email");
+  const [messageType, setMessageType] = useState<"email" | "sms" | "whatsapp" | "ai">("email");
   const [sendMode, setSendMode] = useState<"now" | "schedule">("now");
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
   const [scheduledTime, setScheduledTime] = useState("12:00");
 
-  const handleStartCampaign = async () => {
+  const handleStartAICampaign = async () => {
     if (!campaign) return;
     
     setSendingCampaign(true);
     
     try {
-      // Update campaign status to "running" in Supabase
       const { error } = await supabase
         .from("campaigns")
-        .update({ status: "running" })
+        .update({ 
+          status: "running",
+          started_at: new Date().toISOString()
+        })
         .eq("id", campaign.id);
       
       if (error) throw error;
       
       toast({
-        title: "Campaign Started",
-        description: `Campaign "${campaign.title}" has been started successfully.`
+        title: "AI Campaign Started",
+        description: `Campaign "${campaign.title}" has been activated and will begin processing leads.`
       });
       
-      // Call the onSendSuccess callback to refresh campaigns
       onSendSuccess();
-      
-      // Close the dialog
       onClose();
     } catch (error: any) {
-      console.error("Error starting campaign:", error);
+      console.error("Error starting AI campaign:", error);
       toast({
         variant: "destructive",
         title: "Start Campaign Failed",
-        description: error.message || "Failed to start the campaign. Please try again."
+        description: error.message || "Failed to start the AI campaign. Please try again."
       });
     } finally {
       setSendingCampaign(false);
@@ -93,11 +92,11 @@ export function SendCampaignDialog({
       return;
     }
     
-    if (!script && messageType === "email") {
+    if (!script && (messageType === "email" || messageType === "sms" || messageType === "whatsapp")) {
       toast({
         variant: "destructive",
         title: "No content",
-        description: "This campaign doesn't have any email content."
+        description: `This campaign doesn't have any ${messageType} content.`
       });
       return;
     }
@@ -138,6 +137,11 @@ export function SendCampaignDialog({
         onClose();
         return;
       }
+
+      if (messageType === "ai") {
+        await handleStartAICampaign();
+        return;
+      }
       
       let result;
       
@@ -149,14 +153,18 @@ export function SendCampaignDialog({
           script?.content || "",
           leads
         );
-      } else {
+      } else if (messageType === "sms" || messageType === "whatsapp") {
         result = await sendCampaignSMS(
           campaignId,
           campaign.title,
-          script?.content || "Thank you for joining Reachlytix. Stay tuned for offers!",
+          script?.content || "",
           leads,
           messageType
         );
+      }
+      
+      if (!result) {
+        throw new Error(`Failed to send ${messageType} campaign`);
       }
       
       toast({
@@ -170,11 +178,11 @@ export function SendCampaignDialog({
         onClose();
       }
     } catch (error: any) {
-      console.error("Error sending campaign:", error);
+      console.error(`Error sending ${messageType} campaign:`, error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to send campaign."
+        description: error.message || `Failed to send ${messageType} campaign.`
       });
     } finally {
       setSendingCampaign(false);
@@ -221,14 +229,12 @@ export function SendCampaignDialog({
         </Tabs>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={sendingCampaign}>
             Cancel
           </Button>
           <Button
             disabled={sendingCampaign}
-            onClick={messageType === "email" || messageType === "sms" || messageType === "whatsapp" 
-              ? handleSendCampaign 
-              : handleStartCampaign}
+            onClick={handleSendCampaign}
             className="gap-2"
           >
             {sendingCampaign ? (
@@ -253,12 +259,17 @@ export function SendCampaignDialog({
                     ) : messageType === "sms" ? (
                       <>
                         <MessageSquare className="h-4 w-4" />
-                        Send SMS Now
+                        Send SMS
                       </>
-                    ) : (
+                    ) : messageType === "whatsapp" ? (
                       <>
                         <MessageSquare className="h-4 w-4" />
                         Send WhatsApp
+                      </>
+                    ) : (
+                      <>
+                        <Bot className="h-4 w-4" />
+                        Start AI Campaign
                       </>
                     )}
                   </>
