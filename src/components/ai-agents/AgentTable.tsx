@@ -38,6 +38,8 @@ export function AgentTable() {
     
     setLoading(true);
     try {
+      console.log("Starting campaign for agent:", selectedAgent.name);
+      
       const response = await fetch(
         "https://szkhnwedzwvlqlktgvdp.supabase.co/functions/v1/start-agent-campaign",
         {
@@ -56,7 +58,13 @@ export function AgentTable() {
         }
       );
 
-      if (!response.ok) throw new Error("Failed to start campaign");
+      console.log("Response status:", response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(`Failed to start campaign: ${response.status} ${errorText}`);
+      }
 
       toast({
         title: `Campaign started for ${selectedAgent.name}!`,
@@ -65,6 +73,7 @@ export function AgentTable() {
 
       setDialogOpen(false);
     } catch (error) {
+      console.error("Campaign start error:", error);
       toast({
         title: "Error",
         description: "Failed to start agent campaign. Please try again.",
