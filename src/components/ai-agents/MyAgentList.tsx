@@ -22,6 +22,7 @@ type Agent = {
   created_at: string | null;
   current_index: number;
   lead_list: string;
+  status?: string;
 };
 
 interface AgentDBResponse {
@@ -68,7 +69,8 @@ export function MyAgentList() {
         greeting_script: agent.greeting_script || "No greeting script",
         created_at: agent.created_at,
         current_index: agent.current_index || 0,
-        lead_list: agent.lead_list || ""
+        lead_list: agent.lead_list || "",
+        status: agent.status || "pending"
       })) as Agent[];
     },
     enabled: !!userId,
