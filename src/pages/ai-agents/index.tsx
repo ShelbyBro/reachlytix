@@ -2,6 +2,7 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AgentTable } from "@/components/ai-agents/AgentTable";
 import { AgentRequestForm } from "@/components/ai-agents/AgentRequestForm";
+import { AgentLogsTable } from "@/components/ai-agents/AgentLogsTable";
 import { Shield, Bot } from "lucide-react";
 import Layout from "@/components/layout";
 
@@ -17,12 +18,16 @@ export default function AiAgentsPage() {
           <TabsList className="mb-4">
             <TabsTrigger value="agents">📞 My Agents</TabsTrigger>
             <TabsTrigger value="request">➕ Request Agent</TabsTrigger>
+            <TabsTrigger value="logs">📊 Call Logs</TabsTrigger>
           </TabsList>
           <TabsContent value="agents">
             <AgentTable />
           </TabsContent>
           <TabsContent value="request">
             <AgentRequestForm />
+          </TabsContent>
+          <TabsContent value="logs">
+            <AgentLogsTable />
           </TabsContent>
         </Tabs>
       </div>

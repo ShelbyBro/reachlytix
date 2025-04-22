@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Ensure authenticated users only
 export function AgentBuilderCard() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -30,8 +28,8 @@ export function AgentBuilderCard() {
     greetingScriptPresets[voiceStyles[0].value][businessTypes[0].value]
   );
   const [loading, setLoading] = useState(false);
+  const [leadListInput, setLeadListInput] = useState("");
 
-  // Auto-update greeting script on dropdown changes
   const handleVoiceStyleChange = (value: string) => {
     setVoiceStyle(value);
     setGreetingScript(greetingScriptPresets[value][businessType] || "");
@@ -77,6 +75,11 @@ export function AgentBuilderCard() {
       return;
     }
     setLoading(true);
+    const leadList = leadListInput
+      .split(",")
+      .map(number => number.trim())
+      .filter(number => number);
+
     const { error } = await supabase.from("ai_agents").insert([
       {
         name,
@@ -85,8 +88,10 @@ export function AgentBuilderCard() {
         greeting_script: greetingScript,
         client_id: user.id,
         status: "pending",
+        lead_list: leadList
       },
     ]);
+
     setLoading(false);
 
     if (error) {
@@ -104,7 +109,6 @@ export function AgentBuilderCard() {
     }
   };
 
-  // Hide if not logged in
   if (!user) {
     return (
       <div className="w-full max-w-2xl mt-8 flex items-center justify-center">
@@ -182,6 +186,10 @@ export function AgentBuilderCard() {
               This script will be used when your agent greets contacts.
             </div>
           </div>
+          <LeadListInput
+            value={leadListInput}
+            onChange={setLeadListInput}
+          />
           <Button type="submit" className="mt-2 w-fit" disabled={loading}>
             {loading ? (
               <>
