@@ -75,6 +75,7 @@ export function AgentBuilderCard() {
     setLoading(false);
 
     if (error) {
+      console.error("Error saving agent:", error);
       toast({
         title: "Error saving agent",
         description: error.message,
@@ -136,4 +137,3 @@ export function AgentBuilderCard() {
     </div>
   );
 }
-
