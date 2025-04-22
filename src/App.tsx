@@ -26,6 +26,7 @@ import ComingSoonPage from "./pages/demo/ComingSoonPage";
 import SettingsPage from "./pages/settings";
 import VoipPage from "./pages/voip";
 import SmartScrapePage from "./pages/lead-generator/smart-scrape";
+import ClientPanel from "./pages/client/ClientPanel";
 
 // Lazy load AI Agents page
 const AiAgentsPage = lazy(() => import("./pages/ai-agents"));
@@ -93,11 +94,6 @@ const App = () => (
                 <SmartScrapePage />
               </ProtectedRoute>
             } />
-            <Route path="/admin" element={
-              <ProtectedRoute requiredRoles={["admin"]}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } />
             <Route path="/settings" element={
               <ProtectedRoute>
                 <SettingsPage />
@@ -106,6 +102,18 @@ const App = () => (
             <Route path="/voip" element={
               <ProtectedRoute>
                 <VoipPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* New client and admin dashboard routes */}
+            <Route path="/client-panel" element={
+              <ProtectedRoute requiredRoles={["client"]}>
+                <ClientPanel />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin-dashboard" element={
+              <ProtectedRoute requiredRoles={["admin"]}>
+                <AdminDashboard />
               </ProtectedRoute>
             } />
 

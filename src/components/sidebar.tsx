@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -15,12 +16,15 @@ import {
   Search,
   Wand2,
   Phone,
-  Bot
+  Bot,
+  LayoutDashboard as Dashboard,
+  Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/use-user-role";
 
 type SidebarProps = {
   isAdmin?: boolean;
@@ -30,9 +34,11 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
+  const { isAdmin: userIsAdmin, isClient } = useUserRole();
   
   const clientLinks = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+    { icon: Dashboard, label: "Client Panel", href: "/client-panel" },
     { icon: UserPlus, label: "Add Lead", href: "/leads/add" },
     { icon: Upload, label: "Upload Leads", href: "/upload" },
     { icon: Megaphone, label: "Campaign Manager", href: "/campaigns" },
@@ -46,9 +52,11 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
   
   const adminLinks = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
+    { icon: Shield, label: "Admin Dashboard", href: "/admin-dashboard" },
     { icon: Users, label: "Users", href: "/admin/users" },
     { icon: Upload, label: "Leads", href: "/admin/leads" },
     { icon: Megaphone, label: "Campaigns", href: "/admin/campaigns" },
+    { icon: Bot, label: "AI Agents", href: "/ai-agents" },
     { icon: BarChart3, label: "Reports", href: "/admin/reports" },
     { icon: Settings, label: "Settings", href: "/admin/settings" },
   ];
