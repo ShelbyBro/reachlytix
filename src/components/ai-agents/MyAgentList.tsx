@@ -1,13 +1,13 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Play, Trash } from "lucide-react";
+import { AlertCircle, Play, Trash, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { StartCampaignDialog } from "./StartCampaignDialog";
+import { ResetAgentDialog } from "./ResetAgentDialog";
 import { useState } from "react";
 import { AgentCallLogs } from "./AgentCallLogs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,7 +45,9 @@ export function MyAgentList() {
   const { toast } = useToast();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["ai_agents_custom", userId],
@@ -104,6 +106,38 @@ export function MyAgentList() {
     }
   };
 
+  const handleResetAgent = async () => {
+    if (!selectedAgent) return;
+    
+    setResetting(true);
+    try {
+      const { error } = await supabase
+        .from('ai_agents')
+        .update({ 
+          current_index: 0,
+          status: 'pending'
+        })
+        .eq('id', selectedAgent.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Agent reset successfully",
+        description: "The agent will start from the beginning.",
+      });
+      
+      setResetDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to reset the agent. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setResetting(false);
+    }
+  };
+
   return (
     <>
       <StartCampaignDialog
@@ -113,6 +147,14 @@ export function MyAgentList() {
         loading={loading}
         agentName={selectedAgent?.name || ""}
         agentId={selectedAgent?.id || ""}
+      />
+
+      <ResetAgentDialog
+        open={resetDialogOpen}
+        onOpenChange={setResetDialogOpen}
+        onConfirm={handleResetAgent}
+        loading={resetting}
+        agentName={selectedAgent?.name || ""}
       />
 
       <div className="mt-2">
@@ -152,6 +194,17 @@ export function MyAgentList() {
                       }}
                     >
                       <Play className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="ml-1"
+                      onClick={() => {
+                        setSelectedAgent(agent);
+                        setResetDialogOpen(true);
+                      }}
+                    >
+                      <RefreshCw className="w-4 h-4" />
                     </Button>
                     <Button
                       size="icon"
