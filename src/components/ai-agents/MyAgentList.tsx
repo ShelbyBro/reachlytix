@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { StartCampaignDialog } from "./StartCampaignDialog";
 import { useState } from "react";
 import { AgentCallLogs } from "./AgentCallLogs";
+import { Skeleton } from "@/components/ui/skeleton"; // Add this import
 
 type Agent = {
   id: string;

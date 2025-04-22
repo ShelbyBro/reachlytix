@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -56,11 +55,9 @@ export function AgentBuilderCard() {
 
     setLoading(true);
     
-    // Process the leadListInput to create an array of phone numbers
-    const leadList = leadListInput
-      .split(",")
-      .map(number => number.trim())
-      .filter(number => number);
+    // Process the leadListInput into a string (not array)
+    // This is the key fix: store it directly as string
+    const leadList = leadListInput.trim();
 
     try {
       const { error } = await supabase

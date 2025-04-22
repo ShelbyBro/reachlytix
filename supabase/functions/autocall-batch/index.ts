@@ -61,8 +61,9 @@ serve(async (req: Request) => {
       }
       
       if (agentData?.lead_list) {
-        // Transform lead_list array to the expected format
-        processedLeads = agentData.lead_list.map((phone: string) => ({
+        // Transform lead_list string to the expected format
+        const phoneNumbers = agentData.lead_list.split(',').map((phone: string) => phone.trim());
+        processedLeads = phoneNumbers.map((phone: string) => ({
           name: "Lead",
           phone
         }));

@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { agentName, script, voiceStyle, businessType, leadList } = await req.json()
+    const { agentName, script, voiceStyle, businessType, leadList, agentId } = await req.json()
     const authHeader = req.headers.get('Authorization')
     
     if (!authHeader) {
@@ -27,12 +27,32 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // Get lead list from the agent if we have an agentId and no leadList
+    let phoneNumbers = leadList || [];
+    
+    if (agentId && (!leadList || leadList.length === 0)) {
+      // Fetch the lead_list from the agent
+      const { data: agentData, error: agentError } = await supabaseAdmin
+        .from('ai_agents')
+        .select('lead_list')
+        .eq('id', agentId)
+        .single();
+        
+      if (agentError) throw agentError;
+      
+      // Convert the comma-separated string to an array
+      if (agentData?.lead_list) {
+        phoneNumbers = agentData.lead_list.split(',').map((number: string) => number.trim());
+      }
+    }
+
     // Log the campaign start in ai_agent_logs
     const { data: logData, error: logError } = await supabaseAdmin
       .from('ai_agent_logs')
       .insert({
+        agent_id: agentId,
         status: 'processing',
-        phone: leadList && leadList.length > 0 ? leadList[0] : 'N/A',
+        phone: phoneNumbers && phoneNumbers.length > 0 ? phoneNumbers[0] : 'N/A',
         script: script || '',
       })
       .select()
@@ -41,7 +61,7 @@ serve(async (req) => {
     if (logError) throw logError
 
     return new Response(
-      JSON.stringify({ success: true, log: logData, leadList }),
+      JSON.stringify({ success: true, log: logData, phoneNumbers }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
