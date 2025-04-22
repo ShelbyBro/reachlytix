@@ -55,38 +55,49 @@ export function AgentBuilderCard() {
     }
 
     setLoading(true);
+    
+    // Process the leadListInput to create an array of phone numbers
     const leadList = leadListInput
       .split(",")
       .map(number => number.trim())
       .filter(number => number);
 
-    const { error } = await supabase.from("ai_agents").insert([
-      {
-        name,
-        voice_style: voiceStyle,
-        business_type: businessType,
-        greeting_script: greetingScript,
-        client_id: user.id,
-        status: "pending",
-        lead_list: leadList
-      },
-    ]);
+    try {
+      const { error } = await supabase
+        .from("ai_agents")
+        .insert({
+          name,
+          voice_style: voiceStyle,
+          business_type: businessType,
+          greeting_script: greetingScript,
+          client_id: user.id,
+          status: "pending",
+          lead_list: leadList
+        });
 
-    setLoading(false);
-
-    if (error) {
-      console.error("Error saving agent:", error);
+      if (error) {
+        console.error("Error saving agent:", error);
+        toast({
+          title: "Error saving agent",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Agent saved successfully!",
+          description: "Your AI calling agent has been created.",
+        });
+        resetForm();
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
       toast({
-        title: "Error saving agent",
-        description: error.message,
+        title: "Unexpected error",
+        description: "Something went wrong while saving your agent.",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Agent saved successfully!",
-        description: "Your AI calling agent has been created.",
-      });
-      resetForm();
+    } finally {
+      setLoading(false);
     }
   };
 

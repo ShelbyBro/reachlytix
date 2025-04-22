@@ -43,8 +43,33 @@ serve(async (req: Request) => {
     );
 
     // Get request body
-    const leads = await req.json();
-    if (!Array.isArray(leads) || leads.length === 0) {
+    const { leads, agentId } = await req.json();
+    
+    // Handle both leads array and lead_list formats
+    let processedLeads = leads;
+    
+    if (!processedLeads && agentId) {
+      // If we have an agentId but no leads, fetch the lead_list from the agent
+      const { data: agentData, error: agentError } = await supabaseClient
+        .from("ai_agents")
+        .select("lead_list")
+        .eq("id", agentId)
+        .single();
+        
+      if (agentError) {
+        throw new Error(`Error fetching agent: ${agentError.message}`);
+      }
+      
+      if (agentData?.lead_list) {
+        // Transform lead_list array to the expected format
+        processedLeads = agentData.lead_list.map((phone: string) => ({
+          name: "Lead",
+          phone
+        }));
+      }
+    }
+
+    if (!Array.isArray(processedLeads) || processedLeads.length === 0) {
       return new Response(
         JSON.stringify({ error: "Invalid leads data. Expected non-empty array." }),
         { 
@@ -55,14 +80,14 @@ serve(async (req: Request) => {
     }
 
     // Validate leads structure
-    const invalidLeads = leads.filter(
-      (lead) => !lead.name || !lead.phone || typeof lead.name !== "string" || typeof lead.phone !== "string"
+    const invalidLeads = processedLeads.filter(
+      (lead) => !lead.phone || typeof lead.phone !== "string"
     );
 
     if (invalidLeads.length > 0) {
       return new Response(
         JSON.stringify({
-          error: "Invalid lead format. Each lead must have name and phone properties.",
+          error: "Invalid lead format. Each lead must have a phone property.",
           invalidLeads,
         }),
         { 
@@ -72,14 +97,14 @@ serve(async (req: Request) => {
       );
     }
 
-    console.log(`Processing ${leads.length} leads for auto-calling`);
+    console.log(`Processing ${processedLeads.length} leads for auto-calling`);
 
     // Here you would typically save to database and/or trigger calls
     // For now we'll just return success
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Auto-call campaign started with ${leads.length} leads` 
+        message: `Auto-call campaign started with ${processedLeads.length} leads` 
       }),
       { 
         status: 200,

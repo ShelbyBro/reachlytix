@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { agentName, script, voiceStyle, businessType } = await req.json()
+    const { agentName, script, voiceStyle, businessType, leadList } = await req.json()
     const authHeader = req.headers.get('Authorization')
     
     if (!authHeader) {
@@ -32,7 +32,7 @@ serve(async (req) => {
       .from('ai_agent_logs')
       .insert({
         status: 'processing',
-        phone: 'N/A',
+        phone: leadList && leadList.length > 0 ? leadList[0] : 'N/A',
         script: script || '',
       })
       .select()
@@ -41,7 +41,7 @@ serve(async (req) => {
     if (logError) throw logError
 
     return new Response(
-      JSON.stringify({ success: true, log: logData }),
+      JSON.stringify({ success: true, log: logData, leadList }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
