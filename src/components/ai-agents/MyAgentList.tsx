@@ -1,15 +1,14 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Pen, Play, Trash } from "lucide-react";
+import { AlertCircle, Play, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { StartCampaignDialog } from "./StartCampaignDialog";
 import { useState } from "react";
+import { AgentCallLogs } from "./AgentCallLogs";
 
 type Agent = {
   id: string;
@@ -158,6 +157,7 @@ export function MyAgentList() {
                   <div className="italic text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
                     {agent.greeting_script}
                   </div>
+                  <AgentCallLogs agentId={agent.id} />
                 </Card>
               ))}
             </div>

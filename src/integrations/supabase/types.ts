@@ -15,7 +15,7 @@ export type Database = {
           created_at: string
           id: string
           phone: string
-          script: string
+          script: string | null
           status: string
           timestamp: string
         }
@@ -24,7 +24,7 @@ export type Database = {
           created_at?: string
           id?: string
           phone: string
-          script: string
+          script?: string | null
           status?: string
           timestamp?: string
         }
@@ -33,7 +33,7 @@ export type Database = {
           created_at?: string
           id?: string
           phone?: string
-          script?: string
+          script?: string | null
           status?: string
           timestamp?: string
         }
@@ -53,8 +53,10 @@ export type Database = {
           campaign_id: string | null
           client_id: string | null
           created_at: string | null
+          current_index: number | null
           greeting_script: string | null
           id: string
+          lead_list: string | null
           name: string | null
           notes: string | null
           started_at: string | null
@@ -66,8 +68,10 @@ export type Database = {
           campaign_id?: string | null
           client_id?: string | null
           created_at?: string | null
+          current_index?: number | null
           greeting_script?: string | null
           id?: string
+          lead_list?: string | null
           name?: string | null
           notes?: string | null
           started_at?: string | null
@@ -79,8 +83,10 @@ export type Database = {
           campaign_id?: string | null
           client_id?: string | null
           created_at?: string | null
+          current_index?: number | null
           greeting_script?: string | null
           id?: string
+          lead_list?: string | null
           name?: string | null
           notes?: string | null
           started_at?: string | null
@@ -603,6 +609,10 @@ export type Database = {
       http_set_curlopt: {
         Args: { curlopt: string; value: string }
         Returns: boolean
+      }
+      process_ai_agent_calls: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       text_to_bytea: {
         Args: { data: string }
