@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,7 +23,7 @@ type Agent = {
   created_at: string | null;
   current_index: number;
   lead_list: string;
-  status?: string;
+  status: string; // Added the status property here
 };
 
 interface AgentDBResponse {
