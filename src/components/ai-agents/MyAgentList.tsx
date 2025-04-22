@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Play, Trash, RefreshCw } from "lucide-react";
+import { AlertCircle, Play, Trash, RefreshCw, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { StartCampaignDialog } from "./StartCampaignDialog";
@@ -48,8 +48,9 @@ export function MyAgentList() {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["ai_agents_custom", userId],
     queryFn: async () => {
       if (!userId) return [];
@@ -138,6 +139,35 @@ export function MyAgentList() {
     }
   };
 
+  const handleToggleStatus = async (agent: Agent) => {
+    setUpdatingStatus(true);
+    const newStatus = agent.status === 'running' ? 'inactive' : 'running';
+    
+    try {
+      const { error } = await supabase
+        .from('ai_agents')
+        .update({ status: newStatus })
+        .eq('id', agent.id);
+
+      if (error) throw error;
+
+      await refetch();
+      
+      toast({
+        title: `Agent ${newStatus === 'running' ? 'resumed' : 'paused'}`,
+        description: `${agent.name} has been ${newStatus === 'running' ? 'resumed' : 'paused'}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update agent status. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
   return (
     <>
       <StartCampaignDialog
@@ -194,6 +224,19 @@ export function MyAgentList() {
                       }}
                     >
                       <Play className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="ml-1"
+                      disabled={updatingStatus || agent.status === 'completed'}
+                      onClick={() => handleToggleStatus(agent)}
+                    >
+                      {agent.status === 'running' ? (
+                        <Pause className="w-4 h-4" />
+                      ) : (
+                        <Play className="w-4 h-4" />
+                      )}
                     </Button>
                     <Button
                       size="icon"
