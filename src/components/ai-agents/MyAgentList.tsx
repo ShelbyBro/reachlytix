@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { StartCampaignDialog } from "./StartCampaignDialog";
 import { useState } from "react";
 import { AgentCallLogs } from "./AgentCallLogs";
-import { Skeleton } from "@/components/ui/skeleton"; // Add this import
+import { Skeleton } from "@/components/ui/skeleton";
+import { ProgressTracker } from "./ProgressTracker";
 
 type Agent = {
   id: string;
@@ -19,6 +19,8 @@ type Agent = {
   business_type: string;
   greeting_script: string;
   created_at: string | null;
+  current_index: number;
+  lead_list: string;
 };
 
 interface AgentDBResponse {
@@ -59,6 +61,8 @@ export function MyAgentList() {
         business_type: agent.business_type || "Default",
         greeting_script: agent.greeting_script || "No greeting script",
         created_at: agent.created_at,
+        current_index: agent.current_index || 0,
+        lead_list: agent.lead_list || ""
       })) as Agent[];
     },
     enabled: !!userId,
@@ -156,9 +160,16 @@ export function MyAgentList() {
                       <Trash className="w-4 h-4 text-red-500" />
                     </Button>
                   </div>
-                  <div className="italic text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
+                  
+                  <ProgressTracker 
+                    currentIndex={agent.current_index} 
+                    leadList={agent.lead_list} 
+                  />
+                  
+                  <div className="italic text-sm text-muted-foreground bg-muted px-2 py-1 rounded mt-3">
                     {agent.greeting_script}
                   </div>
+                  
                   <AgentCallLogs agentId={agent.id} />
                 </Card>
               ))}
