@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,6 +35,8 @@ interface AgentDBResponse {
   notes?: string | null;
   status?: string | null;
   created_at: string | null;
+  current_index?: number;
+  lead_list?: string;
 }
 
 export function MyAgentList() {
