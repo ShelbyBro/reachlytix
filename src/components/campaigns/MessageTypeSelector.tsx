@@ -1,27 +1,27 @@
 
-import React from "react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Mail, MessageSquare, Send, Bot, Phone, Loader2 } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Phone } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useTestSMS } from "@/hooks/use-test-sms";
+import { RadioOptions } from "./send-dialog/message-type/RadioOptions";
+import { AIAlert } from "./send-dialog/message-type/AIAlert";
+import { SimpleScript } from "@/types/campaign";
 
 interface MessageTypeSelectorProps {
   messageType: "email" | "sms" | "whatsapp" | "ai";
   onMessageTypeChange: (type: "email" | "sms" | "whatsapp" | "ai") => void;
   campaignId: string;
-  script: { content?: string } | null;
+  script: SimpleScript | null;
 }
 
 export function MessageTypeSelector({ 
   messageType, 
-  onMessageTypeChange,
+  onMessageTypeChange, 
   campaignId,
-  script
+  script 
 }: MessageTypeSelectorProps) {
-  // Only pass "sms" type to useTestSMS when messageType is "ai"
   const smsType = messageType === "ai" ? "sms" : messageType;
   
   const { 
@@ -33,36 +33,7 @@ export function MessageTypeSelector({
 
   return (
     <div className="space-y-4">
-      <RadioGroup 
-        value={messageType} 
-        onValueChange={(val) => onMessageTypeChange(val as "email" | "sms" | "whatsapp" | "ai")}
-        className="flex flex-col space-y-3"
-      >
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="email" id="email" />
-          <Label htmlFor="email" className="flex items-center">
-            <Mail className="w-4 h-4 mr-2" /> Email
-          </Label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="sms" id="sms" />
-          <Label htmlFor="sms" className="flex items-center">
-            <MessageSquare className="w-4 h-4 mr-2" /> SMS
-          </Label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="whatsapp" id="whatsapp" />
-          <Label htmlFor="whatsapp" className="flex items-center">
-            <MessageSquare className="w-4 h-4 mr-2" /> WhatsApp
-          </Label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="ai" id="ai" />
-          <Label htmlFor="ai" className="flex items-center">
-            <Bot className="w-4 h-4 mr-2" /> AI Agent
-          </Label>
-        </div>
-      </RadioGroup>
+      <RadioOptions messageType={messageType} onMessageTypeChange={onMessageTypeChange} />
 
       {(messageType === "sms" || messageType === "whatsapp") && (
         <Alert className="mt-4 bg-blue-50 border-blue-200">
@@ -90,17 +61,7 @@ export function MessageTypeSelector({
                 disabled={sendingTestSms}
                 className="whitespace-nowrap"
               >
-                {sendingTestSms ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Testing...
-                  </>
-                ) : (
-                  <>
-                    <Send className="mr-2 h-4 w-4" />
-                    Test SMS
-                  </>
-                )}
+                {sendingTestSms ? "Testing..." : "Test SMS"}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -110,15 +71,7 @@ export function MessageTypeSelector({
         </Alert>
       )}
 
-      {messageType === "ai" && (
-        <Alert className="mt-4 bg-purple-50 border-purple-200">
-          <Bot className="h-4 w-4" />
-          <AlertTitle>AI Agent Campaign</AlertTitle>
-          <AlertDescription>
-            This campaign will be executed by an AI calling agent. Make sure your campaign script and agent setup are complete.
-          </AlertDescription>
-        </Alert>
-      )}
+      {messageType === "ai" && <AIAlert />}
     </div>
   );
 }
