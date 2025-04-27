@@ -6,9 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
 import { Features } from "./components/Features";
+import { HowItWorks } from "./components/HowItWorks";
 import { Pricing } from "./components/Pricing";
-import { Testimonials } from "./components/Testimonials";
-import { FAQ } from "./components/FAQ";
 import { Footer } from "./components/Footer";
 
 export default function LandingPage() {
@@ -20,9 +19,8 @@ export default function LandingPage() {
       <Header />
       <Hero />
       <Features />
+      <HowItWorks />
       <Pricing />
-      <Testimonials />
-      <FAQ />
 
       {/* CTA Section */}
       <section className="py-16 bg-gradient-primary text-white">
@@ -36,24 +34,13 @@ export default function LandingPage() {
               make for your business.
             </p>
 
-            {/* Get Started Button - Redirect to Login */}
             <Button
               size="lg"
               variant="secondary"
               className="rounded-full"
-              onClick={() => navigate("/auth/login")}
+              onClick={() => navigate("/auth/signup")}
             >
               Get Started Now <ChevronRight className="ml-1" />
-            </Button>
-
-            {/* Watch Demo Button */}
-            <Button
-              size="lg"
-              variant="ghost"
-              className="mt-4 text-white underline"
-              onClick={() => navigate("/demo")}
-            >
-              Watch Demo
             </Button>
           </div>
         </div>

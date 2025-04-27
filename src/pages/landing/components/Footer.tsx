@@ -1,6 +1,6 @@
-
 import { Link } from "react-router-dom";
 import { Link as ScrollLink } from "react-scroll";
+import { SocialLinks } from "./SocialLinks";
 
 export function Footer() {
   return (
@@ -14,8 +14,9 @@ export function Footer() {
               </h2>
             </Link>
             <p className="text-sm text-muted-foreground">
-              Amplify your reach, analyze your success. The all-in-one platform for modern marketing operations.
+              AI-powered CRM platform for modern business growth
             </p>
+            <SocialLinks />
           </div>
           <div>
             <h3 className="font-medium mb-4">Product</h3>

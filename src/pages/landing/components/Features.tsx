@@ -1,26 +1,26 @@
 
-import { Users, BarChart3, Zap, Shield } from "lucide-react";
+import { Bot, Phone, Users, Shield } from "lucide-react";
 
 const features = [
   {
+    icon: <Bot className="h-8 w-8" />,
+    title: "AI Campaign Automation",
+    description: "Let AI handle your outreach campaigns with intelligent automation and personalized messaging."
+  },
+  {
+    icon: <Phone className="h-8 w-8" />,
+    title: "VOIP Calling System",
+    description: "Integrated cloud calling with AI voice assistance for seamless customer communication."
+  },
+  {
     icon: <Users className="h-8 w-8" />,
-    title: "Lead Management",
-    description: "Organize and track all your leads in one centralized platform with detailed profiles and activity history."
-  },
-  {
-    icon: <BarChart3 className="h-8 w-8" />,
-    title: "Campaign Analytics",
-    description: "Get in-depth insights into campaign performance with real-time metrics and customizable dashboards."
-  },
-  {
-    icon: <Zap className="h-8 w-8" />,
-    title: "Automation Tools",
-    description: "Save time with intelligent automation for lead scoring, follow-ups, and campaign scheduling."
+    title: "Smart Lead Management",
+    description: "Intelligent lead scoring, tracking, and nurturing to maximize conversion rates."
   },
   {
     icon: <Shield className="h-8 w-8" />,
-    title: "Security & Compliance",
-    description: "Enterprise-grade security and compliance features to keep your data safe and maintain regulatory standards."
+    title: "Powerful Admin Controls",
+    description: "Complete oversight and control of your campaigns, team, and AI agents."
   },
 ];
 
@@ -31,7 +31,7 @@ export function Features() {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl font-bold mb-4">Powerful Features</h2>
           <p className="text-muted-foreground">
-            Everything you need to manage your marketing campaigns and drive results
+            Everything you need to automate and scale your outreach
           </p>
         </div>
         
