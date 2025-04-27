@@ -41,10 +41,10 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Public landing page as homepage */}
+            {/* Public landing page as homepage - NO protection */}
             <Route path="/" element={<LandingPage />} />
             
-            {/* Auth routes */}
+            {/* Auth routes - also public */}
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/signup" element={<Login />} />
             <Route path="/demo" element={<DemoPage />} />
