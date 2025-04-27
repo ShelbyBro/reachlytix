@@ -86,6 +86,33 @@ export function useAgentManagement() {
     }
   };
 
+  const handleResetAgent = async (agent: any) => {
+    try {
+      const { error } = await supabase
+        .from('ai_agents')
+        .update({ 
+          current_index: 0,
+          status: 'pending'
+        })
+        .eq('id', agent.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Agent reset successfully",
+        description: `${agent.name} will start from the beginning.`,
+      });
+      
+      refetch();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to reset the agent. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDeleteAgent = async (agentId: string, agentName: string) => {
     if (!window.confirm(`Are you sure you want to delete ${agentName}? This action cannot be undone.`)) {
       return;
@@ -144,6 +171,7 @@ export function useAgentManagement() {
     updatingStatus,
     handleToggleStatus,
     handleDeleteAgent,
+    handleResetAgent,
     getStatusBadgeVariant,
     countLeads,
   };
