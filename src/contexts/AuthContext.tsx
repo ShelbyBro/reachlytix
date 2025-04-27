@@ -1,6 +1,4 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { toast } from "sonner";
@@ -20,7 +18,7 @@ type AuthContextType = {
   profile: UserProfile | null;
   loading: boolean;
   role: UserRole | null;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string, redirect?: boolean) => Promise<void>;
   signUp: (email: string, password: string, firstName: string, lastName: string, role?: UserRole) => Promise<void>;
   signOut: () => Promise<void>;
   isAdmin: () => boolean;
@@ -36,7 +34,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<UserRole | null>(null);
-  const navigate = useNavigate();
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -59,7 +56,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // Set initial session and user
     const getInitialSession = async () => {
       try {
         setLoading(true);
@@ -72,7 +68,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setProfile(userProfile);
           setRole(userProfile?.role || null);
           
-          // If profile fetch failed but we have a user, handle gracefully
           if (!userProfile && data.session?.user) {
             console.warn("User authenticated but profile not found. Will retry on next load.");
           }
@@ -86,13 +81,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     getInitialSession();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      // First update the basic auth state immediately without waiting for profile fetch
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
-      // If user signed out, clear profile and role
       if (!currentSession?.user) {
         setProfile(null);
         setRole(null);
@@ -100,9 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
-      // Then fetch profile information if signed in
       if (currentSession?.user) {
-        // Use setTimeout to prevent potential deadlock with Supabase client
         setTimeout(async () => {
           try {
             const userProfile = await fetchUserProfile(currentSession.user.id);
@@ -118,22 +108,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (event === 'SIGNED_IN') {
         toast.success("Successfully signed in!");
-        navigate('/dashboard');
       }
       
       if (event === 'SIGNED_OUT') {
         toast.info("Signed out successfully");
-        navigate('/');
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
 
-  // Sign in with email and password
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, redirect = false) => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -141,7 +128,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         toast.error(error.message);
         throw error;
       }
-      // Auth state change listener will handle navigation
     } catch (error) {
       console.error("Sign in error:", error);
       throw error;
@@ -150,7 +136,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Sign up with email and password
   const signUp = async (email: string, password: string, firstName: string, lastName: string, role: UserRole = "client") => {
     try {
       setLoading(true);
@@ -178,7 +163,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Sign out
   const signOut = async () => {
     try {
       setLoading(true);
@@ -187,7 +171,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         toast.error(error.message);
         throw error;
       }
-      // Auth state change listener will handle navigation
     } catch (error) {
       console.error("Sign out error:", error);
       throw error;
@@ -196,7 +179,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Role check helper functions
   const isAdmin = () => role === "admin";
   const isClient = () => role === "client";
   const isAgent = () => role === "agent";

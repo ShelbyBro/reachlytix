@@ -41,7 +41,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Public landing page as homepage - NO protection */}
+            {/* Public landing page as homepage - NO protection, accessible to all users */}
             <Route path="/" element={<LandingPage />} />
             
             {/* Auth routes - also public */}
@@ -50,7 +50,7 @@ const App = () => (
             <Route path="/demo" element={<DemoPage />} />
             <Route path="/demo/coming-soon" element={<ComingSoonPage />} />
             
-            {/* Protected routes */}
+            {/* Protected routes - require authentication */}
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />

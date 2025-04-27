@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate, Navigate } from "react-router-dom";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
@@ -21,11 +20,9 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Login form state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   
-  // Signup form state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
@@ -34,7 +31,6 @@ export default function Login() {
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   
-  // If user is already logged in, redirect to dashboard
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -54,10 +50,9 @@ export default function Login() {
     try {
       setIsLoading(true);
       await signIn(loginEmail, loginPassword);
-      // Navigation is handled in the auth context
+      navigate('/dashboard');
     } catch (error) {
       console.error("Login error:", error);
-      // Error toasts are handled in the auth context
     } finally {
       setIsLoading(false);
     }
@@ -79,10 +74,8 @@ export default function Login() {
     try {
       setIsLoading(true);
       await signUp(signupEmail, signupPassword, firstName, lastName);
-      // Notification is handled in the auth context
     } catch (error) {
       console.error("Signup error:", error);
-      // Error toasts are handled in the auth context
     } finally {
       setIsLoading(false);
     }
