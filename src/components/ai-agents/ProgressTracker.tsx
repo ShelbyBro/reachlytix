@@ -21,7 +21,7 @@ export function ProgressTracker({ currentIndex, leadList }: ProgressTrackerProps
           {currentIndex} of {totalLeads} leads called
         </div>
         <Badge 
-          variant={isCompleted ? "success" : "secondary"}
+          variant={isCompleted ? "default" : "secondary"}
           className="flex items-center gap-1"
         >
           {isCompleted ? (

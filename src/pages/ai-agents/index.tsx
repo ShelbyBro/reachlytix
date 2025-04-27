@@ -3,7 +3,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AgentTable } from "@/components/ai-agents/AgentTable";
 import { AgentRequestForm } from "@/components/ai-agents/AgentRequestForm";
 import { AgentLogsTable } from "@/components/ai-agents/AgentLogsTable";
-import { Shield, Bot } from "lucide-react";
+import { Bot } from "lucide-react";
 import Layout from "@/components/layout";
 
 export default function AiAgentsPage() {
