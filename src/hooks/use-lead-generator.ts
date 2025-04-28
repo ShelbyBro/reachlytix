@@ -1,5 +1,5 @@
+
 import { useState, useCallback, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useLeadValidator } from "./use-lead-validator";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,8 @@ interface Lead {
   status: string;
   validation_errors?: string[];
   is_duplicate?: boolean;
+  client_id?: string;
+  created_at?: string;
 }
 
 interface ManualLead {
@@ -47,7 +49,21 @@ export function useLeadGenerator() {
         .order('created_at', { ascending: false });
         
       if (error) throw error;
-      setLeads(data || []);
+      
+      // Transform the data to match our Lead interface
+      const formattedLeads: Lead[] = data?.map(lead => ({
+        ...lead,
+        // Convert JsonB validation_errors to string[] or undefined
+        validation_errors: lead.validation_errors ? 
+          Array.isArray(lead.validation_errors) ? 
+            lead.validation_errors : 
+            typeof lead.validation_errors === 'string' ? 
+              [lead.validation_errors] : 
+              undefined : 
+          undefined
+      })) || [];
+      
+      setLeads(formattedLeads);
     } catch (error) {
       console.error('Error fetching leads:', error);
       toast.error("Failed to fetch leads");
@@ -246,22 +262,19 @@ export function useLeadGenerator() {
 
       setLeads(validatedLeads);
 
-      toast({
-        title: "Leads Generated",
+      toast.success("Leads Generated", {
         description: `Successfully generated ${validatedLeads.length} leads using AI.`
       });
 
     } catch (error) {
       console.error('Error generating leads:', error);
-      toast({
-        variant: "destructive",
-        title: "Error Generating Leads",
+      toast.error("Error Generating Leads", {
         description: error.message || "Failed to generate leads with AI."
       });
     } finally {
       setIsProcessing(false);
     }
-  }, [toast]);
+  }, []);
 
   return {
     leads,
