@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LoaderIcon, Save, Search } from "lucide-react";
+import { LoaderIcon, Save, Search, SaveAll } from "lucide-react";
 import { NeuralBackground } from "@/components/neural-background";
 
 interface Lead {
@@ -29,6 +29,7 @@ export default function SmartScrapePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [savingIndices, setSavingIndices] = useState<number[]>([]);
+  const [isSavingAll, setIsSavingAll] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -123,6 +124,57 @@ export default function SmartScrapePage() {
     }
   };
 
+  const handleSaveAllLeads = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to save leads.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (leads.length === 0) {
+      toast({
+        title: "No Leads to Save",
+        description: "Generate leads first before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingAll(true);
+
+    try {
+      const leadsToInsert = leads.map(lead => ({
+        name: lead.name,
+        phone: lead.phone,
+        email: lead.email,
+        source: `${lead.source} (${lead.address || 'No address'})`,
+        client_id: user.id,
+        status: "valid"
+      }));
+
+      const { error } = await supabase.from("cleaned_leads").insert(leadsToInsert);
+
+      if (error) throw error;
+
+      toast({
+        title: "All Leads Saved",
+        description: `Successfully saved ${leads.length} leads to your collection.`,
+      });
+    } catch (error) {
+      console.error('Error saving all leads:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save all leads. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingAll(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="relative">
@@ -178,7 +230,7 @@ export default function SmartScrapePage() {
                   </div>
                 </div>
                 
-                <div>
+                <div className="flex gap-2">
                   <Button 
                     type="submit" 
                     className="gap-2"
@@ -196,6 +248,28 @@ export default function SmartScrapePage() {
                       </>
                     )}
                   </Button>
+                  
+                  {leads.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline" 
+                      className="gap-2"
+                      onClick={handleSaveAllLeads}
+                      disabled={isLoading || isSavingAll || leads.length === 0}
+                    >
+                      {isSavingAll ? (
+                        <>
+                          <LoaderIcon className="h-4 w-4 animate-spin" />
+                          Saving All...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" />
+                          Save All Leads
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </form>
             </CardContent>
