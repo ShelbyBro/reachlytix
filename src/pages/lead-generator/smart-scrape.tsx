@@ -18,6 +18,7 @@ interface Lead {
   email: string;
   website: string;
   source: string;
+  address?: string;
   company?: string;
 }
 
@@ -55,10 +56,18 @@ export default function SmartScrapePage() {
 
       if (data?.status === 'success' && Array.isArray(data.leads)) {
         setLeads(data.leads);
-        toast({
-          title: "Leads Generated",
-          description: `Successfully generated ${data.leads.length} leads.`,
-        });
+        
+        if (data.leads.length === 0) {
+          toast({
+            title: "No Leads Found",
+            description: "Try a different keyword or location.",
+          });
+        } else {
+          toast({
+            title: "Leads Generated",
+            description: `Successfully generated ${data.leads.length} leads.`,
+          });
+        }
       } else {
         throw new Error('Invalid response format');
       }
@@ -91,7 +100,7 @@ export default function SmartScrapePage() {
         name: lead.name,
         phone: lead.phone,
         email: lead.email,
-        source: `${lead.source} (${lead.website || 'No website'})`,
+        source: `${lead.source} (${lead.address || 'No address'})`,
         client_id: user.id,
         status: "valid"
       }]);
@@ -206,7 +215,7 @@ export default function SmartScrapePage() {
                         <TableHead>Phone</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Website</TableHead>
-                        <TableHead>Source</TableHead>
+                        <TableHead>Address</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -217,16 +226,22 @@ export default function SmartScrapePage() {
                           <TableCell>{lead.phone}</TableCell>
                           <TableCell className="max-w-[180px] truncate">{lead.email}</TableCell>
                           <TableCell className="max-w-[180px] truncate">
-                            <a 
-                              href={lead.website} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-blue-500 hover:underline"
-                            >
-                              {lead.website}
-                            </a>
+                            {lead.website ? (
+                              <a 
+                                href={lead.website} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:underline"
+                              >
+                                {lead.website}
+                              </a>
+                            ) : (
+                              "N/A"
+                            )}
                           </TableCell>
-                          <TableCell>{lead.source}</TableCell>
+                          <TableCell className="max-w-[180px] truncate">
+                            {lead.address || "N/A"}
+                          </TableCell>
                           <TableCell className="text-right">
                             <Button
                               variant="outline"
@@ -247,6 +262,26 @@ export default function SmartScrapePage() {
                       ))}
                     </TableBody>
                   </Table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {isLoading && leads.length === 0 && (
+            <div className="flex justify-center items-center p-12">
+              <div className="text-center">
+                <LoaderIcon className="h-8 w-8 animate-spin mx-auto mb-4" />
+                <p className="text-muted-foreground">Searching for leads...</p>
+              </div>
+            </div>
+          )}
+          
+          {!isLoading && leads.length === 0 && keyword && location && (
+            <Card>
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <p className="text-lg mb-2">No leads found</p>
+                  <p className="text-muted-foreground">Try a different keyword or location</p>
                 </div>
               </CardContent>
             </Card>
