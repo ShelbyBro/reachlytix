@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLeadValidator } from "./use-lead-validator";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Json } from "@/integrations/supabase/types";
 
 interface Lead {
   id: string;
@@ -51,17 +52,38 @@ export function useLeadGenerator() {
       if (error) throw error;
       
       // Transform the data to match our Lead interface
-      const formattedLeads: Lead[] = data?.map(lead => ({
-        ...lead,
-        // Convert JsonB validation_errors to string[] or undefined
-        validation_errors: lead.validation_errors ? 
-          Array.isArray(lead.validation_errors) ? 
-            lead.validation_errors : 
-            typeof lead.validation_errors === 'string' ? 
-              [lead.validation_errors] : 
-              undefined : 
-          undefined
-      })) || [];
+      const formattedLeads: Lead[] = data?.map(lead => {
+        // Handle validation_errors conversion properly based on its type
+        let validationErrors: string[] | undefined = undefined;
+        
+        if (lead.validation_errors) {
+          if (Array.isArray(lead.validation_errors)) {
+            // If it's already an array, map each item to string
+            validationErrors = (lead.validation_errors as any[]).map(error => 
+              String(error)
+            );
+          } else if (typeof lead.validation_errors === 'string') {
+            // If it's a string, wrap in array
+            validationErrors = [lead.validation_errors];
+          } else if (typeof lead.validation_errors === 'object') {
+            // If it's an object, convert to array of strings
+            validationErrors = Object.values(lead.validation_errors).map(val => String(val));
+          }
+        }
+        
+        return {
+          id: lead.id,
+          name: lead.name || '',
+          email: lead.email || '',
+          phone: lead.phone || '',
+          source: lead.source || '',
+          status: lead.status,
+          validation_errors: validationErrors,
+          is_duplicate: lead.is_duplicate || false,
+          client_id: lead.client_id,
+          created_at: lead.created_at
+        };
+      }) || [];
       
       setLeads(formattedLeads);
     } catch (error) {
