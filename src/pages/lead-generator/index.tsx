@@ -3,6 +3,9 @@ import React from "react";
 import Layout from "@/components/layout";
 import { LeadGeneratorPanel } from "@/components/leads/lead-generator-panel";
 import { NeuralBackground } from "@/components/neural-background";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { Database } from "lucide-react";
 
 export default function LeadGeneratorPage() {
   return (
@@ -18,6 +21,14 @@ export default function LeadGeneratorPage() {
               <p className="text-muted-foreground">
                 Upload, add and manage your leads
               </p>
+            </div>
+            <div>
+              <Button asChild variant="outline">
+                <Link to="/lead-generator/smart-scrape" className="flex items-center gap-2">
+                  <Database className="h-4 w-4" />
+                  Smart Lead Scraper
+                </Link>
+              </Button>
             </div>
           </div>
 
