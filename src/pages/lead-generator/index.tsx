@@ -16,7 +16,7 @@ export default function LeadGeneratorPage() {
                 Lead Generator
               </h1>
               <p className="text-muted-foreground">
-                Upload and validate your leads
+                Upload, add and manage your leads
               </p>
             </div>
           </div>
