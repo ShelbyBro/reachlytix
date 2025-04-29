@@ -101,15 +101,17 @@ const App = () => (
               </ProtectedRoute>
             } />
             
-            {/* New client and admin dashboard routes */}
-            <Route path="/client-panel" element={
-              <ProtectedRoute requiredRoles={["client"]}>
-                <ClientPanel />
-              </ProtectedRoute>
-            } />
+            {/* Explicitly make sure admin dashboard route points to AdminDashboard component */}
             <Route path="/admin-dashboard" element={
               <ProtectedRoute requiredRoles={["admin"]}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            
+            {/* Client panel route */}
+            <Route path="/client-panel" element={
+              <ProtectedRoute requiredRoles={["client"]}>
+                <ClientPanel />
               </ProtectedRoute>
             } />
 

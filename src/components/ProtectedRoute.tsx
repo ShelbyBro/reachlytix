@@ -55,6 +55,8 @@ export default function ProtectedRoute({ children, requiredRoles }: ProtectedRou
   // Check for required roles if specified
   if (requiredRoles && requiredRoles.length > 0) {
     if (!requiredRoles.includes(role)) {
+      console.log(`User has role ${role} but needs one of ${requiredRoles.join(", ")}`);
+      
       // User doesn't have the required role, redirect to appropriate dashboard
       if (role === "admin") {
         return <Navigate to="/admin-dashboard" replace />;
