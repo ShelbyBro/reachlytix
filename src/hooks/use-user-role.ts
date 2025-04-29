@@ -2,8 +2,11 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 
+// Define a type that includes all possible user roles
+type UserRole = "admin" | "client" | "agent" | "iso";
+
 export function useUserRole() {
-  const { role, isAdmin, isClient, isAgent, loading } = useAuth();
+  const { role, isAdmin, isClient, isAgent, isIso, loading } = useAuth();
   const [roleReady, setRoleReady] = useState(false);
   
   // Mark role as ready once it's loaded or after timeout
@@ -29,13 +32,14 @@ export function useUserRole() {
     isAdmin,
     isClient,
     isAgent,
+    isIso,
     roleReady,
     
     // Helper for role-based UI rendering
     // Update the type to include all possible roles from the auth context
-    canAccess: (allowedRoles: ("admin" | "client" | "agent")[]) => {
+    canAccess: (allowedRoles: UserRole[]) => {
       if (!role) return false;
-      return allowedRoles.includes(role as "admin" | "client" | "agent");
+      return allowedRoles.includes(role as UserRole);
     }
   };
 }
