@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -140,6 +141,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string, firstName: string, lastName: string, role: UserRole = "client") => {
     try {
       setLoading(true);
+      console.log("Signing up with user metadata:", { firstName, lastName, role });
+      
       const { error } = await supabase.auth.signUp({ 
         email, 
         password,
@@ -151,10 +154,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
         }
       });
+      
       if (error) {
         toast.error(error.message);
         throw error;
       }
+      
       toast.success("Account created successfully! Please check your email to verify your account.");
     } catch (error) {
       console.error("Sign up error:", error);
@@ -167,14 +172,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        toast.error(error.message);
-        throw error;
+      // Handle session missing scenario gracefully
+      try {
+        const { error } = await supabase.auth.signOut();
+        if (error && error.name !== "AuthSessionMissingError") {
+          toast.error(error.message);
+          throw error;
+        }
+      } catch (signOutError: any) {
+        // If it's just an AuthSessionMissingError, we can proceed normally
+        if (signOutError.name !== "AuthSessionMissingError") {
+          console.error("Unexpected sign out error:", signOutError);
+          toast.error("Error signing out. Please try again.");
+          throw signOutError;
+        }
       }
+      
+      // Clear local state regardless of whether signOut API call succeeded
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setRole(null);
+      
     } catch (error) {
       console.error("Sign out error:", error);
-      throw error;
+      // We're not throwing here since we want to proceed regardless
     } finally {
       setLoading(false);
     }

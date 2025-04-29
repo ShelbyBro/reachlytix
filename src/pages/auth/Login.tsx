@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate, Navigate } from "react-router-dom";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
@@ -15,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -27,6 +29,7 @@ export default function Login() {
   const [lastName, setLastName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
+  const [role, setRole] = useState<"admin" | "client" | "agent" | "iso">("client");
   
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
@@ -73,7 +76,7 @@ export default function Login() {
     
     try {
       setIsLoading(true);
-      await signUp(signupEmail, signupPassword, firstName, lastName);
+      await signUp(signupEmail, signupPassword, firstName, lastName, role);
     } catch (error) {
       console.error("Signup error:", error);
     } finally {
@@ -248,6 +251,26 @@ export default function Login() {
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </Button>
                     </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="role" className="text-sm font-medium">
+                      Account Type
+                    </label>
+                    <Select
+                      value={role}
+                      onValueChange={(value) => setRole(value as "admin" | "client" | "agent" | "iso")}
+                    >
+                      <SelectTrigger id="role">
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="client">Client</SelectItem>
+                        <SelectItem value="agent">Agent</SelectItem>
+                        <SelectItem value="iso">ISO</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Choose your account type. Most users should select "Client".</p>
                   </div>
                 
                   <Button 
