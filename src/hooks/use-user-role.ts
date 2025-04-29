@@ -32,9 +32,10 @@ export function useUserRole() {
     roleReady,
     
     // Helper for role-based UI rendering
+    // Update the type to include all possible roles from the auth context
     canAccess: (allowedRoles: ("admin" | "client" | "agent")[]) => {
       if (!role) return false;
-      return allowedRoles.includes(role);
+      return allowedRoles.includes(role as "admin" | "client" | "agent");
     }
   };
 }
