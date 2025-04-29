@@ -1,9 +1,7 @@
 
 import { useState } from "react";
-import { Link, useNavigate, Navigate } from "react-router-dom";
-import { Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -15,74 +13,15 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LoginForm } from "@/components/auth/LoginForm";
+import { SignupForm } from "@/components/auth/SignupForm";
 
 export default function Login() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [signupEmail, setSignupEmail] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
-  const [role, setRole] = useState<"admin" | "client" | "agent" | "iso">("client");
-  
-  const { signIn, signUp, user } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
-  
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-  
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!loginEmail || !loginPassword) {
-      toast.error("Please enter both email and password");
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      await signIn(loginEmail, loginPassword);
-      navigate('/dashboard');
-    } catch (error) {
-      console.error("Login error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!firstName || !lastName || !signupEmail || !signupPassword) {
-      toast.error("Please fill in all fields");
-      return;
-    }
-    
-    if (signupPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      await signUp(signupEmail, signupPassword, firstName, lastName, role);
-    } catch (error) {
-      console.error("Signup error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background to-secondary/30">
@@ -111,67 +50,7 @@ export default function Login() {
             
             <TabsContent value="login">
               <CardContent>
-                <form className="space-y-4" onSubmit={handleLogin}>
-                  <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm font-medium">
-                      Email
-                    </label>
-                    <Input 
-                      id="email" 
-                      placeholder="name@example.com" 
-                      type="email" 
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label htmlFor="password" className="text-sm font-medium">
-                        Password
-                      </label>
-                      <Link to="/auth/forgot-password" className="text-xs text-primary hover:underline">
-                        Forgot password?
-                      </Link>
-                    </div>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3"
-                        onClick={togglePasswordVisibility}
-                      >
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </Button>
-                    </div>
-                  </div>
-                
-                  <Button 
-                    className="w-full mt-2" 
-                    size="lg" 
-                    type="submit"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <span className="flex items-center">
-                        <span className="h-4 w-4 mr-2 rounded-full border-2 border-b-transparent border-white animate-spin"></span>
-                        Signing In...
-                      </span>
-                    ) : (
-                      <>Sign In <ArrowRight size={16} className="ml-2" /></>
-                    )}
-                  </Button>
-                </form>
+                <LoginForm />
               </CardContent>
               
               <CardFooter className="flex flex-col space-y-4">
@@ -186,109 +65,7 @@ export default function Login() {
             
             <TabsContent value="signup">
               <CardContent>
-                <form className="space-y-4" onSubmit={handleSignup}>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label htmlFor="firstName" className="text-sm font-medium">
-                        First Name
-                      </label>
-                      <Input 
-                        id="firstName" 
-                        placeholder="John" 
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="lastName" className="text-sm font-medium">
-                        Last Name
-                      </label>
-                      <Input 
-                        id="lastName" 
-                        placeholder="Doe" 
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label htmlFor="signupEmail" className="text-sm font-medium">
-                      Email
-                    </label>
-                    <Input 
-                      id="signupEmail" 
-                      placeholder="name@example.com" 
-                      type="email" 
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label htmlFor="newPassword" className="text-sm font-medium">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <Input
-                        id="newPassword"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={signupPassword}
-                        onChange={(e) => setSignupPassword(e.target.value)}
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3"
-                        onClick={togglePasswordVisibility}
-                      >
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label htmlFor="role" className="text-sm font-medium">
-                      Account Type
-                    </label>
-                    <Select
-                      value={role}
-                      onValueChange={(value) => setRole(value as "admin" | "client" | "agent" | "iso")}
-                    >
-                      <SelectTrigger id="role">
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="client">Client</SelectItem>
-                        <SelectItem value="agent">Agent</SelectItem>
-                        <SelectItem value="iso">ISO</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">Choose your account type. Most users should select "Client".</p>
-                  </div>
-                
-                  <Button 
-                    className="w-full mt-2" 
-                    size="lg" 
-                    type="submit"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <span className="flex items-center">
-                        <span className="h-4 w-4 mr-2 rounded-full border-2 border-b-transparent border-white animate-spin"></span>
-                        Creating Account...
-                      </span>
-                    ) : (
-                      <>Create Account <ArrowRight size={16} className="ml-2" /></>
-                    )}
-                  </Button>
-                </form>
+                <SignupForm />
               </CardContent>
               
               <CardFooter className="flex flex-col space-y-4">
