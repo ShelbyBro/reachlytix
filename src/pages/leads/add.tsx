@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function AddLeadsPage() {
   const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>("none");
 
   const handleCampaignChange = (campaignId: string) => {
     setSelectedCampaignId(campaignId);
@@ -47,7 +47,7 @@ export default function AddLeadsPage() {
           .insert(data.leads.map((lead: any) => ({
             ...lead,
             client_id: user.id,
-            campaign_id: selectedCampaignId || null  // Assign leads to the selected campaign if any
+            campaign_id: selectedCampaignId !== "none" ? selectedCampaignId : null  // Assign leads to the selected campaign if any
           })));
 
         if (insertError) throw insertError;

@@ -18,7 +18,7 @@ export const CampaignDropdown = ({
   readOnly = false 
 }: CampaignDropdownProps) => {
   const [campaigns, setCampaigns] = useState<SimpleCampaign[]>([]);
-  const [selectedCampaign, setSelectedCampaign] = useState<string>(value || "");
+  const [selectedCampaign, setSelectedCampaign] = useState<string>(value || "none");
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
@@ -71,7 +71,7 @@ export const CampaignDropdown = ({
           <SelectValue placeholder={isLoading ? "Loading campaigns..." : "Select a campaign"} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Unassigned</SelectItem>
+          <SelectItem value="none">Unassigned</SelectItem>
           {campaigns.map((campaign) => (
             <SelectItem key={campaign.id} value={campaign.id}>
               {campaign.title}
@@ -85,7 +85,7 @@ export const CampaignDropdown = ({
         </SelectContent>
       </Select>
       <p className="text-xs text-muted-foreground">
-        {selectedCampaign ? "Leads will be assigned to the selected campaign" : "Leads will remain unassigned"}
+        {selectedCampaign && selectedCampaign !== "none" ? "Leads will be assigned to the selected campaign" : "Leads will remain unassigned"}
       </p>
     </div>
   );
