@@ -1,9 +1,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
-
-// Define a type that includes all possible user roles
-type UserRole = "admin" | "client" | "agent" | "iso";
+import { UserRole } from "@/types/auth";
 
 export function useUserRole() {
   const { role, isAdmin, isClient, isAgent, isIso, loading } = useAuth();
@@ -36,7 +34,6 @@ export function useUserRole() {
     roleReady,
     
     // Helper for role-based UI rendering
-    // Update the type to include all possible roles from the auth context
     canAccess: (allowedRoles: UserRole[]) => {
       if (!role) return false;
       return allowedRoles.includes(role as UserRole);

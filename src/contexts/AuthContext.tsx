@@ -1,135 +1,25 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Session, User } from "@supabase/supabase-js";
-import { toast } from "sonner";
-
-type UserRole = "admin" | "client" | "agent" | "iso";
-
-type UserProfile = {
-  first_name: string;
-  last_name: string;
-  role: UserRole;
-  avatar_url?: string;
-};
-
-type AuthContextType = {
-  session: Session | null;
-  user: User | null;
-  profile: UserProfile | null;
-  loading: boolean;
-  role: UserRole | null;
-  signIn: (email: string, password: string, redirect?: boolean) => Promise<void>;
-  signUp: (email: string, password: string, firstName: string, lastName: string, role?: UserRole) => Promise<void>;
-  signOut: () => Promise<void>;
-  isAdmin: () => boolean;
-  isClient: () => boolean;
-  isAgent: () => boolean;
-  isIso: () => boolean;
-};
+import React, { createContext, useContext, ReactNode } from "react";
+import { useAuthState } from "@/hooks/use-auth-state";
+import { signInWithEmail, signUpWithEmail, signOutUser } from "@/utils/auth-service";
+import { AuthContextType, UserRole } from "@/types/auth";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState<UserRole | null>(null);
-
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('first_name, last_name, role, avatar_url')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching user profile:", error);
-        return null;
-      }
-
-      return data as UserProfile;
-    } catch (error) {
-      console.error("Exception fetching user profile:", error);
-      return null;
-    }
-  };
-
-  useEffect(() => {
-    const getInitialSession = async () => {
-      try {
-        setLoading(true);
-        const { data } = await supabase.auth.getSession();
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
-
-        if (data.session?.user) {
-          const userProfile = await fetchUserProfile(data.session.user.id);
-          setProfile(userProfile);
-          setRole(userProfile?.role || null);
-          
-          if (!userProfile && data.session?.user) {
-            console.warn("User authenticated but profile not found. Will retry on next load.");
-          }
-        }
-      } catch (error) {
-        console.error("Error getting initial session:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getInitialSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      
-      if (!currentSession?.user) {
-        setProfile(null);
-        setRole(null);
-        setLoading(false);
-        return;
-      }
-      
-      if (currentSession?.user) {
-        setTimeout(async () => {
-          try {
-            const userProfile = await fetchUserProfile(currentSession.user.id);
-            setProfile(userProfile);
-            setRole(userProfile?.role || null);
-          } catch (profileError) {
-            console.error("Error fetching profile after auth state change:", profileError);
-          } finally {
-            setLoading(false);
-          }
-        }, 0);
-      }
-
-      if (event === 'SIGNED_IN') {
-        toast.success("Successfully signed in!");
-      }
-      
-      if (event === 'SIGNED_OUT') {
-        toast.info("Signed out successfully");
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+  const { 
+    session, 
+    user, 
+    profile, 
+    loading, 
+    role,
+    setLoading
+  } = useAuthState();
 
   const signIn = async (email: string, password: string, redirect = false) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        toast.error(error.message);
-        throw error;
-      }
+      await signInWithEmail(email, password);
     } catch (error) {
       console.error("Sign in error:", error);
       throw error;
@@ -141,26 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string, firstName: string, lastName: string, role: UserRole = "client") => {
     try {
       setLoading(true);
-      console.log("Signing up with user metadata:", { firstName, lastName, role });
-      
-      const { error } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-            role
-          }
-        }
-      });
-      
-      if (error) {
-        toast.error(error.message);
-        throw error;
-      }
-      
-      toast.success("Account created successfully! Please check your email to verify your account.");
+      await signUpWithEmail(email, password, firstName, lastName, role);
     } catch (error) {
       console.error("Sign up error:", error);
       throw error;
@@ -172,28 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       setLoading(true);
-      // Handle session missing scenario gracefully
-      try {
-        const { error } = await supabase.auth.signOut();
-        if (error && error.name !== "AuthSessionMissingError") {
-          toast.error(error.message);
-          throw error;
-        }
-      } catch (signOutError: any) {
-        // If it's just an AuthSessionMissingError, we can proceed normally
-        if (signOutError.name !== "AuthSessionMissingError") {
-          console.error("Unexpected sign out error:", signOutError);
-          toast.error("Error signing out. Please try again.");
-          throw signOutError;
-        }
-      }
-      
-      // Clear local state regardless of whether signOut API call succeeded
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      setRole(null);
-      
+      await signOutUser();
     } catch (error) {
       console.error("Sign out error:", error);
       // We're not throwing here since we want to proceed regardless
