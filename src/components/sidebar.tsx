@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -11,14 +12,9 @@ import {
   LogOut,
   UserPlus,
   Mail,
-  Activity,
-  Search,
-  Wand2,
-  Phone,
   Bot,
-  LayoutDashboard as Dashboard,
-  Shield,
-  ClipboardCheck
+  Search,
+  Wand2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -34,46 +30,33 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
-  const { isAdmin: userIsAdmin, isClient, isIso } = useUserRole();
+  const { isAdmin: userIsAdmin, isClient } = useUserRole();
   
   const clientLinks = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-    { icon: Dashboard, label: "Client Panel", href: "/client-panel" },
-    { icon: UserPlus, label: "Add Lead", href: "/leads/add" },
     { icon: Upload, label: "Upload Leads", href: "/upload" },
+    { icon: UserPlus, label: "Add Lead", href: "/leads/add" },
     { icon: Megaphone, label: "Campaign Manager", href: "/campaigns" },
     { icon: Mail, label: "Create Campaign", href: "/campaigns/create" },
-    { icon: Phone, label: "VOIP Caller", href: "/voip" },
-    { icon: Bot, label: "AI Agent Zone", href: "/ai-agents" },
-    { icon: Activity, label: "Analytics", href: "/analytics" },
-    { icon: Search, label: "Lead Generator", href: "/lead-generator" },
+    { icon: Bot, label: "AI Agents", href: "/ai-agents" },
+    { icon: BarChart3, label: "Analytics", href: "/analytics" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
   
   const adminLinks = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
-    { icon: Shield, label: "Admin Dashboard", href: "/admin-dashboard" },
-    { icon: Users, label: "Users", href: "/admin/users" },
-    { icon: Upload, label: "Leads", href: "/admin/leads" },
-    { icon: Megaphone, label: "Campaigns", href: "/admin/campaigns" },
+    { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+    { icon: Upload, label: "Upload Leads", href: "/upload" },
+    { icon: UserPlus, label: "Add Lead", href: "/leads/add" },
+    { icon: Megaphone, label: "Campaign Manager", href: "/campaigns" },
     { icon: Bot, label: "AI Agents", href: "/ai-agents" },
-    { icon: BarChart3, label: "Reports", href: "/admin/reports" },
-    { icon: Settings, label: "Settings", href: "/admin/settings" },
-  ];
-  
-  const isoLinks = [
-    { icon: LayoutDashboard, label: "ISO Dashboard", href: "/iso-dashboard" },
-    { icon: ClipboardCheck, label: "Manage Leads", href: "/iso-dashboard" },
+    { icon: Search, label: "Lead Generator", href: "/lead-generator" },
+    { icon: Wand2, label: "SmartScrape", href: "/lead-generator/smart-scrape" },
+    { icon: BarChart3, label: "Analytics", href: "/analytics" },
+    { icon: Users, label: "Admin Dashboard", href: "/admin-dashboard" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
   
-  let links = clientLinks;
-  
-  if (userIsAdmin || isAdmin) {
-    links = adminLinks;
-  } else if (isIso) {
-    links = isoLinks;
-  }
+  let links = userIsAdmin || isAdmin ? adminLinks : clientLinks;
 
   const handleLogout = async () => {
     await signOut();
