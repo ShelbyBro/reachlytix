@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 
 export function useUserRole() {
-  const { role, isAdmin, isClient, isAgent, isIso, loading } = useAuth();
+  const { role, isAdmin, isClient, isAgent, loading } = useAuth();
   const [roleReady, setRoleReady] = useState(false);
   
   // Mark role as ready once it's loaded or after timeout
@@ -29,11 +29,10 @@ export function useUserRole() {
     isAdmin,
     isClient,
     isAgent,
-    isIso,
     roleReady,
     
     // Helper for role-based UI rendering
-    canAccess: (allowedRoles: ("admin" | "client" | "agent" | "iso")[]) => {
+    canAccess: (allowedRoles: ("admin" | "client" | "agent")[]) => {
       if (!role) return false;
       return allowedRoles.includes(role);
     }

@@ -25,9 +25,7 @@ import DemoPage from "./pages/demo/DemoPage";
 import ComingSoonPage from "./pages/demo/ComingSoonPage";
 import SettingsPage from "./pages/settings";
 import VoipPage from "./pages/voip";
-import SmartScrapePage from "./pages/lead-generator/smart-scrape";
 import ClientPanel from "./pages/client/ClientPanel";
-import IsoDashboard from "./pages/iso/IsoDashboard";
 
 // Lazy load AI Agents page
 const AiAgentsPage = lazy(() => import("./pages/ai-agents"));
@@ -88,13 +86,8 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/lead-generator" element={
-              <ProtectedRoute requiredRoles={["admin"]}>
+              <ProtectedRoute>
                 <LeadGeneratorPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/lead-generator/smart-scrape" element={
-              <ProtectedRoute requiredRoles={["admin"]}>
-                <SmartScrapePage />
               </ProtectedRoute>
             } />
             <Route path="/settings" element={
@@ -105,13 +98,6 @@ const App = () => (
             <Route path="/voip" element={
               <ProtectedRoute>
                 <VoipPage />
-              </ProtectedRoute>
-            } />
-            
-            {/* New ISO dashboard route */}
-            <Route path="/iso-dashboard" element={
-              <ProtectedRoute requiredRoles={["iso"]}>
-                <IsoDashboard />
               </ProtectedRoute>
             } />
             

@@ -3,11 +3,30 @@ import React from "react";
 import Layout from "@/components/layout";
 import { LeadGeneratorPanel } from "@/components/leads/lead-generator-panel";
 import { NeuralBackground } from "@/components/neural-background";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { Database } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LeadGeneratorForm } from "@/components/lead-generator/LeadGeneratorForm";
+import { LeadsTable } from "@/components/lead-generator/LeadsTable";
+import { LoadingState } from "@/components/lead-generator/LoadingState";
+import { useSmartScrape } from "@/hooks/use-smart-scrape";
 
 export default function LeadGeneratorPage() {
+  const {
+    keyword,
+    setKeyword,
+    location,
+    setLocation,
+    limit,
+    setLimit,
+    isLoading,
+    leads,
+    savingIndices,
+    isSavingAll,
+    generateLeads,
+    saveLead,
+    saveAllLeads
+  } = useSmartScrape();
+
   return (
     <Layout>
       <div className="relative">
@@ -22,17 +41,63 @@ export default function LeadGeneratorPage() {
                 Upload, add and manage your leads
               </p>
             </div>
-            <div>
-              <Button asChild variant="outline">
-                <Link to="/lead-generator/smart-scrape" className="flex items-center gap-2">
-                  <Database className="h-4 w-4" />
-                  Smart Lead Scraper
-                </Link>
-              </Button>
-            </div>
           </div>
 
-          <LeadGeneratorPanel />
+          <Tabs defaultValue="upload" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="upload">Upload CSV / Manual Entry</TabsTrigger>
+              <TabsTrigger value="smart-scrape">Smart Scrape</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="upload">
+              <LeadGeneratorPanel />
+            </TabsContent>
+
+            <TabsContent value="smart-scrape">
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle>Lead Generation Parameters</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <LeadGeneratorForm 
+                    keyword={keyword}
+                    setKeyword={setKeyword}
+                    location={location}
+                    setLocation={setLocation}
+                    limit={limit}
+                    setLimit={setLimit}
+                    isLoading={isLoading}
+                    leads={leads}
+                    isSavingAll={isSavingAll}
+                    onGenerateLeads={generateLeads}
+                    onSaveAllLeads={saveAllLeads}
+                  />
+                </CardContent>
+              </Card>
+
+              {leads.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Generated Leads</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <LeadsTable 
+                      leads={leads}
+                      savingIndices={savingIndices}
+                      onSaveLead={saveLead}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+              
+              <LoadingState
+                isLoading={isLoading && leads.length === 0}
+                hasKeyword={!!keyword}
+                hasLocation={!!location}
+                noResults={!isLoading && leads.length === 0 && !!keyword && !!location}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </Layout>
