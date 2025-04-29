@@ -3,10 +3,11 @@ import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/use-user-role";
+import { UserRole } from "@/types/auth";
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requiredRoles?: ("admin" | "client" | "agent" | "iso")[];
+  requiredRoles?: UserRole[];
 }
 
 export default function ProtectedRoute({ children, requiredRoles }: ProtectedRouteProps) {
