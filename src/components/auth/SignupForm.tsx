@@ -5,16 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PasswordInput } from "./PasswordInput";
-import { UserRole } from "@/types/auth";
 
 export const SignupForm = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<UserRole>("client");
   const [isLoading, setIsLoading] = useState(false);
   
   const { signUp } = useAuth();
@@ -34,7 +31,8 @@ export const SignupForm = () => {
     
     try {
       setIsLoading(true);
-      await signUp(email, password, firstName, lastName, role);
+      // Always use 'client' as the role
+      await signUp(email, password, firstName, lastName, "client");
     } catch (error) {
       console.error("Signup error:", error);
     } finally {
@@ -96,26 +94,6 @@ export const SignupForm = () => {
         />
       </div>
       
-      <div className="space-y-2">
-        <label htmlFor="role" className="text-sm font-medium">
-          Account Type
-        </label>
-        <Select
-          value={role}
-          onValueChange={(value) => setRole(value as UserRole)}
-        >
-          <SelectTrigger id="role">
-            <SelectValue placeholder="Select a role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="client">Client</SelectItem>
-            <SelectItem value="agent">Agent</SelectItem>
-            <SelectItem value="iso">ISO</SelectItem>
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground">Choose your account type. Most users should select "Client".</p>
-      </div>
-    
       <Button 
         className="w-full mt-2" 
         size="lg" 
