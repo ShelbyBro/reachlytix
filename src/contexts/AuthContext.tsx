@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { toast } from "sonner";
 
-type UserRole = "admin" | "client" | "agent";
+type UserRole = "admin" | "client" | "agent" | "iso";
 
 type UserProfile = {
   first_name: string;
@@ -24,6 +24,7 @@ type AuthContextType = {
   isAdmin: () => boolean;
   isClient: () => boolean;
   isAgent: () => boolean;
+  isIso: () => boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -182,6 +183,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAdmin = () => role === "admin";
   const isClient = () => role === "client";
   const isAgent = () => role === "agent";
+  const isIso = () => role === "iso";
 
   const value = {
     session,
@@ -194,7 +196,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signOut,
     isAdmin,
     isClient,
-    isAgent
+    isAgent,
+    isIso
   };
 
   return (

@@ -17,7 +17,8 @@ import {
   Phone,
   Bot,
   LayoutDashboard as Dashboard,
-  Shield
+  Shield,
+  ClipboardCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -33,7 +34,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
-  const { isAdmin: userIsAdmin, isClient } = useUserRole();
+  const { isAdmin: userIsAdmin, isClient, isIso } = useUserRole();
   
   const clientLinks = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -60,7 +61,19 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
     { icon: Settings, label: "Settings", href: "/admin/settings" },
   ];
   
-  const links = isAdmin ? adminLinks : clientLinks;
+  const isoLinks = [
+    { icon: LayoutDashboard, label: "ISO Dashboard", href: "/iso-dashboard" },
+    { icon: ClipboardCheck, label: "Manage Leads", href: "/iso-dashboard" },
+    { icon: Settings, label: "Settings", href: "/settings" },
+  ];
+  
+  let links = clientLinks;
+  
+  if (userIsAdmin || isAdmin) {
+    links = adminLinks;
+  } else if (isIso) {
+    links = isoLinks;
+  }
 
   const handleLogout = async () => {
     await signOut();

@@ -6,7 +6,7 @@ import { useUserRole } from "@/hooks/use-user-role";
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requiredRoles?: ("admin" | "client" | "agent")[];
+  requiredRoles?: ("admin" | "client" | "agent" | "iso")[];
 }
 
 export default function ProtectedRoute({ children, requiredRoles }: ProtectedRouteProps) {
@@ -54,8 +54,14 @@ export default function ProtectedRoute({ children, requiredRoles }: ProtectedRou
   // Check for required roles if specified
   if (requiredRoles && requiredRoles.length > 0) {
     if (!requiredRoles.includes(role)) {
-      // User doesn't have the required role, redirect to dashboard
-      return <Navigate to="/dashboard" replace />;
+      // User doesn't have the required role, redirect to appropriate dashboard
+      if (role === "admin") {
+        return <Navigate to="/admin-dashboard" replace />;
+      } else if (role === "iso") {
+        return <Navigate to="/iso-dashboard" replace />;
+      } else {
+        return <Navigate to="/dashboard" replace />;
+      }
     }
   }
   
