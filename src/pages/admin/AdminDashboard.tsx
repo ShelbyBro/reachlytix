@@ -1,10 +1,15 @@
 
+import { useEffect } from "react";
 import Layout from "@/components/layout";
 import { AdminFilters } from "./components/AdminFilters";
 import { AgentCard } from "./components/AgentCard";
 import { useAgentManagement } from "./hooks/use-agent-management";
+import { useAuth } from "@/contexts/AuthContext";
+import { Navigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function AdminDashboard() {
+  const { role } = useAuth();
   const {
     agents,
     isLoading,
@@ -20,6 +25,18 @@ export default function AdminDashboard() {
     getStatusBadgeVariant,
     countLeads,
   } = useAgentManagement();
+
+  // Check if user is admin, redirect if not
+  useEffect(() => {
+    if (role !== "admin") {
+      toast.error("You don't have permission to access the admin dashboard");
+    }
+  }, [role]);
+
+  // Redirect non-admin users
+  if (role !== "admin") {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <Layout isAdmin>
