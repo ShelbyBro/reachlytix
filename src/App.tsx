@@ -101,7 +101,7 @@ const App = () => (
               </ProtectedRoute>
             } />
             
-            {/* Explicitly make sure admin dashboard route points to AdminDashboard component */}
+            {/* Admin dashboard route - properly pointing to the AdminDashboard component */}
             <Route path="/admin-dashboard" element={
               <ProtectedRoute requiredRoles={["admin"]}>
                 <AdminDashboard />
