@@ -9,65 +9,98 @@ export function useAgentManagement() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [clientFilter, setClientFilter] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const { data: agents, isLoading, refetch } = useQuery({
+  const { data: agents, isLoading: isAgentsLoading, refetch } = useQuery({
     queryKey: ["admin_agents", statusFilter, clientFilter],
     queryFn: async () => {
-      let query = supabase
-        .from("ai_agents")
-        .select("*")
-        .order("created_at", { ascending: false });
-      
-      if (statusFilter) {
-        query = query.eq("status", statusFilter);
+      try {
+        console.log("Fetching agents with filters:", { statusFilter, clientFilter });
+        
+        let query = supabase
+          .from("ai_agents")
+          .select("*")
+          .order("created_at", { ascending: false });
+        
+        if (statusFilter) {
+          query = query.eq("status", statusFilter);
+        }
+        
+        if (clientFilter) {
+          query = query.eq("client_id", clientFilter);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error("Error fetching agents:", error);
+          setError(error);
+          throw error;
+        }
+        
+        console.log("Retrieved agents data:", data);
+        return data || [];
+      } catch (err) {
+        console.error("Error in agents query function:", err);
+        setError(err instanceof Error ? err : new Error("Unknown error in agents query"));
+        return []; // Return empty array to prevent component crash
       }
-      
-      if (clientFilter) {
-        query = query.eq("client_id", clientFilter);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error("Error fetching agents:", error);
-        throw error;
-      }
-      
-      return data || [];
     },
+    onError: (err) => {
+      console.error("Query error for agents:", err);
+      setError(err instanceof Error ? err : new Error("Failed to fetch agents"));
+    }
   });
 
-  const { data: clients } = useQuery({
+  const { data: clients, isLoading: isClientsLoading } = useQuery({
     queryKey: ["admin_clients"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, first_name, last_name")
-        .eq("role", "client");
-      
-      if (error) {
-        console.error("Error fetching clients:", error);
-        throw error;
+      try {
+        console.log("Fetching clients data");
+        
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, first_name, last_name")
+          .eq("role", "client");
+        
+        if (error) {
+          console.error("Error fetching clients:", error);
+          throw error;
+        }
+        
+        const formattedClients = data.map(client => ({
+          id: client.id,
+          name: `${client.first_name || ''} ${client.last_name || ''}`.trim() || 'Unknown',
+        }));
+        
+        console.log("Retrieved clients data:", formattedClients);
+        return formattedClients;
+      } catch (err) {
+        console.error("Error in clients query function:", err);
+        return []; // Return empty array to prevent component crash
       }
-      
-      return data.map(client => ({
-        id: client.id,
-        name: `${client.first_name || ''} ${client.last_name || ''}`.trim() || 'Unknown',
-      }));
     },
+    onError: (err) => {
+      console.error("Query error for clients:", err);
+    }
   });
 
   const handleToggleStatus = async (agent: any) => {
-    setUpdatingStatus(true);
-    const newStatus = agent.status === 'running' ? 'inactive' : 'running';
-    
     try {
+      setUpdatingStatus(true);
+      const newStatus = agent.status === 'running' ? 'inactive' : 'running';
+      
+      console.log("Toggling agent status:", { agentId: agent.id, currentStatus: agent.status, newStatus });
+      
       const { error } = await supabase
         .from('ai_agents')
         .update({ status: newStatus })
         .eq('id', agent.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error toggling agent status:", error);
+        throw error;
+      }
 
       await refetch();
       
@@ -76,6 +109,7 @@ export function useAgentManagement() {
         description: `${agent.name} has been ${newStatus === 'running' ? 'resumed' : 'paused'}.`,
       });
     } catch (error) {
+      console.error("Toggle status error:", error);
       toast({
         title: "Error",
         description: "Failed to update agent status. Please try again.",
@@ -88,6 +122,8 @@ export function useAgentManagement() {
 
   const handleResetAgent = async (agent: any) => {
     try {
+      console.log("Resetting agent:", { agentId: agent.id });
+      
       const { error } = await supabase
         .from('ai_agents')
         .update({ 
@@ -96,7 +132,10 @@ export function useAgentManagement() {
         })
         .eq('id', agent.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error resetting agent:", error);
+        throw error;
+      }
 
       toast({
         title: "Agent reset successfully",
@@ -105,6 +144,7 @@ export function useAgentManagement() {
       
       refetch();
     } catch (error) {
+      console.error("Reset agent error:", error);
       toast({
         title: "Error",
         description: "Failed to reset the agent. Please try again.",
@@ -119,12 +159,17 @@ export function useAgentManagement() {
     }
     
     try {
+      console.log("Deleting agent:", { agentId, agentName });
+      
       const { error } = await supabase
         .from('ai_agents')
         .delete()
         .eq('id', agentId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error deleting agent:", error);
+        throw error;
+      }
 
       toast({
         title: "Agent deleted",
@@ -133,6 +178,7 @@ export function useAgentManagement() {
       
       refetch();
     } catch (error) {
+      console.error("Delete agent error:", error);
       toast({
         title: "Error",
         description: "Failed to delete the agent. Please try again.",
@@ -157,12 +203,16 @@ export function useAgentManagement() {
   };
 
   const countLeads = (leadList: string): number => {
-    return leadList ? leadList.split(',').length : 0;
+    if (!leadList) return 0;
+    return leadList.split(',').length; 
   };
+
+  const isLoading = isAgentsLoading || isClientsLoading;
 
   return {
     agents,
     isLoading,
+    error,
     clients,
     statusFilter,
     setStatusFilter,
