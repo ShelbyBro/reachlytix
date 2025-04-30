@@ -7,9 +7,10 @@ import { useAgentManagement } from "./hooks/use-agent-management";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
+import { LoadingState } from "@/components/dashboard/LoadingState";
 
 export default function AdminDashboard() {
-  const { role } = useAuth();
+  const { role, loading: authLoading } = useAuth();
   const {
     agents,
     isLoading,
@@ -29,13 +30,13 @@ export default function AdminDashboard() {
 
   // Check if user is admin, redirect if not
   useEffect(() => {
-    if (role !== "admin") {
+    if (!authLoading && role !== "admin") {
       toast.error("You don't have permission to access the admin dashboard");
     }
     
     // Debug log - verify role is coming through correctly
     console.log("AdminDashboard - Current user role:", role);
-  }, [role]);
+  }, [role, authLoading]);
 
   // Add debug logging for data fetching
   useEffect(() => {
@@ -45,8 +46,25 @@ export default function AdminDashboard() {
     console.log("AdminDashboard - Error state:", error);
   }, [agents, clients, isLoading, error]);
 
-  // Redirect non-admin users
-  if (role !== "admin") {
+  // Show loading state while auth is being determined
+  if (authLoading) {
+    return (
+      <Layout isAdmin>
+        <div className="space-y-6">
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <div className="flex items-center justify-center p-12">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              <p className="text-muted-foreground">Verifying admin access...</p>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Redirect non-admin users once role is determined
+  if (!authLoading && role !== "admin") {
     return <Navigate to="/dashboard" replace />;
   }
 
