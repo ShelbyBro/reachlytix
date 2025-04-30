@@ -33,12 +33,12 @@ export function AdminFilters({
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4" />
           <span className="text-sm font-medium">Status:</span>
-          <Select value={statusFilter || ""} onValueChange={(value) => setStatusFilter(value || null)}>
+          <Select value={statusFilter || "all"} onValueChange={(value) => setStatusFilter(value === "all" ? null : value)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All statuses</SelectItem>
+              <SelectItem value="all">All statuses</SelectItem>
               <SelectItem value="running">Running</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
@@ -50,12 +50,12 @@ export function AdminFilters({
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4" />
           <span className="text-sm font-medium">Client:</span>
-          <Select value={clientFilter || ""} onValueChange={(value) => setClientFilter(value || null)}>
+          <Select value={clientFilter || "all"} onValueChange={(value) => setClientFilter(value === "all" ? null : value)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="All clients" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All clients</SelectItem>
+              <SelectItem value="all">All clients</SelectItem>
               {clients?.map((client) => (
                 <SelectItem key={client.id} value={client.id}>
                   {client.name}
