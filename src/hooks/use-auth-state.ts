@@ -31,9 +31,19 @@ export function useAuthState() {
             
             // Set a default role to prevent hanging UI
             setRole('client');
-          } else {
+          } else if (userProfile) {
             setProfile(userProfile);
-            setRole(userProfile?.role || 'client'); // Default to client if role is missing
+            
+            // Map database role to application role
+            let appRole: UserRole = userProfile.role;
+            // If role is "agent" but user metadata indicates they should be "iso"
+            if (userProfile.role === "agent" && 
+                data.session.user.user_metadata?.role === "iso") {
+              appRole = "iso";
+            }
+            
+            setRole(appRole);
+            setAuthError(null);
           }
         }
       } catch (error) {
@@ -78,7 +88,16 @@ export function useAuthState() {
               setRole('client');
             } else {
               setProfile(userProfile);
-              setRole(userProfile?.role || 'client'); // Default to client if role is missing
+              
+              // Map database role to application role
+              let appRole: UserRole = userProfile.role;
+              // If role is "agent" but user metadata indicates they should be "iso"
+              if (userProfile.role === "agent" && 
+                  currentSession.user.user_metadata?.role === "iso") {
+                appRole = "iso";
+              }
+              
+              setRole(appRole);
               setAuthError(null);
             }
           } catch (profileError) {

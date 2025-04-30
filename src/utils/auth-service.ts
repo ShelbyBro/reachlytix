@@ -20,12 +20,14 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
       if (error.code === 'PGRST116') {
         console.warn(`Profile not found for user ${userId}. This could indicate a failed trigger.`);
         
-        // Attempt to create profile as a fallback
+        // Attempt to create profile as a fallback - ensure role is compatible with DB
+        const defaultRole = 'client'; // Use 'client' since it's supported in the DB
+        
         const { error: insertError } = await supabase
           .from('profiles')
           .insert({ 
             id: userId,
-            role: 'client' as UserRole,
+            role: defaultRole, // Use string literal instead of UserRole type
           });
         
         if (insertError) {
@@ -36,7 +38,7 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
           return {
             first_name: '',
             last_name: '',
-            role: 'client',
+            role: 'client', // Use compatible role
           };
         }
       }
@@ -70,6 +72,9 @@ export async function signUpWithEmail(
 ) {
   console.log("Signing up with user metadata:", { firstName, lastName, role });
   
+  // Check if role is "iso" - if so, convert it to "agent" for database compatibility
+  const dbRole = role === "iso" ? "agent" : role;
+  
   const { error } = await supabase.auth.signUp({ 
     email, 
     password,
@@ -77,7 +82,7 @@ export async function signUpWithEmail(
       data: {
         first_name: firstName,
         last_name: lastName,
-        role
+        role: dbRole // Use compatible role for database
       }
     }
   });
