@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,9 +45,11 @@ export function useAgentManagement() {
         return []; // Return empty array to prevent component crash
       }
     },
-    onError: (err) => {
-      console.error("Query error for agents:", err);
-      setError(err instanceof Error ? err : new Error("Failed to fetch agents"));
+    onSettled: (data, err) => {
+      if (err) {
+        console.error("Query error for agents:", err);
+        setError(err instanceof Error ? err : new Error("Failed to fetch agents"));
+      }
     }
   });
 
@@ -80,8 +81,10 @@ export function useAgentManagement() {
         return []; // Return empty array to prevent component crash
       }
     },
-    onError: (err) => {
-      console.error("Query error for clients:", err);
+    onSettled: (data, err) => {
+      if (err) {
+        console.error("Query error for clients:", err);
+      }
     }
   });
 
