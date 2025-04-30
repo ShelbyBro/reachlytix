@@ -77,7 +77,7 @@ export default function AdminDashboard() {
           setStatusFilter={setStatusFilter}
           clientFilter={clientFilter}
           setClientFilter={setClientFilter}
-          clients={clients || []} {/* Ensure clients is never undefined */}
+          clients={clients || []} // Ensure clients is never undefined
         />
 
         <div className="grid gap-6">
