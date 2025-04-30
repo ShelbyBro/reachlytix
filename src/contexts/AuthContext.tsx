@@ -13,6 +13,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     profile, 
     loading, 
     role,
+    authError,
     setLoading
   } = useAuthState();
 
@@ -63,6 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     profile,
     loading,
     role,
+    authError,
     signIn,
     signUp,
     signOut,

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { UserRole } from "@/types/auth";
 
 export function useUserRole() {
-  const { role, isAdmin, isClient, isAgent, isIso, loading } = useAuth();
+  const { role, isAdmin, isClient, isAgent, isIso, loading, authError } = useAuth();
   const [roleReady, setRoleReady] = useState(false);
   
   // Mark role as ready once it's loaded or after timeout
@@ -32,6 +32,7 @@ export function useUserRole() {
     isAgent,
     isIso,
     roleReady,
+    authError,
     
     // Helper for role-based UI rendering
     canAccess: (allowedRoles: UserRole[]) => {

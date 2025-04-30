@@ -16,6 +16,7 @@ export type AuthContextType = {
   profile: UserProfile | null;
   loading: boolean;
   role: UserRole | null;
+  authError: string | null;
   signIn: (email: string, password: string, redirect?: boolean) => Promise<void>;
   signUp: (email: string, password: string, firstName: string, lastName: string, role?: UserRole) => Promise<void>;
   signOut: () => Promise<void>;

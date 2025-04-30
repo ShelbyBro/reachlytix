@@ -12,6 +12,7 @@ export function useAuthState() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<UserRole | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     const getInitialSession = async () => {
@@ -23,21 +24,36 @@ export function useAuthState() {
 
         if (data.session?.user) {
           const userProfile = await fetchUserProfile(data.session.user.id);
-          setProfile(userProfile);
-          setRole(userProfile?.role || null);
           
           if (!userProfile && data.session?.user) {
             console.warn("User authenticated but profile not found. Will retry on next load.");
+            setAuthError("Profile not found. Please log out and try again.");
+            
+            // Set a default role to prevent hanging UI
+            setRole('client');
+          } else {
+            setProfile(userProfile);
+            setRole(userProfile?.role || 'client'); // Default to client if role is missing
           }
         }
       } catch (error) {
         console.error("Error getting initial session:", error);
+        setAuthError("Error loading your profile. Please try again.");
       } finally {
         setLoading(false);
       }
     };
 
     getInitialSession();
+
+    // Add a timeout to prevent infinite loading
+    const maxLoadingTime = setTimeout(() => {
+      if (loading) {
+        console.warn("Auth loading timed out after 8 seconds");
+        setLoading(false);
+        setAuthError("Authentication timed out. Please refresh the page.");
+      }
+    }, 8000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       setSession(currentSession);
@@ -54,10 +70,20 @@ export function useAuthState() {
         setTimeout(async () => {
           try {
             const userProfile = await fetchUserProfile(currentSession.user.id);
-            setProfile(userProfile);
-            setRole(userProfile?.role || null);
+            
+            if (!userProfile) {
+              console.warn("onAuthStateChange: User authenticated but profile not found");
+              setAuthError("Profile not found. Please log out and try again.");
+              // Set a default role to prevent hanging UI
+              setRole('client');
+            } else {
+              setProfile(userProfile);
+              setRole(userProfile?.role || 'client'); // Default to client if role is missing
+              setAuthError(null);
+            }
           } catch (profileError) {
             console.error("Error fetching profile after auth state change:", profileError);
+            setAuthError("Error loading your profile. Please try again.");
           } finally {
             setLoading(false);
           }
@@ -75,6 +101,7 @@ export function useAuthState() {
 
     return () => {
       subscription.unsubscribe();
+      clearTimeout(maxLoadingTime);
     };
   }, []);
 
@@ -84,10 +111,12 @@ export function useAuthState() {
     profile,
     loading,
     role,
+    authError,
     setSession,
     setUser,
     setProfile,
     setRole,
-    setLoading
+    setLoading,
+    setAuthError
   };
 }

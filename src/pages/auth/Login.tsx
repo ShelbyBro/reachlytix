@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,9 +15,20 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { SignupForm } from "@/components/auth/SignupForm";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function Login() {
-  const { user } = useAuth();
+  const { user, authError } = useAuth();
+  
+  // Display auth error if present
+  const [showAuthError, setShowAuthError] = useState(false);
+  
+  useEffect(() => {
+    if (authError) {
+      setShowAuthError(true);
+    }
+  }, [authError]);
   
   if (user) {
     return <Navigate to="/dashboard" replace />;
@@ -35,6 +46,24 @@ export default function Login() {
             <p className="text-muted-foreground">Amplify Your Reach, Analyze Your Success</p>
           </Link>
         </div>
+        
+        {showAuthError && authError && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Authentication Error</AlertTitle>
+            <AlertDescription>
+              {authError}
+            </AlertDescription>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="mt-2" 
+              onClick={() => setShowAuthError(false)}
+            >
+              Dismiss
+            </Button>
+          </Alert>
+        )}
         
         <Card className="shadow-lg border-primary/10">
           <CardHeader>

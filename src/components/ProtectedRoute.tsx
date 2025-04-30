@@ -1,9 +1,9 @@
-
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/use-user-role";
 import { UserRole } from "@/types/auth";
+import { toast } from "sonner";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -11,10 +11,17 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, requiredRoles }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, loading, authError } = useAuth();
   const { role, roleReady } = useUserRole();
   const location = useLocation();
   const [timeoutReached, setTimeoutReached] = useState(false);
+  
+  // Show auth error message if present
+  useEffect(() => {
+    if (authError) {
+      toast.error(authError);
+    }
+  }, [authError]);
   
   // Add timeout for handling very slow auth responses
   useEffect(() => {
@@ -46,14 +53,30 @@ export default function ProtectedRoute({ children, requiredRoles }: ProtectedRou
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
   
-  // If role is null or undefined, redirect to login page
-  if (!role) {
-    console.error("User authenticated but has no role assigned");
+  // If timeout reached but user exists, assume minimal access
+  if (timeoutReached && user && !role) {
+    console.warn("Auth timeout reached but user authenticated - assuming minimal access");
+    // Display warning to user
+    toast.warning("Could not fully verify your access level. Some features might be limited.");
+    
+    // If specific roles required, redirect to dashboard for safety
+    if (requiredRoles && requiredRoles.length > 0) {
+      return <Navigate to="/dashboard" replace />;
+    }
+    
+    // Otherwise, allow access to the requested page
+    return <>{children}</>;
+  }
+  
+  // If role is null or undefined but the timeout hasn't been reached,
+  // redirect to login page with a specific message
+  if (!role && !timeoutReached) {
+    toast.error("Your user profile is incomplete. Please contact support.");
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
   
   // Check for required roles if specified
-  if (requiredRoles && requiredRoles.length > 0) {
+  if (requiredRoles && requiredRoles.length > 0 && role) {
     if (!requiredRoles.includes(role)) {
       console.log(`User has role ${role} but needs one of ${requiredRoles.join(", ")}`);
       

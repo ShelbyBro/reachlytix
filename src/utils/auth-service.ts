@@ -5,6 +5,8 @@ import { UserProfile, UserRole } from "@/types/auth";
 
 export async function fetchUserProfile(userId: string): Promise<UserProfile | null> {
   try {
+    console.log(`Fetching profile for user ID: ${userId}`);
+    
     const { data, error } = await supabase
       .from('profiles')
       .select('first_name, last_name, role, avatar_url')
@@ -13,9 +15,36 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
 
     if (error) {
       console.error("Error fetching user profile:", error);
+      
+      // Check if this is a "not found" error, which might indicate the profile wasn't created
+      if (error.code === 'PGRST116') {
+        console.warn(`Profile not found for user ${userId}. This could indicate a failed trigger.`);
+        
+        // Attempt to create profile as a fallback
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({ 
+            id: userId,
+            role: 'client' as UserRole,
+          });
+        
+        if (insertError) {
+          console.error("Failed to create missing profile:", insertError);
+        } else {
+          console.log("Created missing profile as fallback");
+          // Return minimal profile
+          return {
+            first_name: '',
+            last_name: '',
+            role: 'client',
+          };
+        }
+      }
+      
       return null;
     }
-
+    
+    console.log("Profile fetched successfully:", data);
     return data as UserProfile;
   } catch (error) {
     console.error("Exception fetching user profile:", error);
