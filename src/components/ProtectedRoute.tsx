@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -80,7 +81,7 @@ export default function ProtectedRoute({ children, requiredRoles }: ProtectedRou
     if (!requiredRoles.includes(role)) {
       console.log(`User has role ${role} but needs one of ${requiredRoles.join(", ")}`);
       
-      // User doesn't have the required role, redirect to appropriate dashboard
+      // User doesn't have the required role, redirect to appropriate dashboard based on role
       if (role === "admin") {
         return <Navigate to="/admin-dashboard" replace />;
       } else if (role === "iso") {

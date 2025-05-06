@@ -26,13 +26,18 @@ import { useUserRole } from "@/hooks/use-user-role";
 
 type SidebarProps = {
   isAdmin?: boolean;
+  isIso?: boolean;
 }
 
-export function Sidebar({ isAdmin = false }: SidebarProps) {
+export function Sidebar({ isAdmin = false, isIso = false }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
-  const { isAdmin: userIsAdmin, isClient, isIso } = useUserRole();
+  const { isAdmin: userIsAdmin, isClient, isIso: userIsIso } = useUserRole();
+  
+  // Determine which role takes precedence for showing the sidebar
+  const effectiveIsAdmin = isAdmin || userIsAdmin();
+  const effectiveIsIso = isIso || userIsIso();
   
   const clientLinks = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -58,7 +63,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
   
-  // New ISO links
+  // ISO links
   const isoLinks = [
     { icon: LayoutDashboard, label: "ISO Dashboard", href: "/iso-dashboard" },
     { icon: Network, label: "My Network", href: "/iso-network" },
@@ -71,9 +76,9 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
   
   // Choose the right links based on user role
   let links = clientLinks;
-  if (userIsAdmin || isAdmin) {
+  if (effectiveIsAdmin) {
     links = adminLinks;
-  } else if (isIso()) {
+  } else if (effectiveIsIso) {
     links = isoLinks;
   }
 

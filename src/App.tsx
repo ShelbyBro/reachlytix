@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -8,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import IsoPortal from "@/pages/iso/IsoPortal";
 
 // Import our pages
 import Login from "./pages/auth/Login";
@@ -52,7 +52,7 @@ const App = () => (
             
             {/* Protected routes - require authentication */}
             <Route path="/dashboard" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={["client", "admin"]}>
                 <Dashboard />
               </ProtectedRoute>
             } />
@@ -111,36 +111,36 @@ const App = () => (
             
             {/* ISO dashboard route */}
             <Route path="/iso-dashboard" element={
-              <ProtectedRoute requiredRoles={["iso"]}>
+              <IsoPortal>
                 <IsoDashboard />
-              </ProtectedRoute>
+              </IsoPortal>
             } />
             
             {/* ISO placeholder routes - redirect to coming soon */}
             <Route path="/iso-network" element={
-              <ProtectedRoute requiredRoles={["iso"]}>
+              <IsoPortal>
                 <ComingSoonPage />
-              </ProtectedRoute>
+              </IsoPortal>
             } />
             <Route path="/iso-agents" element={
-              <ProtectedRoute requiredRoles={["iso"]}>
+              <IsoPortal>
                 <ComingSoonPage />
-              </ProtectedRoute>
+              </IsoPortal>
             } />
             <Route path="/iso-leads" element={
-              <ProtectedRoute requiredRoles={["iso"]}>
+              <IsoPortal>
                 <ComingSoonPage />
-              </ProtectedRoute>
+              </IsoPortal>
             } />
             <Route path="/iso-merchants" element={
-              <ProtectedRoute requiredRoles={["iso"]}>
+              <IsoPortal>
                 <ComingSoonPage />
-              </ProtectedRoute>
+              </IsoPortal>
             } />
             <Route path="/iso-analytics" element={
-              <ProtectedRoute requiredRoles={["iso"]}>
+              <IsoPortal>
                 <ComingSoonPage />
-              </ProtectedRoute>
+              </IsoPortal>
             } />
             
             {/* Client panel route */}
