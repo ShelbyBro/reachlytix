@@ -2,42 +2,17 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, FilePlus, RefreshCcw, UserPlus, Edit, Check, X } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { FilePlus, RefreshCcw, UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "@/components/ui/sonner";
-
-// Updated type definition to handle error cases from Supabase
-type IsoLead = {
-  id: string;
-  iso_id: string;
-  lead_id: string;
-  assigned_agent_id: string | null;
-  status: string;
-  notes: string | null;
-  created_at: string;
-  lead: {
-    name: string;
-    email: string;
-    phone: string;
-    source: string;
-  };
-  // Make assigned_agent optional and adjust its type
-  assigned_agent?: {
-    first_name: string | null;
-    last_name: string | null;
-  } | null;
-};
+import { IsoLeadsTable, IsoLead } from "./components/IsoLeadsTable";
+import { StatsCard } from "./components/StatsCard";
+import { LeadEditDialog } from "./components/LeadEditDialog";
+import { NotesDialog } from "./components/NotesDialog";
 
 type Agent = {
   id: string;
@@ -216,9 +191,11 @@ export default function IsoDashboard() {
 
         {/* Stats Cards */}
         <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Leads</CardTitle>
+          <StatsCard
+            title="Total Leads"
+            value={isLoading ? "-" : isoLeads?.length || 0}
+            description="Active leads in your account"
+            icon={
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -234,19 +211,13 @@ export default function IsoDashboard() {
                 <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {isLoading ? "-" : isoLeads?.length || 0}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Active leads in your account
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Unassigned</CardTitle>
+            }
+          />
+          <StatsCard
+            title="Unassigned"
+            value={isLoading ? "-" : isoLeads?.filter(lead => lead.status === 'unassigned').length || 0}
+            description="Leads waiting for assignment"
+            icon={
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -260,19 +231,13 @@ export default function IsoDashboard() {
                 <rect width="20" height="14" x="2" y="5" rx="2" />
                 <path d="M2 10h20" />
               </svg>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {isLoading ? "-" : isoLeads?.filter(lead => lead.status === 'unassigned').length || 0}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Leads waiting for assignment
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">In Progress</CardTitle>
+            }
+          />
+          <StatsCard
+            title="In Progress"
+            value={isLoading ? "-" : isoLeads?.filter(lead => lead.status === 'in_progress').length || 0}
+            description="Leads currently in progress"
+            icon={
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -285,19 +250,13 @@ export default function IsoDashboard() {
               >
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {isLoading ? "-" : isoLeads?.filter(lead => lead.status === 'in_progress').length || 0}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Leads currently in progress
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Converted</CardTitle>
+            }
+          />
+          <StatsCard
+            title="Converted"
+            value={isLoading ? "-" : isoLeads?.filter(lead => lead.status === 'converted').length || 0}
+            description="Successfully converted leads"
+            icon={
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -311,16 +270,8 @@ export default function IsoDashboard() {
                 <path d="M12 2v20" />
                 <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
               </svg>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {isLoading ? "-" : isoLeads?.filter(lead => lead.status === 'converted').length || 0}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Successfully converted leads
-              </p>
-            </CardContent>
-          </Card>
+            }
+          />
         </section>
 
         {/* Leads Management */}
@@ -414,234 +365,23 @@ export default function IsoDashboard() {
         </section>
       </div>
 
-      {/* Lead Edit Dialog */}
-      <Dialog open={isLeadDialogOpen} onOpenChange={setIsLeadDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit Lead</DialogTitle>
-            <DialogDescription>
-              Update the lead status or assign an agent.
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...leadForm}>
-            <form onSubmit={leadForm.handleSubmit(handleLeadUpdate)} className="space-y-4 py-2">
-              <FormField
-                control={leadForm.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="unassigned">Unassigned</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="converted">Converted</SelectItem>
-                        <SelectItem value="rejected">Rejected</SelectItem>
-                        <SelectItem value="closed">Closed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={leadForm.control}
-                name="assigned_agent_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Assigned Agent</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select agent" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="">None</SelectItem>
-                        {agents?.map(agent => (
-                          <SelectItem key={agent.id} value={agent.id}>
-                            {agent.first_name} {agent.last_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <DialogFooter>
-                <Button type="submit">Save Changes</Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      {/* Dialogs */}
+      <LeadEditDialog
+        open={isLeadDialogOpen}
+        onOpenChange={setIsLeadDialogOpen}
+        selectedLead={selectedLead}
+        agents={agents}
+        form={leadForm}
+        onSubmit={handleLeadUpdate}
+      />
 
-      {/* Notes Dialog */}
-      <Dialog open={isNotesDialogOpen} onOpenChange={setIsNotesDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Lead Notes</DialogTitle>
-            <DialogDescription>
-              Add or update notes for this lead.
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...notesForm}>
-            <form onSubmit={notesForm.handleSubmit(handleNotesUpdate)} className="space-y-4 py-2">
-              <FormField
-                control={notesForm.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Notes</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Enter notes about this lead" 
-                        className="min-h-[100px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <DialogFooter>
-                <Button type="submit">Save Notes</Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      <NotesDialog
+        open={isNotesDialogOpen}
+        onOpenChange={setIsNotesDialogOpen}
+        selectedLead={selectedLead}
+        form={notesForm}
+        onSubmit={handleNotesUpdate}
+      />
     </Layout>
-  );
-}
-
-function IsoLeadsTable({ 
-  leads, 
-  loading, 
-  error,
-  onEdit,
-  onNotes
-}: { 
-  leads?: IsoLead[], 
-  loading: boolean, 
-  error: unknown,
-  onEdit: (lead: IsoLead) => void,
-  onNotes: (lead: IsoLead) => void
-}) {
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-8 text-center text-red-500">
-        Error loading leads. Please try again.
-      </div>
-    );
-  }
-
-  if (!leads || leads.length === 0) {
-    return (
-      <div className="text-center p-8 text-muted-foreground">
-        No leads found in this category.
-      </div>
-    );
-  }
-
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Contact</TableHead>
-          <TableHead>Source</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Agent</TableHead>
-          <TableHead>Notes</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {leads?.map((lead) => (
-          <TableRow key={lead.id}>
-            <TableCell className="font-medium">{lead.lead?.name || 'N/A'}</TableCell>
-            <TableCell>
-              <div className="flex flex-col">
-                <span>{lead.lead?.email || 'N/A'}</span>
-                <span className="text-muted-foreground text-sm">{lead.lead?.phone || 'N/A'}</span>
-              </div>
-            </TableCell>
-            <TableCell>{lead.lead?.source || 'N/A'}</TableCell>
-            <TableCell>
-              <StatusBadge status={lead.status} />
-            </TableCell>
-            <TableCell>
-              {lead.assigned_agent ? 
-                `${lead.assigned_agent?.first_name || ''} ${lead.assigned_agent?.last_name || ''}`.trim() || 'N/A' : 
-                'Unassigned'}
-            </TableCell>
-            <TableCell>
-              {lead.notes ? 
-                <span className="line-clamp-1 max-w-[120px]">{lead.notes}</span> : 
-                <span className="text-muted-foreground text-sm">No notes</span>}
-            </TableCell>
-            <TableCell className="text-right">
-              <div className="flex justify-end gap-2">
-                <Button variant="ghost" size="icon" onClick={() => onEdit(lead)}>
-                  <Edit className="h-4 w-4" />
-                  <span className="sr-only">Edit lead</span>
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => onNotes(lead)}>
-                  <ArrowUpRight className="h-4 w-4" />
-                  <span className="sr-only">View notes</span>
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const getVariant = (status: string) => {
-    switch(status) {
-      case 'unassigned': return "outline";
-      case 'in_progress': return "secondary";
-      case 'converted': return "default";
-      case 'rejected': return "destructive";
-      case 'closed': return "outline";
-      default: return "outline";
-    }
-  };
-
-  const getLabel = (status: string) => {
-    return status.replace('_', ' ').charAt(0).toUpperCase() + status.replace('_', ' ').slice(1);
-  };
-
-  return (
-    <Badge variant={getVariant(status) as any}>
-      {getLabel(status)}
-    </Badge>
   );
 }
