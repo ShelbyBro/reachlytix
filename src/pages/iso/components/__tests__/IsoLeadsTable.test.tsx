@@ -2,7 +2,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { IsoLeadsTable, IsoLead } from "../IsoLeadsTable";
-import { vi } from "vitest";
+import { vi, describe, it, expect, beforeEach } from "vitest";
 
 describe("IsoLeadsTable", () => {
   // Mock functions for the component props
