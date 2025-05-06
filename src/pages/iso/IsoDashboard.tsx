@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout";
@@ -580,7 +581,7 @@ function IsoLeadsTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {leads.map((lead) => (
+        {leads?.map((lead) => (
           <TableRow key={lead.id}>
             <TableCell className="font-medium">{lead.lead?.name || 'N/A'}</TableCell>
             <TableCell>
@@ -595,7 +596,7 @@ function IsoLeadsTable({
             </TableCell>
             <TableCell>
               {lead.assigned_agent ? 
-                `${lead.assigned_agent.first_name || ''} ${lead.assigned_agent.last_name || ''}`.trim() : 
+                `${lead.assigned_agent?.first_name || ''} ${lead.assigned_agent?.last_name || ''}`.trim() || 'N/A' : 
                 'Unassigned'}
             </TableCell>
             <TableCell>
