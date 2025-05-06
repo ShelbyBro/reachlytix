@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout";
@@ -69,8 +70,11 @@ export default function IsoDashboard() {
   const { data: isoLeads, isLoading, error, refetch } = useQuery({
     queryKey: ['iso-leads'],
     queryFn: async () => {
-      const { user } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      // Fix error #1: Get the session user data correctly
+      const { data: userResponse, error: userError } = await supabase.auth.getUser();
+      if (userError || !userResponse.user) throw new Error("Not authenticated");
+      
+      const userId = userResponse.user.id;
 
       // Join iso_leads with leads table and optional join with profiles for agent data
       const { data, error } = await supabase
@@ -80,7 +84,7 @@ export default function IsoDashboard() {
           lead:leads(name, email, phone, source),
           assigned_agent:profiles!assigned_agent_id(first_name, last_name)
         `)
-        .eq('iso_id', user.id)
+        .eq('iso_id', userId)
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -102,7 +106,7 @@ export default function IsoDashboard() {
           notes: lead.notes,
           created_at: lead.created_at,
           lead: lead.lead,
-          // Only include assigned_agent if it exists and is not an error object
+          // Fix error #2: Add proper null checking for assigned_agent
           ...(lead.assigned_agent && 
                typeof lead.assigned_agent === 'object' && 
                !('error' in lead.assigned_agent) && { 
