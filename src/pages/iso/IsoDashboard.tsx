@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout";
@@ -107,11 +106,11 @@ export default function IsoDashboard() {
           created_at: lead.created_at,
           lead: lead.lead,
           // Fix error #2: Add proper null checking for assigned_agent
-          ...(lead.assigned_agent && 
-               typeof lead.assigned_agent === 'object' && 
-               !('error' in lead.assigned_agent) && { 
-            assigned_agent: lead.assigned_agent 
-          })
+          // Only include assigned_agent if it exists, is not null, is an object, and doesn't have an error
+          assigned_agent: lead.assigned_agent && 
+                          typeof lead.assigned_agent === 'object' && 
+                          !('error' in lead.assigned_agent) ? 
+                          lead.assigned_agent : null
         };
         
         return transformedLead;
