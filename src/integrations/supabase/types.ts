@@ -666,7 +666,7 @@ export type Database = {
       automation_status: "active" | "paused"
       call_type: "inbound" | "outbound"
       trigger_type: "source" | "campaign" | "time_delay"
-      user_role: "admin" | "client" | "agent"
+      user_role: "admin" | "client" | "agent" | "iso"
     }
     CompositeTypes: {
       http_header: {
@@ -802,7 +802,7 @@ export const Constants = {
       automation_status: ["active", "paused"],
       call_type: ["inbound", "outbound"],
       trigger_type: ["source", "campaign", "time_delay"],
-      user_role: ["admin", "client", "agent"],
+      user_role: ["admin", "client", "agent", "iso"],
     },
   },
 } as const

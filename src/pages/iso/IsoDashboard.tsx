@@ -9,7 +9,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, FilePlus, RefreshCcw, UserPlus } from "lucide-react";
+import { ArrowUpRight, FilePlus, RefreshCcw, UserPlus, Edit, Check, X } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { toast } from "@/components/ui/sonner";
 
 type IsoLead = {
   id: string;
@@ -25,11 +31,38 @@ type IsoLead = {
     phone: string;
     source: string;
   };
+  assigned_agent?: {
+    first_name: string | null;
+    last_name: string | null;
+  };
+};
+
+type Agent = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
 };
 
 export default function IsoDashboard() {
   const { profile, role } = useAuth();
   const [greeting, setGreeting] = useState("");
+  const [selectedLead, setSelectedLead] = useState<IsoLead | null>(null);
+  const [isLeadDialogOpen, setIsLeadDialogOpen] = useState(false);
+  const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
+  
+  // Fetch available agents
+  const { data: agents } = useQuery({
+    queryKey: ['agents'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .eq('role', 'agent');
+      
+      if (error) throw error;
+      return data as Agent[];
+    }
+  });
   
   // Fetch ISO leads
   const { data: isoLeads, isLoading, error, refetch } = useQuery({
@@ -39,7 +72,8 @@ export default function IsoDashboard() {
         .from('iso_leads')
         .select(`
           *,
-          lead:leads(name, email, phone, source)
+          lead:leads(name, email, phone, source),
+          assigned_agent:profiles(first_name, last_name)
         `)
         .order('created_at', { ascending: false });
       
@@ -55,6 +89,80 @@ export default function IsoDashboard() {
       hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
     setGreeting(`${greetingText}, ${profile?.first_name || "ISO Partner"}!`);
   }, [profile]);
+
+  // Forms for managing leads
+  const leadForm = useForm({
+    defaultValues: {
+      status: "",
+      assigned_agent_id: "",
+    }
+  });
+
+  const notesForm = useForm({
+    defaultValues: {
+      notes: "",
+    }
+  });
+
+  // Reset form when selected lead changes
+  useEffect(() => {
+    if (selectedLead) {
+      leadForm.reset({
+        status: selectedLead.status,
+        assigned_agent_id: selectedLead.assigned_agent_id || "",
+      });
+      notesForm.reset({
+        notes: selectedLead.notes || "",
+      });
+    }
+  }, [selectedLead, leadForm, notesForm]);
+
+  // Handle lead update
+  const handleLeadUpdate = async (values: { status: string; assigned_agent_id: string }) => {
+    if (!selectedLead) return;
+
+    try {
+      const { error } = await supabase
+        .from('iso_leads')
+        .update({
+          status: values.status,
+          assigned_agent_id: values.assigned_agent_id || null,
+        })
+        .eq('id', selectedLead.id);
+
+      if (error) throw error;
+      
+      toast.success("Lead updated successfully");
+      refetch();
+      setIsLeadDialogOpen(false);
+    } catch (error) {
+      console.error("Error updating lead:", error);
+      toast.error("Failed to update lead");
+    }
+  };
+
+  // Handle notes update
+  const handleNotesUpdate = async (values: { notes: string }) => {
+    if (!selectedLead) return;
+
+    try {
+      const { error } = await supabase
+        .from('iso_leads')
+        .update({
+          notes: values.notes,
+        })
+        .eq('id', selectedLead.id);
+
+      if (error) throw error;
+      
+      toast.success("Notes updated successfully");
+      refetch();
+      setIsNotesDialogOpen(false);
+    } catch (error) {
+      console.error("Error updating notes:", error);
+      toast.error("Failed to update notes");
+    }
+  };
 
   return (
     <Layout>
@@ -204,13 +312,33 @@ export default function IsoDashboard() {
               <TabsTrigger value="converted">Converted</TabsTrigger>
             </TabsList>
             <TabsContent value="all" className="border rounded-md mt-2">
-              <IsoLeadsTable leads={isoLeads} loading={isLoading} error={error} />
+              <IsoLeadsTable 
+                leads={isoLeads} 
+                loading={isLoading} 
+                error={error} 
+                onEdit={(lead) => {
+                  setSelectedLead(lead);
+                  setIsLeadDialogOpen(true);
+                }}
+                onNotes={(lead) => {
+                  setSelectedLead(lead);
+                  setIsNotesDialogOpen(true);
+                }}
+              />
             </TabsContent>
             <TabsContent value="unassigned" className="border rounded-md mt-2">
               <IsoLeadsTable 
                 leads={isoLeads?.filter(lead => lead.status === 'unassigned')} 
                 loading={isLoading} 
                 error={error} 
+                onEdit={(lead) => {
+                  setSelectedLead(lead);
+                  setIsLeadDialogOpen(true);
+                }}
+                onNotes={(lead) => {
+                  setSelectedLead(lead);
+                  setIsNotesDialogOpen(true);
+                }}
               />
             </TabsContent>
             <TabsContent value="in_progress" className="border rounded-md mt-2">
@@ -218,6 +346,14 @@ export default function IsoDashboard() {
                 leads={isoLeads?.filter(lead => lead.status === 'in_progress')} 
                 loading={isLoading} 
                 error={error} 
+                onEdit={(lead) => {
+                  setSelectedLead(lead);
+                  setIsLeadDialogOpen(true);
+                }}
+                onNotes={(lead) => {
+                  setSelectedLead(lead);
+                  setIsNotesDialogOpen(true);
+                }}
               />
             </TabsContent>
             <TabsContent value="converted" className="border rounded-md mt-2">
@@ -225,11 +361,132 @@ export default function IsoDashboard() {
                 leads={isoLeads?.filter(lead => lead.status === 'converted')} 
                 loading={isLoading} 
                 error={error} 
+                onEdit={(lead) => {
+                  setSelectedLead(lead);
+                  setIsLeadDialogOpen(true);
+                }}
+                onNotes={(lead) => {
+                  setSelectedLead(lead);
+                  setIsNotesDialogOpen(true);
+                }}
               />
             </TabsContent>
           </Tabs>
         </section>
       </div>
+
+      {/* Lead Edit Dialog */}
+      <Dialog open={isLeadDialogOpen} onOpenChange={setIsLeadDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Lead</DialogTitle>
+            <DialogDescription>
+              Update the lead status or assign an agent.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...leadForm}>
+            <form onSubmit={leadForm.handleSubmit(handleLeadUpdate)} className="space-y-4 py-2">
+              <FormField
+                control={leadForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="unassigned">Unassigned</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="converted">Converted</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                        <SelectItem value="closed">Closed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={leadForm.control}
+                name="assigned_agent_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assigned Agent</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select agent" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">None</SelectItem>
+                        {agents?.map(agent => (
+                          <SelectItem key={agent.id} value={agent.id}>
+                            {agent.first_name} {agent.last_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button type="submit">Save Changes</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Notes Dialog */}
+      <Dialog open={isNotesDialogOpen} onOpenChange={setIsNotesDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Lead Notes</DialogTitle>
+            <DialogDescription>
+              Add or update notes for this lead.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...notesForm}>
+            <form onSubmit={notesForm.handleSubmit(handleNotesUpdate)} className="space-y-4 py-2">
+              <FormField
+                control={notesForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Enter notes about this lead" 
+                        className="min-h-[100px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button type="submit">Save Notes</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
@@ -237,11 +494,15 @@ export default function IsoDashboard() {
 function IsoLeadsTable({ 
   leads, 
   loading, 
-  error 
+  error,
+  onEdit,
+  onNotes
 }: { 
   leads?: IsoLead[], 
   loading: boolean, 
-  error: unknown 
+  error: unknown,
+  onEdit: (lead: IsoLead) => void,
+  onNotes: (lead: IsoLead) => void
 }) {
   if (loading) {
     return (
@@ -275,7 +536,8 @@ function IsoLeadsTable({
           <TableHead>Contact</TableHead>
           <TableHead>Source</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Created</TableHead>
+          <TableHead>Agent</TableHead>
+          <TableHead>Notes</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -294,13 +556,26 @@ function IsoLeadsTable({
               <StatusBadge status={lead.status} />
             </TableCell>
             <TableCell>
-              {new Date(lead.created_at).toLocaleDateString()}
+              {lead.assigned_agent ? 
+                `${lead.assigned_agent.first_name || ''} ${lead.assigned_agent.last_name || ''}`.trim() : 
+                'Unassigned'}
+            </TableCell>
+            <TableCell>
+              {lead.notes ? 
+                <span className="line-clamp-1 max-w-[120px]">{lead.notes}</span> : 
+                <span className="text-muted-foreground text-sm">No notes</span>}
             </TableCell>
             <TableCell className="text-right">
-              <Button variant="ghost" size="icon">
-                <ArrowUpRight className="h-4 w-4" />
-                <span className="sr-only">View details</span>
-              </Button>
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" size="icon" onClick={() => onEdit(lead)}>
+                  <Edit className="h-4 w-4" />
+                  <span className="sr-only">Edit lead</span>
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => onNotes(lead)}>
+                  <ArrowUpRight className="h-4 w-4" />
+                  <span className="sr-only">View notes</span>
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         ))}
@@ -315,7 +590,8 @@ function StatusBadge({ status }: { status: string }) {
       case 'unassigned': return "outline";
       case 'in_progress': return "secondary";
       case 'converted': return "default";
-      case 'lost': return "destructive";
+      case 'rejected': return "destructive";
+      case 'closed': return "outline";
       default: return "outline";
     }
   };

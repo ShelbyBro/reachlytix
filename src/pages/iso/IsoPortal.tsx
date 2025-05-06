@@ -2,7 +2,6 @@
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import Layout from "@/components/layout";
 
 interface IsoPortalProps {
   children: ReactNode;
