@@ -365,6 +365,44 @@ export type Database = {
           },
         ]
       }
+      iso_leads: {
+        Row: {
+          assigned_agent_id: string | null
+          created_at: string
+          id: string
+          iso_id: string
+          lead_id: string
+          notes: string | null
+          status: string
+        }
+        Insert: {
+          assigned_agent_id?: string | null
+          created_at?: string
+          id?: string
+          iso_id: string
+          lead_id: string
+          notes?: string | null
+          status?: string
+        }
+        Update: {
+          assigned_agent_id?: string | null
+          created_at?: string
+          id?: string
+          iso_id?: string
+          lead_id?: string
+          notes?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iso_leads_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           client_id: string | null

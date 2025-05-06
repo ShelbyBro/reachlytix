@@ -26,6 +26,7 @@ import ComingSoonPage from "./pages/demo/ComingSoonPage";
 import SettingsPage from "./pages/settings";
 import VoipPage from "./pages/voip";
 import ClientPanel from "./pages/client/ClientPanel";
+import IsoDashboard from "./pages/iso/IsoDashboard";
 
 // Lazy load AI Agents page
 const AiAgentsPage = lazy(() => import("./pages/ai-agents"));
@@ -101,10 +102,44 @@ const App = () => (
               </ProtectedRoute>
             } />
             
-            {/* Admin dashboard route - properly pointing to the AdminDashboard component */}
+            {/* Admin dashboard route */}
             <Route path="/admin-dashboard" element={
               <ProtectedRoute requiredRoles={["admin"]}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            
+            {/* ISO dashboard route */}
+            <Route path="/iso-dashboard" element={
+              <ProtectedRoute requiredRoles={["iso"]}>
+                <IsoDashboard />
+              </ProtectedRoute>
+            } />
+            
+            {/* ISO placeholder routes - redirect to coming soon */}
+            <Route path="/iso-network" element={
+              <ProtectedRoute requiredRoles={["iso"]}>
+                <ComingSoonPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/iso-agents" element={
+              <ProtectedRoute requiredRoles={["iso"]}>
+                <ComingSoonPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/iso-leads" element={
+              <ProtectedRoute requiredRoles={["iso"]}>
+                <ComingSoonPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/iso-merchants" element={
+              <ProtectedRoute requiredRoles={["iso"]}>
+                <ComingSoonPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/iso-analytics" element={
+              <ProtectedRoute requiredRoles={["iso"]}>
+                <ComingSoonPage />
               </ProtectedRoute>
             } />
             

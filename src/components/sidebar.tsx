@@ -13,6 +13,10 @@ import {
   Mail,
   Bot,
   Search,
+  Network,
+  UserCog,
+  Building,
+  ClipboardList
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -28,7 +32,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
-  const { isAdmin: userIsAdmin, isClient } = useUserRole();
+  const { isAdmin: userIsAdmin, isClient, isIso } = useUserRole();
   
   const clientLinks = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -54,7 +58,24 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
   
-  let links = userIsAdmin || isAdmin ? adminLinks : clientLinks;
+  // New ISO links
+  const isoLinks = [
+    { icon: LayoutDashboard, label: "ISO Dashboard", href: "/iso-dashboard" },
+    { icon: Network, label: "My Network", href: "/iso-network" },
+    { icon: UserCog, label: "Agent Management", href: "/iso-agents" },
+    { icon: ClipboardList, label: "Lead Queue", href: "/iso-leads" },
+    { icon: Building, label: "Merchants", href: "/iso-merchants" },
+    { icon: BarChart3, label: "Performance", href: "/iso-analytics" },
+    { icon: Settings, label: "Settings", href: "/settings" },
+  ];
+  
+  // Choose the right links based on user role
+  let links = clientLinks;
+  if (userIsAdmin || isAdmin) {
+    links = adminLinks;
+  } else if (isIso()) {
+    links = isoLinks;
+  }
 
   const handleLogout = async () => {
     await signOut();
