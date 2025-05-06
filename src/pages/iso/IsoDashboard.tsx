@@ -69,19 +69,29 @@ export default function IsoDashboard() {
   const { data: isoLeads, isLoading, error, refetch } = useQuery({
     queryKey: ['iso-leads'],
     queryFn: async () => {
+      const { user } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Join iso_leads with leads table and optional join with profiles for agent data
       const { data, error } = await supabase
         .from('iso_leads')
         .select(`
           *,
           lead:leads(name, email, phone, source),
-          assigned_agent:profiles(first_name, last_name)
+          assigned_agent:profiles!assigned_agent_id(first_name, last_name)
         `)
+        .eq('iso_id', user.id)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching ISO leads:", error);
+        throw error;
+      }
+      
+      if (!data) return [];
       
       // Transform the data to match our IsoLead type, handling potential errors
-      return (data as any[]).map(lead => {
+      return data.map(lead => {
         // Create a properly shaped IsoLead object
         const transformedLead: IsoLead = {
           id: lead.id,
@@ -92,8 +102,10 @@ export default function IsoDashboard() {
           notes: lead.notes,
           created_at: lead.created_at,
           lead: lead.lead,
-          // Only include assigned_agent if it's not an error
-          ...(lead.assigned_agent && !lead.assigned_agent.error && { 
+          // Only include assigned_agent if it exists and is not an error object
+          ...(lead.assigned_agent && 
+               typeof lead.assigned_agent === 'object' && 
+               !('error' in lead.assigned_agent) && { 
             assigned_agent: lead.assigned_agent 
           })
         };
