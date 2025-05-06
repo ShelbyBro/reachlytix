@@ -122,6 +122,7 @@ export default function IsoDashboard() {
     if (selectedLead) {
       leadForm.reset({
         status: selectedLead.status,
+        // Add optional chaining and fallback for the assigned_agent_id
         assigned_agent_id: selectedLead.assigned_agent_id || "",
       });
       notesForm.reset({
