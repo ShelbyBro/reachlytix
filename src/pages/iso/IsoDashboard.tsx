@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout";
@@ -17,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { toast } from "@/components/ui/sonner";
 
+// Updated type definition to handle error cases from Supabase
 type IsoLead = {
   id: string;
   iso_id: string;
@@ -31,10 +31,11 @@ type IsoLead = {
     phone: string;
     source: string;
   };
+  // Make assigned_agent optional and adjust its type
   assigned_agent?: {
     first_name: string | null;
     last_name: string | null;
-  };
+  } | null;
 };
 
 type Agent = {
@@ -64,7 +65,7 @@ export default function IsoDashboard() {
     }
   });
   
-  // Fetch ISO leads
+  // Fetch ISO leads with error handling for assigned_agent
   const { data: isoLeads, isLoading, error, refetch } = useQuery({
     queryKey: ['iso-leads'],
     queryFn: async () => {
@@ -78,7 +79,27 @@ export default function IsoDashboard() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as IsoLead[];
+      
+      // Transform the data to match our IsoLead type, handling potential errors
+      return (data as any[]).map(lead => {
+        // Create a properly shaped IsoLead object
+        const transformedLead: IsoLead = {
+          id: lead.id,
+          iso_id: lead.iso_id,
+          lead_id: lead.lead_id,
+          assigned_agent_id: lead.assigned_agent_id,
+          status: lead.status,
+          notes: lead.notes,
+          created_at: lead.created_at,
+          lead: lead.lead,
+          // Only include assigned_agent if it's not an error
+          ...(lead.assigned_agent && !lead.assigned_agent.error && { 
+            assigned_agent: lead.assigned_agent 
+          })
+        };
+        
+        return transformedLead;
+      });
     }
   });
 
