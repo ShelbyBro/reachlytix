@@ -95,7 +95,7 @@ export default function IsoDashboard() {
       
       // Transform the data to match our IsoLead type, handling potential errors
       return data.map(lead => {
-        // Create a properly shaped IsoLead object
+        // Create a properly shaped IsoLead object with proper null checking
         const transformedLead: IsoLead = {
           id: lead.id,
           iso_id: lead.iso_id,
@@ -105,12 +105,14 @@ export default function IsoDashboard() {
           notes: lead.notes,
           created_at: lead.created_at,
           lead: lead.lead,
-          // Fix error #2: Add proper null checking for assigned_agent
-          // Only include assigned_agent if it exists, is not null, is an object, and doesn't have an error
+          // Fix: Add proper null checking for assigned_agent with full safety checks
           assigned_agent: lead.assigned_agent && 
-                          typeof lead.assigned_agent === 'object' && 
-                          !('error' in lead.assigned_agent) ? 
-                          lead.assigned_agent : null
+                         typeof lead.assigned_agent === 'object' && 
+                         !('error' in lead.assigned_agent) ? 
+                         {
+                           first_name: lead.assigned_agent.first_name,
+                           last_name: lead.assigned_agent.last_name
+                         } : null
         };
         
         return transformedLead;
