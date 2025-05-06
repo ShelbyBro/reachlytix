@@ -105,13 +105,13 @@ export default function IsoDashboard() {
           notes: lead.notes,
           created_at: lead.created_at,
           lead: lead.lead,
-          // Fix: Add proper null checking for assigned_agent with full safety checks
+          // Fix: Add proper null checking with additional safety for assigned_agent properties
           assigned_agent: lead.assigned_agent && 
                          typeof lead.assigned_agent === 'object' && 
                          !('error' in lead.assigned_agent) ? 
                          {
-                           first_name: lead.assigned_agent.first_name,
-                           last_name: lead.assigned_agent.last_name
+                           first_name: lead.assigned_agent?.first_name ?? null,
+                           last_name: lead.assigned_agent?.last_name ?? null
                          } : null
         };
         
