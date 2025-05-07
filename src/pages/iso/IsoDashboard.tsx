@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout";
