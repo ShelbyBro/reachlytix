@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout";
@@ -80,7 +81,7 @@ export default function IsoDashboard() {
           notes: lead.notes,
           created_at: lead.created_at,
           lead: lead.lead,
-          // Fix: Add proper null checking with additional safety for assigned_agent properties
+          // Fix: Add proper null checking with optional chaining for assigned_agent properties
           assigned_agent: lead.assigned_agent && 
                          typeof lead.assigned_agent === 'object' && 
                          !('error' in lead.assigned_agent) ? 
