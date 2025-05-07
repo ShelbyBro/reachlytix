@@ -395,6 +395,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_assigned_agent_id"
+            columns: ["assigned_agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "iso_leads_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false

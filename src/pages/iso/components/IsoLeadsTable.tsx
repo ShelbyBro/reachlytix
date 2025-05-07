@@ -35,7 +35,7 @@ interface IsoLeadsTableProps {
 
 export function IsoLeadsTable({ leads, loading, error, onEdit, onNotes }: IsoLeadsTableProps) {
   if (loading) {
-    return <div className="p-4 text-center">Loading leads data...</div>;
+    return <div className="p-4 text-center" role="status">Loading leads data...</div>;
   }
   
   if (error) {
@@ -70,8 +70,9 @@ export function IsoLeadsTable({ leads, loading, error, onEdit, onNotes }: IsoLea
               <TableCell>{lead.lead.phone || "N/A"}</TableCell>
               <TableCell>{lead.lead.email || "N/A"}</TableCell>
               <TableCell>
-                {/* Here we use the proper optional chaining for assigned_agent */}
-                {lead.assigned_agent?.first_name || "Unassigned"} {lead.assigned_agent?.last_name || ""}
+                {lead.assigned_agent ? 
+                  `${lead.assigned_agent.first_name || ""} ${lead.assigned_agent.last_name || ""}`.trim() || "N/A" 
+                  : "Unassigned"}
               </TableCell>
               <TableCell>
                 <StatusBadge status={lead.status} />
