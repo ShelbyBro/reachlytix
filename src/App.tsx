@@ -1,177 +1,188 @@
-import { Suspense, lazy } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import NotFound from "./pages/NotFound";
-import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import IsoPortal from "@/pages/iso/IsoPortal";
-
-// Import our pages
-import Login from "./pages/auth/Login";
-import Dashboard from "./pages/dashboard/Dashboard";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import LandingPage from "./pages/landing/LandingPage";
-import UploadPage from "./pages/upload";
-import CampaignsPage from "./pages/campaigns";
-import ManageCampaignsPage from "./pages/campaigns/manage";
-import CreateCampaignPage from "./pages/campaigns/create";
-import AddLeadPage from "./pages/leads/add";
-import AnalyticsPage from "./pages/analytics";
-import LeadGeneratorPage from "./pages/lead-generator";
-import DemoPage from "./pages/demo/DemoPage";
-import ComingSoonPage from "./pages/demo/ComingSoonPage";
-import SettingsPage from "./pages/settings";
-import VoipPage from "./pages/voip";
-import ClientPanel from "./pages/client/ClientPanel";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import "./App.css";
+import Dashboard from "./pages/Dashboard";
+import Campaigns from "./pages/Campaigns";
+import Settings from "./pages/Settings";
+import Upload from "./pages/Upload";
+import AddLead from "./pages/AddLead";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Analytics from "./pages/Analytics";
+import AdminDashboard from "./pages/AdminDashboard";
+import AIAgents from "./pages/AIAgents";
+import LeadGenerator from "./pages/LeadGenerator";
+import CreateCampaign from "./pages/CreateCampaign";
 import IsoDashboard from "./pages/iso/IsoDashboard";
+import IsoNetwork from "./pages/iso/IsoNetwork";
+import IsoAgents from "./pages/iso/IsoAgents";
+import IsoLeads from "./pages/iso/IsoLeads";
+import IsoAnalytics from "./pages/iso/IsoAnalytics";
+import IsoMerchants from "./pages/iso/merchants/IsoMerchants";
+import IsoLenders from "./pages/iso/lenders/IsoLenders";
+import IsoApplications from "./pages/iso/applications/IsoApplications";
 
-// Lazy load AI Agents page
-const AiAgentsPage = lazy(() => import("./pages/ai-agents"));
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Login />,
+  },
+  {
+    path: "/register",
+    element: <Register />,
+  },
+  {
+    path: "/dashboard",
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/campaigns",
+    element: (
+      <ProtectedRoute>
+        <Campaigns />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/campaigns/create",
+    element: (
+      <ProtectedRoute>
+        <CreateCampaign />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/settings",
+    element: (
+      <ProtectedRoute>
+        <Settings />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/upload",
+    element: (
+      <ProtectedRoute>
+        <Upload />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/leads/add",
+    element: (
+      <ProtectedRoute>
+        <AddLead />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/analytics",
+    element: (
+      <ProtectedRoute>
+        <Analytics />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin-dashboard",
+    element: (
+      <ProtectedRoute>
+        <AdminDashboard />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/ai-agents",
+    element: (
+      <ProtectedRoute>
+        <AIAgents />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/lead-generator",
+    element: (
+      <ProtectedRoute>
+        <LeadGenerator />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/iso-dashboard",
+    element: (
+      <ProtectedRoute>
+        <IsoDashboard />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/iso-network",
+    element: (
+      <ProtectedRoute>
+        <IsoNetwork />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/iso-agents",
+    element: (
+      <ProtectedRoute>
+        <IsoAgents />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/iso-leads",
+    element: (
+      <ProtectedRoute>
+        <IsoLeads />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/iso-analytics",
+    element: (
+      <ProtectedRoute>
+        <IsoAnalytics />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/iso-merchants",
+    element: (
+      <ProtectedRoute>
+        <IsoMerchants />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/iso-lenders",
+    element: (
+      <ProtectedRoute>
+        <IsoLenders />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/iso-applications",
+    element: (
+      <ProtectedRoute>
+        <IsoApplications />
+      </ProtectedRoute>
+    ),
+  },
+]);
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            {/* Public landing page as homepage - NO protection, accessible to all users */}
-            <Route path="/" element={<LandingPage />} />
-            
-            {/* Auth routes - also public */}
-            <Route path="/auth/login" element={<Login />} />
-            <Route path="/auth/signup" element={<Login />} />
-            <Route path="/demo" element={<DemoPage />} />
-            <Route path="/demo/coming-soon" element={<ComingSoonPage />} />
-            
-            {/* Protected routes - require authentication */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute requiredRoles={["client", "admin"]}>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/upload" element={
-              <ProtectedRoute>
-                <UploadPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/leads/add" element={
-              <ProtectedRoute>
-                <AddLeadPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/campaigns" element={
-              <ProtectedRoute>
-                <CampaignsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/campaigns/manage" element={
-              <ProtectedRoute>
-                <ManageCampaignsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/campaigns/create" element={
-              <ProtectedRoute>
-                <CreateCampaignPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/analytics" element={
-              <ProtectedRoute>
-                <AnalyticsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/lead-generator" element={
-              <ProtectedRoute>
-                <LeadGeneratorPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <SettingsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/voip" element={
-              <ProtectedRoute>
-                <VoipPage />
-              </ProtectedRoute>
-            } />
-            
-            {/* Admin dashboard route */}
-            <Route path="/admin-dashboard" element={
-              <ProtectedRoute requiredRoles={["admin"]}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } />
-            
-            {/* ISO dashboard route */}
-            <Route path="/iso-dashboard" element={
-              <IsoPortal>
-                <IsoDashboard />
-              </IsoPortal>
-            } />
-            
-            {/* ISO placeholder routes - redirect to coming soon */}
-            <Route path="/iso-network" element={
-              <IsoPortal>
-                <ComingSoonPage />
-              </IsoPortal>
-            } />
-            <Route path="/iso-agents" element={
-              <IsoPortal>
-                <ComingSoonPage />
-              </IsoPortal>
-            } />
-            <Route path="/iso-leads" element={
-              <IsoPortal>
-                <ComingSoonPage />
-              </IsoPortal>
-            } />
-            <Route path="/iso-merchants" element={
-              <IsoPortal>
-                <ComingSoonPage />
-              </IsoPortal>
-            } />
-            <Route path="/iso-analytics" element={
-              <IsoPortal>
-                <ComingSoonPage />
-              </IsoPortal>
-            } />
-            
-            {/* Client panel route */}
-            <Route path="/client-panel" element={
-              <ProtectedRoute requiredRoles={["client"]}>
-                <ClientPanel />
-              </ProtectedRoute>
-            } />
-
-            {/* AI Agents page */}
-            <Route path="/ai-agents" element={
-              <ProtectedRoute>
-                <Suspense fallback={<div className="p-8 flex justify-center">Loading...</div>}>
-                  <AiAgentsPage />
-                </Suspense>
-              </ProtectedRoute>
-            } />
-
-            {/* Add a catch-all redirect for auth paths */}
-            <Route path="/logout" element={<Navigate to="/" replace />} />
-            
-            {/* Redirect /auth to login */}
-            <Route path="/auth" element={<Navigate to="/auth/login" replace />} />
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <div className="App">
+      <RouterProvider router={router} />
+    </div>
+  );
+}
 
 export default App;

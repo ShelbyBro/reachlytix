@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -15,8 +16,10 @@ import {
   Search,
   Network,
   UserCog,
+  ClipboardList,
   Building,
-  ClipboardList
+  FileText,
+  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -70,6 +73,8 @@ export function Sidebar({ isAdmin = false, isIso = false }: SidebarProps) {
     { icon: UserCog, label: "Agent Management", href: "/iso-agents" },
     { icon: ClipboardList, label: "Lead Queue", href: "/iso-leads" },
     { icon: Building, label: "Merchants", href: "/iso-merchants" },
+    { icon: CreditCard, label: "Lenders", href: "/iso-lenders" },
+    { icon: FileText, label: "Applications", href: "/iso-applications" },
     { icon: BarChart3, label: "Performance", href: "/iso-analytics" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
