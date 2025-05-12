@@ -149,7 +149,7 @@ export function BarChartComponent({ data, width = "100%", height = 300, classNam
 
 export function PieChartComponent({ data, width = "100%", height = 300, className }: ChartProps) {
   // Custom colors for different status types
-  const COLORS = ['#4ade80', '#f87171', '#fbbf24', '#60a5fa', '#8884D8'];
+  const COLORS = ['#4ade80', '#f87171', '#fbbf24', '#60a5fa', '#8884D8', '#a855f7', '#d6d3d1'];
 
   return (
     <ResponsiveContainer width={width} height={height} className={className}>
@@ -163,13 +163,18 @@ export function PieChartComponent({ data, width = "100%", height = 300, classNam
           fill="#8884d8"
           dataKey="value"
           label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+          animationDuration={750}
         >
           {data.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip formatter={(value: number) => [value.toLocaleString(), '']} />
-        <Legend />
+        <Tooltip 
+          formatter={(value: number) => [value.toLocaleString(), 'Leads']} 
+          contentStyle={{ backgroundColor: 'rgba(23, 23, 23, 0.9)', border: '1px solid #383838' }}
+          itemStyle={{ color: '#f8fafc' }}
+        />
+        <Legend verticalAlign="bottom" height={36} />
       </PieChart>
     </ResponsiveContainer>
   );

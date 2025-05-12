@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout";
@@ -5,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { FilePlus, RefreshCcw, UserPlus } from "lucide-react";
+import { FilePlus, BarChart, RefreshCcw, UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "@/components/ui/sonner";
 import { IsoLeadsTable, IsoLead } from "./components/IsoLeadsTable";
@@ -13,6 +14,7 @@ import { StatsCard } from "./components/StatsCard";
 import { LeadEditDialog } from "./components/LeadEditDialog";
 import { NotesDialog } from "./components/NotesDialog";
 import { AssignAgentModal } from "./components/AssignAgentModal";
+import { LeadAnalytics } from "./components/LeadAnalytics";
 
 type Agent = {
   id: string;
@@ -276,111 +278,135 @@ export default function IsoDashboard() {
           />
         </section>
 
-        {/* Leads Management */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold tracking-tight">Your Leads</h2>
-            <div className="flex items-center gap-2">
+        {/* Main Dashboard Tabs */}
+        <Tabs defaultValue="leads" className="w-full">
+          <TabsList>
+            <TabsTrigger value="leads">Lead Management</TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-1">
+              <BarChart className="w-4 h-4" />
+              <span>Performance Analytics</span>
+            </TabsTrigger>
+          </TabsList>
+          
+          {/* Leads Tab Content */}
+          <TabsContent value="leads">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold tracking-tight">Your Leads</h2>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => refetch()} className="flex items-center">
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  Refresh
+                </Button>
+                <Button size="sm" className="flex items-center">
+                  <FilePlus className="mr-2 h-4 w-4" />
+                  Import Leads
+                </Button>
+                <Button size="sm" className="flex items-center">
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Add Lead
+                </Button>
+              </div>
+            </div>
+
+            <Tabs defaultValue="all" className="w-full">
+              <TabsList>
+                <TabsTrigger value="all">All Leads</TabsTrigger>
+                <TabsTrigger value="unassigned">Unassigned</TabsTrigger>
+                <TabsTrigger value="in_progress">In Progress</TabsTrigger>
+                <TabsTrigger value="converted">Converted</TabsTrigger>
+              </TabsList>
+              <TabsContent value="all" className="border rounded-md mt-2">
+                <IsoLeadsTable 
+                  leads={isoLeads} 
+                  loading={isLoading} 
+                  error={error} 
+                  onEdit={(lead) => {
+                    setSelectedLead(lead);
+                    setIsLeadDialogOpen(true);
+                  }}
+                  onNotes={(lead) => {
+                    setSelectedLead(lead);
+                    setIsNotesDialogOpen(true);
+                  }}
+                  onAssign={(lead) => {
+                    setSelectedLead(lead);
+                    setIsAssignAgentModalOpen(true);
+                  }}
+                />
+              </TabsContent>
+              <TabsContent value="unassigned" className="border rounded-md mt-2">
+                <IsoLeadsTable 
+                  leads={isoLeads?.filter(lead => lead.status === 'unassigned')} 
+                  loading={isLoading} 
+                  error={error} 
+                  onEdit={(lead) => {
+                    setSelectedLead(lead);
+                    setIsLeadDialogOpen(true);
+                  }}
+                  onNotes={(lead) => {
+                    setSelectedLead(lead);
+                    setIsNotesDialogOpen(true);
+                  }}
+                  onAssign={(lead) => {
+                    setSelectedLead(lead);
+                    setIsAssignAgentModalOpen(true);
+                  }}
+                />
+              </TabsContent>
+              <TabsContent value="in_progress" className="border rounded-md mt-2">
+                <IsoLeadsTable 
+                  leads={isoLeads?.filter(lead => lead.status === 'in_progress')} 
+                  loading={isLoading} 
+                  error={error} 
+                  onEdit={(lead) => {
+                    setSelectedLead(lead);
+                    setIsLeadDialogOpen(true);
+                  }}
+                  onNotes={(lead) => {
+                    setSelectedLead(lead);
+                    setIsNotesDialogOpen(true);
+                  }}
+                  onAssign={(lead) => {
+                    setSelectedLead(lead);
+                    setIsAssignAgentModalOpen(true);
+                  }}
+                />
+              </TabsContent>
+              <TabsContent value="converted" className="border rounded-md mt-2">
+                <IsoLeadsTable 
+                  leads={isoLeads?.filter(lead => lead.status === 'converted')} 
+                  loading={isLoading} 
+                  error={error} 
+                  onEdit={(lead) => {
+                    setSelectedLead(lead);
+                    setIsLeadDialogOpen(true);
+                  }}
+                  onNotes={(lead) => {
+                    setSelectedLead(lead);
+                    setIsNotesDialogOpen(true);
+                  }}
+                  onAssign={(lead) => {
+                    setSelectedLead(lead);
+                    setIsAssignAgentModalOpen(true);
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+          
+          {/* Analytics Tab Content */}
+          <TabsContent value="analytics">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold tracking-tight">Performance Analytics</h2>
               <Button variant="outline" size="sm" onClick={() => refetch()} className="flex items-center">
                 <RefreshCcw className="mr-2 h-4 w-4" />
-                Refresh
-              </Button>
-              <Button size="sm" className="flex items-center">
-                <FilePlus className="mr-2 h-4 w-4" />
-                Import Leads
-              </Button>
-              <Button size="sm" className="flex items-center">
-                <UserPlus className="mr-2 h-4 w-4" />
-                Add Lead
+                Refresh Data
               </Button>
             </div>
-          </div>
-
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList>
-              <TabsTrigger value="all">All Leads</TabsTrigger>
-              <TabsTrigger value="unassigned">Unassigned</TabsTrigger>
-              <TabsTrigger value="in_progress">In Progress</TabsTrigger>
-              <TabsTrigger value="converted">Converted</TabsTrigger>
-            </TabsList>
-            <TabsContent value="all" className="border rounded-md mt-2">
-              <IsoLeadsTable 
-                leads={isoLeads} 
-                loading={isLoading} 
-                error={error} 
-                onEdit={(lead) => {
-                  setSelectedLead(lead);
-                  setIsLeadDialogOpen(true);
-                }}
-                onNotes={(lead) => {
-                  setSelectedLead(lead);
-                  setIsNotesDialogOpen(true);
-                }}
-                onAssign={(lead) => {
-                  setSelectedLead(lead);
-                  setIsAssignAgentModalOpen(true);
-                }}
-              />
-            </TabsContent>
-            <TabsContent value="unassigned" className="border rounded-md mt-2">
-              <IsoLeadsTable 
-                leads={isoLeads?.filter(lead => lead.status === 'unassigned')} 
-                loading={isLoading} 
-                error={error} 
-                onEdit={(lead) => {
-                  setSelectedLead(lead);
-                  setIsLeadDialogOpen(true);
-                }}
-                onNotes={(lead) => {
-                  setSelectedLead(lead);
-                  setIsNotesDialogOpen(true);
-                }}
-                onAssign={(lead) => {
-                  setSelectedLead(lead);
-                  setIsAssignAgentModalOpen(true);
-                }}
-              />
-            </TabsContent>
-            <TabsContent value="in_progress" className="border rounded-md mt-2">
-              <IsoLeadsTable 
-                leads={isoLeads?.filter(lead => lead.status === 'in_progress')} 
-                loading={isLoading} 
-                error={error} 
-                onEdit={(lead) => {
-                  setSelectedLead(lead);
-                  setIsLeadDialogOpen(true);
-                }}
-                onNotes={(lead) => {
-                  setSelectedLead(lead);
-                  setIsNotesDialogOpen(true);
-                }}
-                onAssign={(lead) => {
-                  setSelectedLead(lead);
-                  setIsAssignAgentModalOpen(true);
-                }}
-              />
-            </TabsContent>
-            <TabsContent value="converted" className="border rounded-md mt-2">
-              <IsoLeadsTable 
-                leads={isoLeads?.filter(lead => lead.status === 'converted')} 
-                loading={isLoading} 
-                error={error} 
-                onEdit={(lead) => {
-                  setSelectedLead(lead);
-                  setIsLeadDialogOpen(true);
-                }}
-                onNotes={(lead) => {
-                  setSelectedLead(lead);
-                  setIsNotesDialogOpen(true);
-                }}
-                onAssign={(lead) => {
-                  setSelectedLead(lead);
-                  setIsAssignAgentModalOpen(true);
-                }}
-              />
-            </TabsContent>
-          </Tabs>
-        </section>
+            
+            <LeadAnalytics />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Dialogs */}
