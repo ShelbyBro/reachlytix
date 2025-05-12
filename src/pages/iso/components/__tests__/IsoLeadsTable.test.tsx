@@ -8,6 +8,7 @@ describe("IsoLeadsTable", () => {
   // Mock functions for the component props
   const mockOnEdit = vi.fn();
   const mockOnNotes = vi.fn();
+  const mockOnAssign = vi.fn(); // Add mock for the new onAssign prop
 
   // Helper function to create a valid IsoLead object for testing
   const createMockLead = (overrides = {}): IsoLead => ({
@@ -35,6 +36,7 @@ describe("IsoLeadsTable", () => {
   beforeEach(() => {
     mockOnEdit.mockReset();
     mockOnNotes.mockReset();
+    mockOnAssign.mockReset(); // Reset the new mock as well
   });
 
   it("renders loading state correctly", () => {
@@ -45,6 +47,7 @@ describe("IsoLeadsTable", () => {
         error={null}
         onEdit={mockOnEdit}
         onNotes={mockOnNotes}
+        onAssign={mockOnAssign} // Add onAssign prop
       />
     );
 
@@ -60,6 +63,7 @@ describe("IsoLeadsTable", () => {
         error={"Test error"}
         onEdit={mockOnEdit}
         onNotes={mockOnNotes}
+        onAssign={mockOnAssign} // Add onAssign prop
       />
     );
 
@@ -74,6 +78,7 @@ describe("IsoLeadsTable", () => {
         error={null}
         onEdit={mockOnEdit}
         onNotes={mockOnNotes}
+        onAssign={mockOnAssign} // Add onAssign prop
       />
     );
 
@@ -90,6 +95,7 @@ describe("IsoLeadsTable", () => {
         error={null}
         onEdit={mockOnEdit}
         onNotes={mockOnNotes}
+        onAssign={mockOnAssign} // Add onAssign prop
       />
     );
 
@@ -118,6 +124,7 @@ describe("IsoLeadsTable", () => {
         error={null}
         onEdit={mockOnEdit}
         onNotes={mockOnNotes}
+        onAssign={mockOnAssign} // Add onAssign prop
       />
     );
 
@@ -138,6 +145,7 @@ describe("IsoLeadsTable", () => {
         error={null}
         onEdit={mockOnEdit}
         onNotes={mockOnNotes}
+        onAssign={mockOnAssign} // Add onAssign prop
       />
     );
 
@@ -158,6 +166,7 @@ describe("IsoLeadsTable", () => {
         error={null}
         onEdit={mockOnEdit}
         onNotes={mockOnNotes}
+        onAssign={mockOnAssign} // Add onAssign prop
       />
     );
 
@@ -179,6 +188,7 @@ describe("IsoLeadsTable", () => {
         error={null}
         onEdit={mockOnEdit}
         onNotes={mockOnNotes}
+        onAssign={mockOnAssign} // Add onAssign prop
       />
     );
 
@@ -210,11 +220,34 @@ describe("IsoLeadsTable", () => {
         error={null}
         onEdit={mockOnEdit}
         onNotes={mockOnNotes}
+        onAssign={mockOnAssign} // Add onAssign prop
       />
     );
     
     expect(screen.getByText("Doe")).toBeInTheDocument(); // Only last name
     expect(screen.getByText("John")).toBeInTheDocument(); // Only first name
     expect(screen.getByText("N/A")).toBeInTheDocument(); // Both null shows N/A
+  });
+
+  // Add a test for the new onAssign functionality
+  it("calls onAssign when assign button is clicked", async () => {
+    const mockLead = createMockLead();
+    const user = userEvent.setup();
+    
+    render(
+      <IsoLeadsTable
+        leads={[mockLead]}
+        loading={false}
+        error={null}
+        onEdit={mockOnEdit}
+        onNotes={mockOnNotes}
+        onAssign={mockOnAssign}
+      />
+    );
+
+    const assignButton = screen.getAllByRole("button")[2]; // Third button is assign
+    await user.click(assignButton);
+
+    expect(mockOnAssign).toHaveBeenCalledWith(mockLead);
   });
 });
