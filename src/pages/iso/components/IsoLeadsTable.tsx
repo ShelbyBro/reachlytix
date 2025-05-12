@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Edit, FileText } from "lucide-react";
+import { Edit, FileText, UserPlus } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 
 // Define the type for the lead
@@ -31,9 +31,10 @@ interface IsoLeadsTableProps {
   error: any;
   onEdit: (lead: IsoLead) => void;
   onNotes: (lead: IsoLead) => void;
+  onAssign: (lead: IsoLead) => void;
 }
 
-export function IsoLeadsTable({ leads, loading, error, onEdit, onNotes }: IsoLeadsTableProps) {
+export function IsoLeadsTable({ leads, loading, error, onEdit, onNotes, onAssign }: IsoLeadsTableProps) {
   if (loading) {
     return <div className="p-4 text-center" role="status">Loading leads data...</div>;
   }
@@ -94,6 +95,14 @@ export function IsoLeadsTable({ leads, loading, error, onEdit, onNotes }: IsoLea
                   >
                     <FileText className="h-4 w-4 mr-1" />
                     Notes
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onAssign(lead)}
+                  >
+                    <UserPlus className="h-4 w-4 mr-1" />
+                    Assign
                   </Button>
                 </div>
               </TableCell>

@@ -12,6 +12,7 @@ import { IsoLeadsTable, IsoLead } from "./components/IsoLeadsTable";
 import { StatsCard } from "./components/StatsCard";
 import { LeadEditDialog } from "./components/LeadEditDialog";
 import { NotesDialog } from "./components/NotesDialog";
+import { AssignAgentModal } from "./components/AssignAgentModal";
 
 type Agent = {
   id: string;
@@ -25,6 +26,7 @@ export default function IsoDashboard() {
   const [selectedLead, setSelectedLead] = useState<IsoLead | null>(null);
   const [isLeadDialogOpen, setIsLeadDialogOpen] = useState(false);
   const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
+  const [isAssignAgentModalOpen, setIsAssignAgentModalOpen] = useState(false);
   
   // Fetch available agents
   const { data: agents } = useQuery({
@@ -314,6 +316,10 @@ export default function IsoDashboard() {
                   setSelectedLead(lead);
                   setIsNotesDialogOpen(true);
                 }}
+                onAssign={(lead) => {
+                  setSelectedLead(lead);
+                  setIsAssignAgentModalOpen(true);
+                }}
               />
             </TabsContent>
             <TabsContent value="unassigned" className="border rounded-md mt-2">
@@ -328,6 +334,10 @@ export default function IsoDashboard() {
                 onNotes={(lead) => {
                   setSelectedLead(lead);
                   setIsNotesDialogOpen(true);
+                }}
+                onAssign={(lead) => {
+                  setSelectedLead(lead);
+                  setIsAssignAgentModalOpen(true);
                 }}
               />
             </TabsContent>
@@ -344,6 +354,10 @@ export default function IsoDashboard() {
                   setSelectedLead(lead);
                   setIsNotesDialogOpen(true);
                 }}
+                onAssign={(lead) => {
+                  setSelectedLead(lead);
+                  setIsAssignAgentModalOpen(true);
+                }}
               />
             </TabsContent>
             <TabsContent value="converted" className="border rounded-md mt-2">
@@ -358,6 +372,10 @@ export default function IsoDashboard() {
                 onNotes={(lead) => {
                   setSelectedLead(lead);
                   setIsNotesDialogOpen(true);
+                }}
+                onAssign={(lead) => {
+                  setSelectedLead(lead);
+                  setIsAssignAgentModalOpen(true);
                 }}
               />
             </TabsContent>
@@ -381,6 +399,13 @@ export default function IsoDashboard() {
         selectedLead={selectedLead}
         form={notesForm}
         onSubmit={handleNotesUpdate}
+      />
+
+      <AssignAgentModal
+        open={isAssignAgentModalOpen}
+        onOpenChange={setIsAssignAgentModalOpen}
+        selectedLead={selectedLead}
+        onAssignSuccess={refetch}
       />
     </Layout>
   );
