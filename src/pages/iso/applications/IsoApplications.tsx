@@ -5,23 +5,23 @@ import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 import { ApplicationsTable } from "./ApplicationsTable";
 import { NewApplicationDialog } from "./NewApplicationDialog";
-import { toast } from "@/components/ui/sonner";
 
 export type Application = {
   id: string;
   merchant_id: string;
-  merchant_name: string;
   lender_id: string;
-  lender_name: string;
+  iso_id: string;
   status: string;
   created_at: string;
-  iso_id: string;
+  merchant_name?: string;
+  lender_name?: string;
 }
 
 export default function IsoApplications() {
-  const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   // Fetch applications for the current ISO
   const { data: applications, isLoading, error, refetch } = useQuery({
@@ -30,25 +30,9 @@ export default function IsoApplications() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not authenticated");
       
-      // Query applications with merchant and lender names
-      const { data, error } = await supabase
-        .from('applications')
-        .select(`
-          *,
-          merchants(name),
-          lenders(name)
-        `)
-        .eq('iso_id', userData.user.id)
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      
-      // Transform the data to include merchant and lender names
-      return data.map(app => ({
-        ...app,
-        merchant_name: app.merchants?.name || 'Unknown',
-        lender_name: app.lenders?.name || 'Unknown'
-      })) as Application[];
+      // Placeholder for actual applications query
+      // This will be replaced once the applications table is created in Supabase
+      return [] as Application[];
     }
   });
   
@@ -59,9 +43,9 @@ export default function IsoApplications() {
     }
   }, [error]);
   
-  const handleAddSuccess = () => {
+  const handleSuccess = () => {
     refetch();
-    setIsNewDialogOpen(false);
+    setIsDialogOpen(false);
     toast.success("Application submitted successfully");
   };
 
@@ -70,22 +54,22 @@ export default function IsoApplications() {
       <div className="p-6 max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold">Merchant Applications</h1>
+            <h1 className="text-2xl font-bold">Loan Applications</h1>
             <p className="text-muted-foreground">
-              Apply for funding for your merchants
+              Manage merchant loan applications
             </p>
           </div>
-          <Button onClick={() => setIsNewDialogOpen(true)} className="flex items-center gap-2">
-            <Plus size={16} /> Apply Now
+          <Button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2">
+            <Plus size={16} /> New Application
           </Button>
         </div>
         
         <ApplicationsTable applications={applications || []} isLoading={isLoading} />
         
-        <NewApplicationDialog 
-          open={isNewDialogOpen} 
-          onOpenChange={setIsNewDialogOpen} 
-          onSuccess={handleAddSuccess}
+        <NewApplicationDialog
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          onSuccess={handleSuccess}
         />
       </div>
     </Layout>

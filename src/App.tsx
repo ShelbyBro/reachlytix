@@ -1,26 +1,30 @@
+
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./App.css";
-import Dashboard from "./pages/Dashboard";
-import Campaigns from "./pages/Campaigns";
-import Settings from "./pages/Settings";
-import Upload from "./pages/Upload";
-import AddLead from "./pages/AddLead";
+import Layout from "./components/layout";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Analytics from "./pages/Analytics";
-import AdminDashboard from "./pages/AdminDashboard";
-import AIAgents from "./pages/AIAgents";
-import LeadGenerator from "./pages/LeadGenerator";
-import CreateCampaign from "./pages/CreateCampaign";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Login"; // Using the Login component for now since it has tabs
+import Dashboard from "./pages/dashboard/Dashboard";
 import IsoDashboard from "./pages/iso/IsoDashboard";
-import IsoNetwork from "./pages/iso/IsoNetwork";
-import IsoAgents from "./pages/iso/IsoAgents";
-import IsoLeads from "./pages/iso/IsoLeads";
-import IsoAnalytics from "./pages/iso/IsoAnalytics";
 import IsoMerchants from "./pages/iso/merchants/IsoMerchants";
 import IsoLenders from "./pages/iso/lenders/IsoLenders";
-import IsoApplications from "./pages/iso/applications/IsoApplications";
+
+// Create placeholders for missing pages to fix import errors
+const Campaigns = () => <Layout><div className="p-6">Campaigns Page</div></Layout>;
+const Settings = () => <Layout><div className="p-6">Settings Page</div></Layout>;
+const Upload = () => <Layout><div className="p-6">Upload Page</div></Layout>;
+const AddLead = () => <Layout><div className="p-6">Add Lead Page</div></Layout>;
+const Analytics = () => <Layout><div className="p-6">Analytics Page</div></Layout>;
+const AdminDashboard = () => <Layout><div className="p-6">Admin Dashboard</div></Layout>;
+const AIAgents = () => <Layout><div className="p-6">AI Agents Page</div></Layout>;
+const LeadGenerator = () => <Layout><div className="p-6">Lead Generator Page</div></Layout>;
+const CreateCampaign = () => <Layout><div className="p-6">Create Campaign Page</div></Layout>;
+const IsoNetwork = () => <Layout><div className="p-6">ISO Network Page</div></Layout>;
+const IsoAgents = () => <Layout><div className="p-6">ISO Agents Page</div></Layout>;
+const IsoLeads = () => <Layout><div className="p-6">ISO Leads Page</div></Layout>;
+const IsoAnalytics = () => <Layout><div className="p-6">ISO Analytics Page</div></Layout>;
+const IsoApplications = () => <Layout><div className="p-6">ISO Applications Page</div></Layout>;
 
 const router = createBrowserRouter([
   {

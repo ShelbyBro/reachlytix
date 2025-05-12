@@ -30,7 +30,7 @@ export function ApplicationsTable({ applications, isLoading }: ApplicationsTable
   if (applications.length === 0) {
     return (
       <div className="text-center py-8 border rounded-md">
-        <p className="text-muted-foreground">No applications found. Submit your first application to get started.</p>
+        <p className="text-muted-foreground">No applications found. Submit a new application to get started.</p>
       </div>
     );
   }
@@ -43,19 +43,19 @@ export function ApplicationsTable({ applications, isLoading }: ApplicationsTable
             <TableHead>Merchant</TableHead>
             <TableHead>Lender</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Created</TableHead>
+            <TableHead>Submitted</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {applications.map((app) => (
-            <TableRow key={app.id}>
-              <TableCell className="font-medium">{app.merchant_name}</TableCell>
-              <TableCell>{app.lender_name}</TableCell>
+          {applications.map((application) => (
+            <TableRow key={application.id}>
+              <TableCell className="font-medium">{application.merchant_name}</TableCell>
+              <TableCell>{application.lender_name}</TableCell>
               <TableCell>
-                <StatusBadge status={app.status} />
+                <StatusBadge status={application.status} />
               </TableCell>
               <TableCell className="text-muted-foreground">
-                {formatCreatedAt(app.created_at)}
+                {formatCreatedAt(application.created_at)}
               </TableCell>
             </TableRow>
           ))}
@@ -67,26 +67,25 @@ export function ApplicationsTable({ applications, isLoading }: ApplicationsTable
 
 function StatusBadge({ status }: { status: string }) {
   let variant: "default" | "secondary" | "destructive" | "outline" | "success" = "default";
-  let label = status;
   
   switch (status.toLowerCase()) {
+    case "approved":
+      variant = "success";
+      break;
     case "pending":
       variant = "secondary";
       break;
-    case "approved":
-      variant = "default";
-      break;
-    case "funded":
-      variant = "success";
-      break;
     case "rejected":
       variant = "destructive";
+      break;
+    case "under_review":
+      variant = "default";
       break;
     default:
       variant = "outline";
   }
   
-  return <Badge variant={variant}>{label}</Badge>;
+  return <Badge variant={variant}>{status}</Badge>;
 }
 
 function formatCreatedAt(dateString: string) {
