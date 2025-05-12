@@ -5,6 +5,25 @@ import { IsoLeadsTable } from "../IsoLeadsTable";
 import { describe, it, expect, beforeEach } from "vitest";
 import { createMockLead, mockOnEdit, mockOnNotes, mockOnAssign, resetMocks } from "./utils/IsoLeadTestUtils";
 
+// Mock the supabase client
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: {
+    from: () => ({
+      update: () => ({
+        eq: () => Promise.resolve({ error: null })
+      })
+    })
+  }
+}));
+
+// Mock the toast component
+vi.mock("@/components/ui/use-toast", () => ({
+  toast: vi.fn(),
+  useToast: () => ({
+    toast: vi.fn()
+  })
+}));
+
 describe("IsoLeadsTable Button Interactions", () => {
   // Reset mocks before each test
   beforeEach(() => {

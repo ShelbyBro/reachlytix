@@ -13,6 +13,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       case 'converted': return "default";
       case 'rejected': return "destructive";
       case 'closed': return "outline";
+      case 'follow_up': return "warning";
       default: return "outline";
     }
   };
