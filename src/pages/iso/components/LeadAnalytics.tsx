@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
@@ -63,11 +62,13 @@ export function LeadAnalytics() {
         counts[status] = (counts[status] || 0) + 1;
       });
       
-      // Format for pie chart
-      return Object.entries(counts).map(([name, value]) => ({
-        name: name.replace('_', ' ').charAt(0).toUpperCase() + name.replace('_', ' ').slice(1),
-        value
-      }));
+      // Format for pie chart - only include non-zero values
+      return Object.entries(counts)
+        .filter(([_, value]) => value > 0)
+        .map(([name, value]) => ({
+          name: name.replace('_', ' ').charAt(0).toUpperCase() + name.replace('_', ' ').slice(1),
+          value
+        }));
     }
   });
   
@@ -141,7 +142,7 @@ export function LeadAnalytics() {
   }
   
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 my-6">
+    <div className="grid gap-6 md:grid-cols-2 my-8">
       {/* Leads This Month */}
       <StatsCard
         title="Leads This Month"
@@ -150,18 +151,6 @@ export function LeadAnalytics() {
         icon={<PieChart className="h-4 w-4 text-muted-foreground" />}
       />
       
-      {/* Assigned vs Converted */}
-      <Card className="md:col-span-2">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Lead Status Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[200px]">
-            <PieChartComponent data={statusBreakdown || []} />
-          </div>
-        </CardContent>
-      </Card>
-      
       {/* Drop Rate */}
       <StatsCard
         title="Drop Rate"
@@ -169,6 +158,18 @@ export function LeadAnalytics() {
         description="Rejected or Follow-Up leads"
         icon={<TrendingDown className="h-4 w-4 text-muted-foreground" />}
       />
+      
+      {/* Assigned vs Converted */}
+      <Card className="transition-shadow hover:shadow-md hover:shadow-primary/10">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Lead Status Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[220px]">
+            <PieChartComponent data={statusBreakdown || []} />
+          </div>
+        </CardContent>
+      </Card>
       
       {/* Top Agent */}
       <StatsCard
