@@ -6,6 +6,9 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
+  // Make sure we have a valid non-empty status
+  const safeStatus = status || "unassigned";
+  
   const getVariant = (status: string) => {
     switch(status) {
       case 'unassigned': return "outline";
@@ -23,8 +26,8 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   };
 
   return (
-    <Badge variant={getVariant(status) as any}>
-      {getLabel(status)}
+    <Badge variant={getVariant(safeStatus) as any}>
+      {getLabel(safeStatus)}
     </Badge>
   );
 }

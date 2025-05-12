@@ -23,10 +23,10 @@ const STATUS_OPTIONS = [
 ];
 
 export function StatusSelector({ currentStatus, onStatusChange, isDisabled = false }: StatusSelectorProps) {
-  // Make sure we have a valid status
-  const validStatus = STATUS_OPTIONS.some(option => option.value === currentStatus) 
+  // Make sure we have a valid status and it's not an empty string
+  const validStatus = currentStatus && STATUS_OPTIONS.some(option => option.value === currentStatus)
     ? currentStatus 
-    : "unassigned";
+    : "unassigned";  // Default to "unassigned" if status is empty or invalid
 
   return (
     <Select 

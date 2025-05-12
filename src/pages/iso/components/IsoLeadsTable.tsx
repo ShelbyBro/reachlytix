@@ -115,7 +115,7 @@ export function IsoLeadsTable({ leads, loading, error, onEdit, onNotes, onAssign
               </TableCell>
               <TableCell>
                 <StatusSelector 
-                  currentStatus={lead.status}
+                  currentStatus={lead.status || "unassigned"} 
                   onStatusChange={(newStatus) => handleStatusChange(lead, newStatus)}
                   isDisabled={updatingLeadId === lead.id}
                 />
