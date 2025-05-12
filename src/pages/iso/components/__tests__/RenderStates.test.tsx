@@ -1,7 +1,7 @@
 
 import { render, screen } from "@testing-library/react";
 import { IsoLeadsTable } from "../IsoLeadsTable";
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { mockOnEdit, mockOnNotes, mockOnAssign, resetMocks } from "./utils/IsoLeadTestUtils";
 
 // Mock the supabase client
