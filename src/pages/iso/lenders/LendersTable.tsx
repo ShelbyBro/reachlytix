@@ -9,15 +9,14 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
-import { Lender } from "./IsoLenders";
+import { Lender } from "@/types/iso";
 
 interface LendersTableProps {
   lenders: Lender[];
   isLoading: boolean;
-  isAdmin: boolean;
 }
 
-export function LendersTable({ lenders, isLoading, isAdmin }: LendersTableProps) {
+export function LendersTable({ lenders, isLoading }: LendersTableProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -30,7 +29,7 @@ export function LendersTable({ lenders, isLoading, isAdmin }: LendersTableProps)
   if (lenders.length === 0) {
     return (
       <div className="text-center py-8 border rounded-md">
-        <p className="text-muted-foreground">No lenders available in the network.</p>
+        <p className="text-muted-foreground">No lenders available. Please contact support.</p>
       </div>
     );
   }
@@ -41,26 +40,20 @@ export function LendersTable({ lenders, isLoading, isAdmin }: LendersTableProps)
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
+            <TableHead>Loan Type</TableHead>
             <TableHead>Interest Rate</TableHead>
-            <TableHead>Type</TableHead>
             <TableHead>Status</TableHead>
-            {isAdmin && <TableHead>Action</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {lenders.map((lender) => (
             <TableRow key={lender.id}>
               <TableCell className="font-medium">{lender.name}</TableCell>
-              <TableCell>{lender.interest_rate}%</TableCell>
               <TableCell>{lender.type}</TableCell>
+              <TableCell>{lender.interest_rate}%</TableCell>
               <TableCell>
                 <StatusBadge status={lender.status} />
               </TableCell>
-              {isAdmin && (
-                <TableCell>
-                  <span className="text-primary cursor-pointer">Edit</span>
-                </TableCell>
-              )}
             </TableRow>
           ))}
         </TableBody>
@@ -70,11 +63,14 @@ export function LendersTable({ lenders, isLoading, isAdmin }: LendersTableProps)
 }
 
 function StatusBadge({ status }: { status: string }) {
-  let variant: "default" | "secondary" | "destructive" | "outline" = "default";
+  let variant: "default" | "secondary" | "destructive" | "outline" | "success" = "default";
   
   switch (status.toLowerCase()) {
     case "active":
-      variant = "default";
+      variant = "success";
+      break;
+    case "pending":
+      variant = "secondary";
       break;
     case "inactive":
       variant = "destructive";

@@ -9,6 +9,7 @@ import Dashboard from "./pages/dashboard/Dashboard";
 import IsoDashboard from "./pages/iso/IsoDashboard";
 import IsoMerchants from "./pages/iso/merchants/IsoMerchants";
 import IsoLenders from "./pages/iso/lenders/IsoLenders";
+import IsoApplications from "./pages/iso/applications/IsoApplications";
 
 // Create placeholders for missing pages to fix import errors
 const Campaigns = () => <Layout><div className="p-6">Campaigns Page</div></Layout>;
@@ -24,8 +25,8 @@ const IsoNetwork = () => <Layout><div className="p-6">ISO Network Page</div></La
 const IsoAgents = () => <Layout><div className="p-6">ISO Agents Page</div></Layout>;
 const IsoLeads = () => <Layout><div className="p-6">ISO Leads Page</div></Layout>;
 const IsoAnalytics = () => <Layout><div className="p-6">ISO Analytics Page</div></Layout>;
-const IsoApplications = () => <Layout><div className="p-6">ISO Applications Page</div></Layout>;
 
+// Create the router configuration
 const router = createBrowserRouter([
   {
     path: "/",

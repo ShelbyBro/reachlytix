@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { Merchant } from "./IsoMerchants";
+import { Merchant } from "@/types/iso";
 
 interface MerchantsTableProps {
   merchants: Merchant[];
@@ -44,7 +44,7 @@ export function MerchantsTable({ merchants, isLoading }: MerchantsTableProps) {
             <TableHead>Business Type</TableHead>
             <TableHead>Contact</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Created</TableHead>
+            <TableHead>Added</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -68,11 +68,11 @@ export function MerchantsTable({ merchants, isLoading }: MerchantsTableProps) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  let variant: "default" | "secondary" | "destructive" | "outline" = "default";
+  let variant: "default" | "secondary" | "destructive" | "outline" | "success" = "default";
   
   switch (status.toLowerCase()) {
     case "active":
-      variant = "default";
+      variant = "success";
       break;
     case "pending":
       variant = "secondary";

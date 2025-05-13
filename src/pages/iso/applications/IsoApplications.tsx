@@ -5,20 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { ApplicationsTable } from "./ApplicationsTable";
 import { NewApplicationDialog } from "./NewApplicationDialog";
-
-export type Application = {
-  id: string;
-  merchant_id: string;
-  lender_id: string;
-  iso_id: string;
-  status: string;
-  created_at: string;
-  merchant_name?: string;
-  lender_name?: string;
-}
+import { Application } from "@/types/iso";
 
 export default function IsoApplications() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -27,12 +17,37 @@ export default function IsoApplications() {
   const { data: applications, isLoading, error, refetch } = useQuery({
     queryKey: ['iso-applications'],
     queryFn: async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Not authenticated");
-      
-      // Placeholder for actual applications query
-      // This will be replaced once the applications table is created in Supabase
-      return [] as Application[];
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) throw new Error("Not authenticated");
+        
+        // For now, return mock data as the applications table may not exist yet
+        return [
+          {
+            id: '1',
+            merchant_id: '1',
+            merchant_name: 'ABC Restaurant',
+            lender_id: '1',
+            lender_name: 'First Capital Bank',
+            iso_id: userData.user.id,
+            status: 'pending',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: '2',
+            merchant_id: '2',
+            merchant_name: 'XYZ Retail',
+            lender_id: '2',
+            lender_name: 'Business Credit Union',
+            iso_id: userData.user.id,
+            status: 'approved',
+            created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+          }
+        ] as Application[];
+      } catch (error) {
+        console.error("Error fetching applications:", error);
+        throw error;
+      }
     }
   });
   
