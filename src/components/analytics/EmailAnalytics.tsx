@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Card,
@@ -256,7 +255,7 @@ export function EmailAnalytics() {
           </CardContent>
         </Card>
       </div>
-
+      
       {/* Charts */}
       <Tabs defaultValue="timeline" className="w-full">
         <TabsList className="grid grid-cols-3 mb-4 w-full sm:w-auto">
@@ -284,8 +283,7 @@ export function EmailAnalytics() {
                     name: item.date,
                     value: item.count,
                     status: item.status
-                  }))} 
-                  height={300}
+                  }))}
                 />
               )}
             </CardContent>
@@ -307,8 +305,7 @@ export function EmailAnalytics() {
                 </div>
               ) : (
                 <PieChartComponent 
-                  data={emailAnalytics.emailsByStatus} 
-                  height={300}
+                  data={emailAnalytics.emailsByStatus}
                 />
               )}
             </CardContent>
@@ -330,8 +327,7 @@ export function EmailAnalytics() {
                 </div>
               ) : (
                 <BarChartComponent 
-                  data={emailAnalytics.emailsByCampaign} 
-                  height={300}
+                  data={emailAnalytics.emailsByCampaign}
                 />
               )}
             </CardContent>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -53,7 +52,7 @@ export default function CreateCampaign() {
           description: values.description,
           type: values.type,
           client_id: userData.user.id,
-          scheduled_at: values.scheduledAt,
+          scheduled_at: values.scheduledAt ? values.scheduledAt.toISOString() : null, // Convert Date to ISO string
           schedule_status: values.scheduledAt ? 'scheduled' : 'draft',
           status: 'pending',
         });

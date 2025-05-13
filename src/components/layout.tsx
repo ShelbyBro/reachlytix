@@ -10,18 +10,15 @@ interface LayoutProps {
 }
 
 export default function Layout({ children, isAdmin = false }: LayoutProps) {
-  const { isAdmin: userIsAdmin, isIso } = useUserRole();
+  const { isAdmin: userIsAdmin } = useUserRole();
   
   // Determine if we should show admin sidebar based on props or user role
   const showAdminSidebar = isAdmin || userIsAdmin();
-  // Determine if we should show ISO sidebar
-  const showIsoSidebar = isIso();
   
   return (
     <div className="flex h-screen bg-background">
       <Sidebar 
-        isAdmin={showAdminSidebar} 
-        isIso={showIsoSidebar} 
+        isAdmin={showAdminSidebar}
       />
       <div className="flex flex-col flex-1 overflow-hidden">
         <TopBar />

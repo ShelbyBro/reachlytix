@@ -1,12 +1,12 @@
-
 import { useState } from "react";
 import Layout from "@/components/layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { BarChart, LineChart, PieChart } from "@/components/analytics/ChartComponents";
+import { BarChart, LineChart, PieChartComponent } from "@/components/analytics/ChartComponents";
 import { supabase } from "@/integrations/supabase/client";
+import { EmailAnalytics } from "@/components/analytics/EmailAnalytics";
 
 export default function Analytics() {
   const [timeRange, setTimeRange] = useState("30days");
@@ -185,7 +185,7 @@ export default function Analytics() {
                   <CardDescription>Where your leads are coming from</CardDescription>
                 </CardHeader>
                 <CardContent className="h-[300px]">
-                  {leadStats?.leadsBySource && <PieChart data={leadStats.leadsBySource} />}
+                  {leadStats?.leadsBySource && <PieChartComponent data={leadStats.leadsBySource} />}
                 </CardContent>
               </Card>
               
@@ -195,7 +195,7 @@ export default function Analytics() {
                   <CardDescription>Current pipeline distribution</CardDescription>
                 </CardHeader>
                 <CardContent className="h-[300px]">
-                  {leadStats?.leadsByStatus && <PieChart data={leadStats.leadsByStatus} />}
+                  {leadStats?.leadsByStatus && <PieChartComponent data={leadStats.leadsByStatus} />}
                 </CardContent>
               </Card>
             </div>
@@ -212,53 +212,7 @@ export default function Analytics() {
           </TabsContent>
           
           <TabsContent value="campaign" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{campaignStats?.totalCampaigns}</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Messages Sent</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{campaignStats?.totalMessages}</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Open Rate</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{campaignStats?.openRate}%</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Click Rate</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{campaignStats?.clickRate}%</div>
-                </CardContent>
-              </Card>
-            </div>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Campaign Performance</CardTitle>
-                <CardDescription>Performance metrics for recent campaigns</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[400px]">
-                {campaignStats?.campaignPerformance && <BarChart data={campaignStats.campaignPerformance} />}
-              </CardContent>
-            </Card>
+            <EmailAnalytics />
           </TabsContent>
           
           <TabsContent value="agent" className="space-y-6">

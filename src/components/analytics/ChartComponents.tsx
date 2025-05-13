@@ -1,5 +1,5 @@
 
-import { Bar, BarChart as RechartsBarChart, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer, Line, LineChart as RechartsLineChart, Pie, PieChart as RechartsPieChart, Cell } from 'recharts';
+import { Bar, BarChart as RechartsBarChart, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer, Line, LineChart as RechartsLineChart, Pie, PieChart as RechartsPieChart, Cell, Area, AreaChart as RechartsAreaChart } from 'recharts';
 
 const COLORS = ['#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c', '#d0ed57', '#ffc658', '#ff8042'];
 
@@ -88,3 +88,31 @@ export function PieChartComponent({ data }: { data: any[] }) {
     </ResponsiveContainer>
   );
 }
+
+// Add these components that were referenced but missing
+export function AreaChartComponent({ data }: { data: any[] }) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <RechartsAreaChart
+        data={data}
+        margin={{
+          top: 10,
+          right: 30,
+          left: 0,
+          bottom: 0,
+        }}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        <Area type="monotone" dataKey="value" stroke="#8884d8" fill="#8884d8" />
+      </RechartsAreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+// Add aliases to match imports in other files
+export const BarChartComponent = BarChart;
+export const PieChart = PieChartComponent;
