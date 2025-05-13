@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { Application } from "./IsoApplications";
+import { Application } from "@/types/iso";
 
 interface ApplicationsTableProps {
   applications: Application[];
