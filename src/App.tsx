@@ -10,6 +10,7 @@ import IsoDashboard from "./pages/iso/IsoDashboard";
 import IsoMerchants from "./pages/iso/merchants/IsoMerchants";
 import IsoLenders from "./pages/iso/lenders/IsoLenders";
 import IsoApplications from "./pages/iso/applications/IsoApplications";
+import AdminApplications from "./pages/admin/applications/AdminApplications";
 
 // Create placeholders for missing pages to fix import errors
 const Campaigns = () => <Layout><div className="p-6">Campaigns Page</div></Layout>;
@@ -97,6 +98,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <AdminDashboard />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/applications",
+    element: (
+      <ProtectedRoute requiredRoles={["admin"]}>
+        <AdminApplications />
       </ProtectedRoute>
     ),
   },

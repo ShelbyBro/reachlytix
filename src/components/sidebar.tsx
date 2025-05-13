@@ -19,7 +19,8 @@ import {
   ClipboardList,
   Building,
   FileText,
-  CreditCard
+  CreditCard,
+  CheckSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,7 @@ export function Sidebar({ isAdmin = false, isIso = false }: SidebarProps) {
     { icon: Megaphone, label: "Campaign Manager", href: "/campaigns" },
     { icon: Bot, label: "AI Agents", href: "/ai-agents" },
     { icon: Search, label: "Lead Generator", href: "/lead-generator" },
+    { icon: CheckSquare, label: "Application Approvals", href: "/admin/applications" },
     { icon: BarChart3, label: "Analytics", href: "/analytics" },
     { icon: Users, label: "Admin Dashboard", href: "/admin-dashboard" },
     { icon: Settings, label: "Settings", href: "/settings" },
