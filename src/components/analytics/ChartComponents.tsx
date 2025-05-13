@@ -1,181 +1,90 @@
 
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from "recharts";
+import { Bar, BarChart as RechartsBarChart, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer, Line, LineChart as RechartsLineChart, Pie, PieChart as RechartsPieChart, Cell } from 'recharts';
 
-interface ChartProps {
-  data: any[];
-  width?: number | string;
-  height?: number | string;
-  className?: string;
+const COLORS = ['#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c', '#d0ed57', '#ffc658', '#ff8042'];
+
+export function BarChart({ data }: { data: any[] }) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <RechartsBarChart
+        data={data}
+        margin={{
+          top: 20,
+          right: 30,
+          left: 20,
+          bottom: 5,
+        }}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        {Object.keys(data[0])
+          .filter(key => key !== 'name')
+          .map((key, index) => (
+            <Bar key={key} dataKey={key} fill={COLORS[index % COLORS.length]} />
+          ))}
+      </RechartsBarChart>
+    </ResponsiveContainer>
+  );
 }
 
-export function AreaChartComponent({ data, width = "100%", height = 300, className }: ChartProps) {
-  // Check if data has 'status' field - for email analytics time series
-  const hasStatusField = data.length > 0 && 'status' in data[0];
+export function LineChart({ data }: { data: any[] }) {
+  // Find all keys except 'name' to use as line data
+  const dataKeys = Object.keys(data[0]).filter(key => key !== 'name');
   
   return (
-    <ResponsiveContainer width={width} height={height} className={className}>
-      <AreaChart
+    <ResponsiveContainer width="100%" height="100%">
+      <RechartsLineChart
         data={data}
-        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+        margin={{
+          top: 5,
+          right: 30,
+          left: 20,
+          bottom: 5,
+        }}
       >
-        <defs>
-          <linearGradient id="colorEmails" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-            <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-          </linearGradient>
-          <linearGradient id="colorDelivered" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#4ade80" stopOpacity={0.8} />
-            <stop offset="95%" stopColor="#4ade80" stopOpacity={0} />
-          </linearGradient>
-          <linearGradient id="colorFailed" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#f87171" stopOpacity={0.8} />
-            <stop offset="95%" stopColor="#f87171" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <XAxis 
-          dataKey="name" 
-          tick={{ fontSize: 12 }} 
-          tickFormatter={(value) => {
-            // For date strings, try to shorten them
-            if (typeof value === 'string' && value.includes('-')) {
-              const dateParts = value.split('-');
-              if (dateParts.length === 3) {
-                return `${dateParts[1]}/${dateParts[2]}`;
-              }
-            }
-            return value;
-          }}
-        />
-        <YAxis />
         <CartesianGrid strokeDasharray="3 3" />
-        <Tooltip 
-          formatter={(value: number) => [value.toLocaleString(), '']}
-          labelFormatter={(label) => {
-            // For date strings, format them nicely
-            if (typeof label === 'string' && label.includes('-')) {
-              const date = new Date(label);
-              if (!isNaN(date.getTime())) {
-                return new Intl.DateTimeFormat('en-US', { 
-                  weekday: 'short',
-                  month: 'short', 
-                  day: 'numeric'
-                }).format(date);
-              }
-            }
-            return label;
-          }}
-        />
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip />
         <Legend />
-        
-        {hasStatusField ? (
-          // For email analytics with status field, render multiple areas
-          <>
-            <Area
-              type="monotone"
-              dataKey={(entry) => entry.status === 'delivered' ? entry.value || entry.count : 0}
-              name="Delivered"
-              stroke="#4ade80"
-              fillOpacity={1}
-              fill="url(#colorDelivered)"
-              stackId="1"
-            />
-            <Area
-              type="monotone"
-              dataKey={(entry) => entry.status === 'failed' ? entry.value || entry.count : 0}
-              name="Failed"
-              stroke="#f87171"
-              fillOpacity={1}
-              fill="url(#colorFailed)"
-              stackId="1"
-            />
-          </>
-        ) : (
-          // For standard analytics
-          <Area
+        {dataKeys.map((key, index) => (
+          <Line
+            key={key}
             type="monotone"
-            dataKey="emails"
-            stroke="#8884d8"
-            fillOpacity={1}
-            fill="url(#colorEmails)"
+            dataKey={key}
+            stroke={COLORS[index % COLORS.length]}
+            activeDot={{ r: 8 }}
           />
-        )}
-      </AreaChart>
+        ))}
+      </RechartsLineChart>
     </ResponsiveContainer>
   );
 }
 
-export function BarChartComponent({ data, width = "100%", height = 300, className }: ChartProps) {
+export function PieChartComponent({ data }: { data: any[] }) {
   return (
-    <ResponsiveContainer width={width} height={height} className={className}>
-      <BarChart
-        data={data}
-        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis 
-          dataKey="name" 
-          tick={{ fontSize: 12 }}
-          height={50}
-          tickFormatter={(value) => {
-            // If value is too long, truncate
-            if (value && value.length > 15) {
-              return `${value.substring(0, 12)}...`;
-            }
-            return value;
-          }}
-        />
-        <YAxis />
-        <Tooltip formatter={(value: number) => [value.toLocaleString(), '']} />
-        <Legend />
-        <Bar dataKey="value" fill="#8884d8" />
-      </BarChart>
-    </ResponsiveContainer>
-  );
-}
-
-export function PieChartComponent({ data, width = "100%", height = 300, className }: ChartProps) {
-  // Custom colors for different status types
-  const COLORS = ['#4ade80', '#f87171', '#fbbf24', '#60a5fa', '#8884D8', '#a855f7', '#d6d3d1'];
-
-  return (
-    <ResponsiveContainer width={width} height={height} className={className}>
-      <PieChart>
+    <ResponsiveContainer width="100%" height="100%">
+      <RechartsPieChart>
         <Pie
           data={data}
           cx="50%"
           cy="50%"
-          labelLine={true}
+          labelLine={false}
+          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
           outerRadius={80}
           fill="#8884d8"
           dataKey="value"
-          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-          animationDuration={750}
         >
           {data.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip 
-          formatter={(value: number) => [value.toLocaleString(), 'Leads']} 
-          contentStyle={{ backgroundColor: 'rgba(23, 23, 23, 0.9)', border: '1px solid #383838' }}
-          itemStyle={{ color: '#f8fafc' }}
-        />
-        <Legend verticalAlign="bottom" height={36} />
-      </PieChart>
+        <Tooltip />
+        <Legend />
+      </RechartsPieChart>
     </ResponsiveContainer>
   );
 }

@@ -14,12 +14,7 @@ import {
   Mail,
   Bot,
   Search,
-  Network,
-  UserCog,
-  ClipboardList,
-  Building,
-  FileText,
-  CreditCard,
+  Phone,
   CheckSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,18 +25,16 @@ import { useUserRole } from "@/hooks/use-user-role";
 
 type SidebarProps = {
   isAdmin?: boolean;
-  isIso?: boolean;
 }
 
-export function Sidebar({ isAdmin = false, isIso = false }: SidebarProps) {
+export function Sidebar({ isAdmin = false }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
-  const { isAdmin: userIsAdmin, isClient, isIso: userIsIso } = useUserRole();
+  const { isAdmin: userIsAdmin, isClient } = useUserRole();
   
-  // Determine which role takes precedence for showing the sidebar
-  const effectiveIsAdmin = isAdmin || userIsAdmin();
-  const effectiveIsIso = isIso || userIsIso();
+  // Determine if we should show admin sidebar based on props or user role
+  const showAdminSidebar = isAdmin || userIsAdmin();
   
   const clientLinks = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -63,31 +56,14 @@ export function Sidebar({ isAdmin = false, isIso = false }: SidebarProps) {
     { icon: Bot, label: "AI Agents", href: "/ai-agents" },
     { icon: Search, label: "Lead Generator", href: "/lead-generator" },
     { icon: CheckSquare, label: "Application Approvals", href: "/admin/applications" },
+    { icon: Phone, label: "VoIP Panel", href: "/voip-panel" },
     { icon: BarChart3, label: "Analytics", href: "/analytics" },
     { icon: Users, label: "Admin Dashboard", href: "/admin-dashboard" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
   
-  // ISO links
-  const isoLinks = [
-    { icon: LayoutDashboard, label: "ISO Dashboard", href: "/iso-dashboard" },
-    { icon: Network, label: "My Network", href: "/iso-network" },
-    { icon: UserCog, label: "Agent Management", href: "/iso-agents" },
-    { icon: ClipboardList, label: "Lead Queue", href: "/iso-leads" },
-    { icon: Building, label: "Merchants", href: "/iso-merchants" },
-    { icon: CreditCard, label: "Lenders", href: "/iso-lenders" },
-    { icon: FileText, label: "Applications", href: "/iso-applications" },
-    { icon: BarChart3, label: "Performance", href: "/iso-analytics" },
-    { icon: Settings, label: "Settings", href: "/settings" },
-  ];
-  
   // Choose the right links based on user role
-  let links = clientLinks;
-  if (effectiveIsAdmin) {
-    links = adminLinks;
-  } else if (effectiveIsIso) {
-    links = isoLinks;
-  }
+  let links = showAdminSidebar ? adminLinks : clientLinks;
 
   const handleLogout = async () => {
     await signOut();

@@ -6,27 +6,18 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Login"; // Using the Login component for now since it has tabs
 import Dashboard from "./pages/dashboard/Dashboard";
-import IsoDashboard from "./pages/iso/IsoDashboard";
-import IsoMerchants from "./pages/iso/merchants/IsoMerchants";
-import IsoLenders from "./pages/iso/lenders/IsoLenders";
-import IsoApplications from "./pages/iso/applications/IsoApplications";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminApplications from "./pages/admin/applications/AdminApplications";
+import Campaigns from "./pages/campaigns/Campaigns";
+import CreateCampaign from "./pages/campaigns/CreateCampaign";
+import Settings from "./pages/settings/Settings";
+import Upload from "./pages/upload/Upload";
+import AddLead from "./pages/leads/AddLead";
+import Analytics from "./pages/analytics/Analytics";
+import AIAgents from "./pages/ai-agents/AIAgents";
+import LeadGenerator from "./pages/lead-generator/LeadGenerator";
 import NotFound from "./pages/NotFound";
-
-// Create placeholders for missing pages to fix import errors
-const Campaigns = () => <Layout><div className="p-6">Campaigns Page</div></Layout>;
-const Settings = () => <Layout><div className="p-6">Settings Page</div></Layout>;
-const Upload = () => <Layout><div className="p-6">Upload Page</div></Layout>;
-const AddLead = () => <Layout><div className="p-6">Add Lead Page</div></Layout>;
-const Analytics = () => <Layout><div className="p-6">Analytics Page</div></Layout>;
-const AdminDashboard = () => <Layout><div className="p-6">Admin Dashboard</div></Layout>;
-const AIAgents = () => <Layout><div className="p-6">AI Agents Page</div></Layout>;
-const LeadGenerator = () => <Layout><div className="p-6">Lead Generator Page</div></Layout>;
-const CreateCampaign = () => <Layout><div className="p-6">Create Campaign Page</div></Layout>;
-const IsoNetwork = () => <Layout><div className="p-6">ISO Network Page</div></Layout>;
-const IsoAgents = () => <Layout><div className="p-6">ISO Agents Page</div></Layout>;
-const IsoLeads = () => <Layout><div className="p-6">ISO Leads Page</div></Layout>;
-const IsoAnalytics = () => <Layout><div className="p-6">ISO Analytics Page</div></Layout>;
+import VoipPanel from "./pages/voip/VoipPanel";
 
 // Create the router configuration
 const router = createBrowserRouter([
@@ -97,7 +88,7 @@ const router = createBrowserRouter([
   {
     path: "/admin-dashboard",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute requiredRoles={["admin"]}>
         <AdminDashboard />
       </ProtectedRoute>
     ),
@@ -127,66 +118,10 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: "/iso-dashboard",
+    path: "/voip-panel",
     element: (
-      <ProtectedRoute>
-        <IsoDashboard />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/iso-network",
-    element: (
-      <ProtectedRoute>
-        <IsoNetwork />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/iso-agents",
-    element: (
-      <ProtectedRoute>
-        <IsoAgents />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/iso-leads",
-    element: (
-      <ProtectedRoute>
-        <IsoLeads />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/iso-analytics",
-    element: (
-      <ProtectedRoute>
-        <IsoAnalytics />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/iso-merchants",
-    element: (
-      <ProtectedRoute>
-        <IsoMerchants />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/iso-lenders",
-    element: (
-      <ProtectedRoute>
-        <IsoLenders />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/iso-applications",
-    element: (
-      <ProtectedRoute>
-        <IsoApplications />
+      <ProtectedRoute requiredRoles={["admin"]}>
+        <VoipPanel />
       </ProtectedRoute>
     ),
   },
