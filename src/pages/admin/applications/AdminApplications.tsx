@@ -23,9 +23,9 @@ export default function AdminApplications() {
             status,
             notes,
             created_at,
-            merchants:merchant_id (name),
-            lenders:lender_id (name),
-            profiles:iso_id (first_name, last_name)
+            merchants(name),
+            lenders(name),
+            profiles(first_name, last_name)
           `)
           .order('created_at', { ascending: false });
           
