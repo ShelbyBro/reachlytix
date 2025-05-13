@@ -121,6 +121,51 @@ export type Database = {
         }
         Relationships: []
       }
+      applications: {
+        Row: {
+          created_at: string
+          id: string
+          iso_id: string
+          lender_id: string
+          merchant_id: string
+          notes: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          iso_id: string
+          lender_id: string
+          merchant_id: string
+          notes?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          iso_id?: string
+          lender_id?: string
+          merchant_id?: string
+          notes?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_lender_id_fkey"
+            columns: ["lender_id"]
+            isOneToOne: false
+            referencedRelation: "lenders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automations: {
         Row: {
           action_type: Database["public"]["Enums"]["action_type"] | null
@@ -440,6 +485,66 @@ export type Database = {
           phone?: string | null
           source?: string | null
           status?: string | null
+        }
+        Relationships: []
+      }
+      lenders: {
+        Row: {
+          created_at: string
+          id: string
+          interest_rate: number
+          name: string
+          status: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interest_rate: number
+          name: string
+          status?: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interest_rate?: number
+          name?: string
+          status?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      merchants: {
+        Row: {
+          business_type: string
+          contact_info: string | null
+          created_at: string
+          id: string
+          iso_id: string
+          name: string
+          notes: string | null
+          status: string
+        }
+        Insert: {
+          business_type: string
+          contact_info?: string | null
+          created_at?: string
+          id?: string
+          iso_id: string
+          name: string
+          notes?: string | null
+          status?: string
+        }
+        Update: {
+          business_type?: string
+          contact_info?: string | null
+          created_at?: string
+          id?: string
+          iso_id?: string
+          name?: string
+          notes?: string | null
+          status?: string
         }
         Relationships: []
       }

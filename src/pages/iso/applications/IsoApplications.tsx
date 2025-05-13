@@ -21,29 +21,29 @@ export default function IsoApplications() {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) throw new Error("Not authenticated");
         
-        // For now, return mock data as the applications table may not exist yet
-        return [
-          {
-            id: '1',
-            merchant_id: '1',
-            merchant_name: 'ABC Restaurant',
-            lender_id: '1',
-            lender_name: 'First Capital Bank',
-            iso_id: userData.user.id,
-            status: 'pending',
-            created_at: new Date().toISOString()
-          },
-          {
-            id: '2',
-            merchant_id: '2',
-            merchant_name: 'XYZ Retail',
-            lender_id: '2',
-            lender_name: 'Business Credit Union',
-            iso_id: userData.user.id,
-            status: 'approved',
-            created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-          }
-        ] as Application[];
+        const { data, error } = await supabase
+          .from('applications')
+          .select(`
+            id,
+            merchant_id,
+            lender_id,
+            iso_id,
+            status,
+            created_at,
+            merchants:merchant_id (name),
+            lenders:lender_id (name)
+          `)
+          .eq('iso_id', userData.user.id)
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
+        
+        // Map to include merchant and lender names in the application object
+        return data.map(app => ({
+          ...app,
+          merchant_name: app.merchants?.name,
+          lender_name: app.lenders?.name
+        })) as Application[];
       } catch (error) {
         console.error("Error fetching applications:", error);
         throw error;
@@ -74,8 +74,8 @@ export default function IsoApplications() {
               Manage merchant loan applications
             </p>
           </div>
-          <Button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2">
-            <Plus size={16} /> New Application
+          <Button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700">
+            <Plus size={16} /> Apply Now
           </Button>
         </div>
         

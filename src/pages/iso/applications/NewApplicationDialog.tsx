@@ -35,7 +35,7 @@ interface NewApplicationDialogProps {
 export function NewApplicationDialog({ open, onOpenChange, onSuccess }: NewApplicationDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Fetch merchants
+  // Fetch merchants for the current ISO
   const { data: merchants, isLoading: isLoadingMerchants } = useQuery({
     queryKey: ['merchant-options'],
     queryFn: async () => {
@@ -43,29 +43,16 @@ export function NewApplicationDialog({ open, onOpenChange, onSuccess }: NewAppli
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) throw new Error("Not authenticated");
         
-        // Return mock data for merchants
-        return [
-          {
-            id: '1',
-            name: 'ABC Restaurant',
-            business_type: 'Restaurant',
-            contact_info: 'contact@abcrestaurant.com',
-            status: 'active',
-            notes: 'Good customer history',
-            iso_id: userData.user.id,
-            created_at: new Date().toISOString()
-          },
-          {
-            id: '2',
-            name: 'XYZ Retail',
-            business_type: 'Retail',
-            contact_info: 'info@xyzretail.com',
-            status: 'pending',
-            notes: 'New application',
-            iso_id: userData.user.id,
-            created_at: new Date().toISOString()
-          }
-        ] as Merchant[];
+        const { data, error } = await supabase
+          .from('merchants')
+          .select('id, name, business_type')
+          .eq('iso_id', userData.user.id)
+          .eq('status', 'active')
+          .order('name');
+          
+        if (error) throw error;
+        
+        return data as Merchant[];
       } catch (error) {
         console.error("Error fetching merchants:", error);
         throw error;
@@ -77,33 +64,20 @@ export function NewApplicationDialog({ open, onOpenChange, onSuccess }: NewAppli
   const { data: lenders, isLoading: isLoadingLenders } = useQuery({
     queryKey: ['lender-options'],
     queryFn: async () => {
-      // Return mock data for lenders
-      return [
-        {
-          id: '1',
-          name: 'First Capital Bank',
-          interest_rate: 5.25,
-          type: 'Term Loan',
-          status: 'active',
-          created_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          name: 'Business Credit Union',
-          interest_rate: 4.75,
-          type: 'Line of Credit',
-          status: 'active',
-          created_at: new Date().toISOString()
-        },
-        {
-          id: '3',
-          name: 'Merchant Advance',
-          interest_rate: 8.5,
-          type: 'Merchant Cash Advance',
-          status: 'active',
-          created_at: new Date().toISOString()
-        }
-      ] as Lender[];
+      try {
+        const { data, error } = await supabase
+          .from('lenders')
+          .select('id, name, interest_rate, type')
+          .eq('status', 'active')
+          .order('name');
+          
+        if (error) throw error;
+        
+        return data as Lender[];
+      } catch (error) {
+        console.error("Error fetching lenders:", error);
+        throw error;
+      }
     }
   });
   
@@ -124,17 +98,18 @@ export function NewApplicationDialog({ open, onOpenChange, onSuccess }: NewAppli
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not authenticated");
       
-      // In a production app, we would insert into applications table
-      // For now, just simulate a successful submission
-      console.log("Submitting application:", {
-        ...values,
-        iso_id: userData.user.id,
-        status: 'pending',
-        created_at: new Date().toISOString()
-      });
+      // Insert the application into the database
+      const { error } = await supabase
+        .from('applications')
+        .insert({
+          merchant_id: values.merchant_id,
+          lender_id: values.lender_id,
+          iso_id: userData.user.id,
+          notes: values.notes || null,
+          status: 'pending'
+        });
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (error) throw error;
       
       // Call onSuccess to refresh the parent component
       onSuccess();
@@ -246,7 +221,7 @@ export function NewApplicationDialog({ open, onOpenChange, onSuccess }: NewAppli
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting} className="bg-purple-600 hover:bg-purple-700">
                 {isSubmitting ? "Submitting..." : "Submit Application"}
               </Button>
             </div>

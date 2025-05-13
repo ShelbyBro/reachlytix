@@ -21,7 +21,7 @@ export function ApplicationsTable({ applications, isLoading }: ApplicationsTable
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
         <span className="ml-2">Loading applications...</span>
       </div>
     );
@@ -30,7 +30,7 @@ export function ApplicationsTable({ applications, isLoading }: ApplicationsTable
   if (applications.length === 0) {
     return (
       <div className="text-center py-8 border rounded-md">
-        <p className="text-muted-foreground">No applications found. Submit a new application to get started.</p>
+        <p className="text-muted-foreground">No applications found. Click "Apply Now" to submit a new application.</p>
       </div>
     );
   }
