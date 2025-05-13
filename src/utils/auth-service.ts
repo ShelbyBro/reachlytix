@@ -3,6 +3,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { UserProfile, UserRole } from "@/types/auth";
 
+// Helper function to clean up auth state
+const cleanupAuthState = () => {
+  // Remove standard auth tokens
+  localStorage.removeItem('supabase.auth.token');
+  // Remove all Supabase auth keys from localStorage
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      localStorage.removeItem(key);
+    }
+  });
+  // Remove from sessionStorage if in use
+  Object.keys(sessionStorage || {}).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      sessionStorage.removeItem(key);
+    }
+  });
+};
+
 export async function fetchUserProfile(userId: string): Promise<UserProfile | null> {
   try {
     console.log(`Fetching profile for user ID: ${userId}`);
@@ -98,11 +116,18 @@ export async function signUpWithEmail(
 
 export async function signOutUser() {
   try {
-    const { error } = await supabase.auth.signOut();
+    // Clean up auth state first
+    cleanupAuthState();
+    
+    // Attempt global sign out
+    const { error } = await supabase.auth.signOut({ scope: 'global' });
+    
     if (error && error.name !== "AuthSessionMissingError") {
       toast.error(error.message);
       throw error;
     }
+    
+    // The navigation should happen in the component that called this function
     return { success: true };
   } catch (signOutError: any) {
     // If it's just an AuthSessionMissingError, we can proceed normally

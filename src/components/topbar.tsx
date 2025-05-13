@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 type TopBarProps = {
   user?: {
@@ -24,12 +25,15 @@ type TopBarProps = {
 
 export function TopBar({ user }: TopBarProps) {
   const { user: authUser, signOut } = useAuth();
+  const navigate = useNavigate();
   
   const displayName = user?.name || authUser?.user_metadata?.first_name + " " + authUser?.user_metadata?.last_name || "User";
   const displayEmail = user?.email || authUser?.email || "user@example.com";
   
   const handleLogout = async () => {
     await signOut();
+    // Redirect to the login page after logout
+    navigate("/");
   };
 
   return (

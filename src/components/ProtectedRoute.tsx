@@ -51,7 +51,7 @@ export default function ProtectedRoute({ children, requiredRoles }: ProtectedRou
   // If loading took too long or not authenticated, redirect to login page
   if (timeoutReached || !user) {
     console.log("Redirecting to login due to:", timeoutReached ? "timeout" : "no user");
-    return <Navigate to="/auth/login" state={{ from: location }} replace />;
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
   
   // If timeout reached but user exists, assume minimal access
@@ -73,7 +73,7 @@ export default function ProtectedRoute({ children, requiredRoles }: ProtectedRou
   // redirect to login page with a specific message
   if (!role && !timeoutReached) {
     toast.error("Your user profile is incomplete. Please contact support.");
-    return <Navigate to="/auth/login" state={{ from: location }} replace />;
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
   
   // Check for required roles if specified

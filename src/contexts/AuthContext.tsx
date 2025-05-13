@@ -45,6 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
       await signOutUser();
+      // The redirect will happen in the component via navigation
     } catch (error) {
       console.error("Sign out error:", error);
       // We're not throwing here since we want to proceed regardless

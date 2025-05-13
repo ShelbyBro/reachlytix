@@ -11,6 +11,7 @@ import IsoMerchants from "./pages/iso/merchants/IsoMerchants";
 import IsoLenders from "./pages/iso/lenders/IsoLenders";
 import IsoApplications from "./pages/iso/applications/IsoApplications";
 import AdminApplications from "./pages/admin/applications/AdminApplications";
+import NotFound from "./pages/NotFound";
 
 // Create placeholders for missing pages to fix import errors
 const Campaigns = () => <Layout><div className="p-6">Campaigns Page</div></Layout>;
@@ -188,6 +189,11 @@ const router = createBrowserRouter([
         <IsoApplications />
       </ProtectedRoute>
     ),
+  },
+  // 404 route - must be last
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);
 
