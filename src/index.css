@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,8 +14,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 260 84% 75%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 326 100% 60%; /* closest to #FF3185 in HSL */
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 217 80% 92%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -22,65 +23,66 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 262 83% 58%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 326 82% 60%; /* midway between p1-p4 */
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 262 83% 58%;
+    --ring: 318 83% 60%;
 
     --radius: 1rem;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 260 84% 75%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 262 83% 58%;
+    /* Sidebar/dark backgrounds */
+    --sidebar-background: 229 23% 12%; /* #171B27 in HSL */
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 326 100% 60%; /* #FF3185 */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 326 75% 70%; /* lighter brand accent */
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 229 13% 20%;
+    --sidebar-ring: 326 83% 60%;
   }
 
   .dark {
-    --background: 222.2 26% 12%;
-    --foreground: 210 40% 98%;
+    --background: 229 23% 12%; /* #171B27 for all main dark backgrounds */
+    --foreground: 0 0% 100%;
 
-    --card: 222.2 20% 14%;
-    --card-foreground: 210 40% 98%;
+    --card: 229 23% 16%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 222.2 25% 10%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 229 23% 10%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 260 84% 75%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 326 100% 60%; /* #FF3185 */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 229 20% 20%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 229 23% 18%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 262 83% 58%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 326 82% 65%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 68% 45%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 262 83% 58%;
+    --border: 229 13% 20%;
+    --input: 229 13% 20%;
+    --ring: 326 83% 60%;
     
-    --sidebar-background: 222.2 25% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 260 84% 75%;
+    --sidebar-background: 229 23% 12%; /* #171B27 */
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 326 100% 60%; /* #FF3185 */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 262 83% 58%;
+    --sidebar-accent: 326 82% 65%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 229 13% 20%;
+    --sidebar-ring: 326 83% 60%;
   }
 }
 
@@ -102,7 +104,7 @@
   }
   
   .card-gradient {
-    @apply bg-gradient-to-br from-card to-secondary/80 backdrop-blur-sm shadow-sm;
+    @apply bg-gradient-primary text-white;
   }
 }
 
@@ -120,27 +122,27 @@
   
   /* Futuristic effects */
   .glow {
-    box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+    box-shadow: 0 0 15px #F4358F;
   }
   
   .glow-text {
-    text-shadow: 0 0 8px rgba(155, 135, 245, 0.5);
+    text-shadow: 0 0 8px #E83899;
   }
   
   .border-glow {
-    box-shadow: 0 0 0 1px rgba(155, 135, 245, 0.3),
-                0 0 0 3px rgba(155, 135, 245, 0.1);
+    box-shadow: 0 0 0 1px #F4358F,
+                0 0 0 3px #DD3CA3;
   }
   
   .btn-futuristic {
-    @apply relative overflow-hidden bg-gradient-to-r from-primary to-purple-500
+    @apply relative overflow-hidden bg-gradient-primary
            backdrop-blur-sm border border-white/10 
-           shadow-[0_0_15px_rgba(155,135,245,0.5)]
+           shadow-[0_0_15px_#F4358F]
            transition-all duration-300 ease-out;
   }
   
   .btn-futuristic:hover {
-    @apply shadow-[0_0_25px_rgba(155,135,245,0.7)];
+    @apply shadow-[0_0_25px_#E83899];
   }
   
   .btn-futuristic:before {

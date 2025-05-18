@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -25,8 +26,8 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					DEFAULT: '#FF3185', // brand main pink
+					foreground: '#fff'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -53,25 +54,33 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
+					DEFAULT: '#171B27', // new dark for sidebar backgrounds
+					foreground: '#fff',
+					primary: '#FF3185', // brand color
+					'primary-foreground': '#fff',
+					accent: '#F4358F',
+					'accent-foreground': '#fff',
+					border: '#232A3A',
+					ring: '#E83899'
 				},
+				// Updated brand spectrum
                 brand: {
-                    purple: '#9b87f5',
-                    'light-purple': '#D6BCFA',
-                    'dark-purple': '#1A1F2C',
-                    blue: '#D3E4FD',
-                }
+                    p1: '#FF3185', // solid pink for all single-shade use
+                    p2: '#F4358F',
+                    p3: '#E83899',
+                    p4: '#DD3CA3',
+                    p5: '#D23FAE',
+                    p6: '#C642B8',
+                    p7: '#BB46C2'
+                },
+				dark: {
+					DEFAULT: '#171B27'
+				}
 			},
 			backgroundImage: {
-				'gradient-primary': 'linear-gradient(90deg, hsla(277, 75%, 84%, 1) 0%, hsla(297, 50%, 51%, 1) 100%)',
-				'gradient-secondary': 'linear-gradient(90deg, hsla(216, 41%, 79%, 1) 0%, hsla(186, 33%, 94%, 1) 100%)',
+				'gradient-primary':
+					'linear-gradient(90deg, #FF3185 0%, #F4358F 16%, #E83899 32%, #DD3CA3 48%, #D23FAE 64%, #C642B8 80%, #BB46C2 100%)',
+				'gradient-secondary': 'linear-gradient(90deg, #171B27 0%, #232A3A 100%)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -104,11 +113,12 @@ export default {
 			},
       keyframes: {
         glow: {
-          "0%": { boxShadow: "0 0 15px rgba(155,135,245,0.5)" },
-          "100%": { boxShadow: "0 0 25px rgba(155,135,245,0.8)" }
+          "0%": { boxShadow: "0 0 15px #F4358F" },
+          "100%": { boxShadow: "0 0 25px #E83899" }
         },
       },
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
 } satisfies Config;
+
