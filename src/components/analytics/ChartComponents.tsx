@@ -1,4 +1,3 @@
-
 import { Bar, BarChart as RechartsBarChart, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer, Line, LineChart as RechartsLineChart, Pie, PieChart as RechartsPieChart, Cell, Area, AreaChart as RechartsAreaChart } from 'recharts';
 
 const COLORS = ['#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c', '#d0ed57', '#ffc658', '#ff8042'];
@@ -115,5 +114,5 @@ export function AreaChartComponent({ data }: { data: any[] }) {
 // Named exports to match all usages
 export { AreaChartComponent, BarChartComponent, PieChartComponent, LineChart };
 
-// Alias for PieChartComponent to handle other imports
+// Only this alias is needed for backwards compatibility—DO NOT repeat named exports above!
 export const PieChart = PieChartComponent;
