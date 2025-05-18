@@ -153,3 +153,13 @@
     @apply translate-x-[200%] transition-transform duration-1000 ease-out;
   }
 }
+
+/* Hide scrollbars globally */
+::-webkit-scrollbar {
+  display: none !important;
+}
+
+body, * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
