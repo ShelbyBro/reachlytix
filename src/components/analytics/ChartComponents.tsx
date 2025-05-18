@@ -111,8 +111,5 @@ export function AreaChartComponent({ data }: { data: any[] }) {
   );
 }
 
-// Named exports to match all usages
-export { AreaChartComponent, BarChartComponent, PieChartComponent, LineChart };
-
 // Only this alias is needed for backwards compatibility—DO NOT repeat named exports above!
 export const PieChart = PieChartComponent;
