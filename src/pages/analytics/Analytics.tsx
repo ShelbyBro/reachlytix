@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { BarChart, LineChart, PieChartComponent } from "@/components/analytics/ChartComponents";
+import { BarChartComponent, LineChart, PieChartComponent } from "@/components/analytics/ChartComponents";
 import { supabase } from "@/integrations/supabase/client";
 import { EmailAnalytics } from "@/components/analytics/EmailAnalytics";
 
@@ -263,7 +263,7 @@ export default function Analytics() {
                   <CardDescription>Call metrics by agent</CardDescription>
                 </CardHeader>
                 <CardContent className="h-[300px]">
-                  {agentStats?.agentPerformance && <BarChart data={agentStats.agentPerformance} />}
+                  {agentStats?.agentPerformance && <BarChartComponent data={agentStats.agentPerformance} />}
                 </CardContent>
               </Card>
               

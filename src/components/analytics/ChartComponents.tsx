@@ -3,7 +3,7 @@ import { Bar, BarChart as RechartsBarChart, XAxis, YAxis, Tooltip, Legend, Carte
 
 const COLORS = ['#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c', '#d0ed57', '#ffc658', '#ff8042'];
 
-export function BarChart({ data }: { data: any[] }) {
+export function BarChartComponent({ data }: { data: any[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <RechartsBarChart
@@ -20,7 +20,7 @@ export function BarChart({ data }: { data: any[] }) {
         <YAxis />
         <Tooltip />
         <Legend />
-        {Object.keys(data[0])
+        {Object.keys(data[0] ?? {})
           .filter(key => key !== 'name')
           .map((key, index) => (
             <Bar key={key} dataKey={key} fill={COLORS[index % COLORS.length]} />
@@ -32,8 +32,8 @@ export function BarChart({ data }: { data: any[] }) {
 
 export function LineChart({ data }: { data: any[] }) {
   // Find all keys except 'name' to use as line data
-  const dataKeys = Object.keys(data[0]).filter(key => key !== 'name');
-  
+  const dataKeys = Object.keys(data[0] ?? {}).filter(key => key !== 'name');
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <RechartsLineChart
@@ -89,7 +89,6 @@ export function PieChartComponent({ data }: { data: any[] }) {
   );
 }
 
-// Add these components that were referenced but missing
 export function AreaChartComponent({ data }: { data: any[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -113,6 +112,8 @@ export function AreaChartComponent({ data }: { data: any[] }) {
   );
 }
 
-// Add aliases to match imports in other files
-export const BarChartComponent = BarChart;
+// Named exports to match all usages
+export { AreaChartComponent, BarChartComponent, PieChartComponent, LineChart };
+
+// Alias for PieChartComponent to handle other imports
 export const PieChart = PieChartComponent;
