@@ -10,23 +10,27 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "@/hooks/use-toast";
 import Layout from "@/components/layout";
 
+// NEW IsoLead type to match the schema
 type IsoLead = {
   id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
+  lead_id: string;
+  iso_id: string;
   status: string;
-  assigned_iso_agent: string | null;
-  date_added: string;
+  assigned_agent_id: string | null;
+  created_at: string;
+  notes: string | null;
 };
 
 const STATUS_OPTIONS = [
-  { value: "new", label: "New" },
-  { value: "contacted", label: "Contacted" },
-  { value: "approved", label: "Approved" },
+  { value: "unassigned", label: "Unassigned" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "converted", label: "Converted" },
   { value: "rejected", label: "Rejected" },
+  { value: "closed", label: "Closed" },
+  { value: "follow_up", label: "Follow-Up" },
 ];
 
+// Dialog for adding a new ISO lead
 function AddIsoLeadDialog({
   open,
   onOpenChange,
@@ -36,34 +40,27 @@ function AddIsoLeadDialog({
   onOpenChange: (v: boolean) => void;
   onSuccess: () => void;
 }) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [status, setStatus] = useState("new");
-  const [agent, setAgent] = useState("");
+  const [leadId, setLeadId] = useState("");
+  const [isoId, setIsoId] = useState("");
+  const [status, setStatus] = useState("unassigned");
+  const [assignedAgentId, setAssignedAgentId] = useState("");
+  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (!name) {
-      toast({ description: "Name is required", title: "Missing Info" });
+    if (!leadId || !isoId) {
+      toast({ description: "Lead ID and ISO ID are required", title: "Missing Info" });
       return;
     }
     setLoading(true);
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError || !userData?.user) {
-      toast({ title: "Authentication error", description: userError?.message || "Not logged in" });
-      setLoading(false);
-      return;
-    }
+    // created_at: handled by default
     const { error } = await supabase.from("iso_leads").insert([
       {
-        name,
-        email: email || null,
-        phone: phone || null,
+        lead_id: leadId,
+        iso_id: isoId,
         status,
-        assigned_iso_agent: agent || null,
-        created_by: userData.user.id,
-        // date_added is default now()
+        assigned_agent_id: assignedAgentId || null,
+        notes: notes || null,
       },
     ]);
     setLoading(false);
@@ -82,9 +79,8 @@ function AddIsoLeadDialog({
           <DialogTitle>Add New ISO Lead</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <Input placeholder="Name *" value={name} onChange={e => setName(e.target.value)} />
-          <Input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-          <Input placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)} />
+          <Input placeholder="Lead ID *" value={leadId} onChange={e => setLeadId(e.target.value)} />
+          <Input placeholder="ISO ID *" value={isoId} onChange={e => setIsoId(e.target.value)} />
           <Select value={status} onValueChange={setStatus}>
             <SelectTrigger>
               <SelectValue>{STATUS_OPTIONS.find(o => o.value === status)?.label}</SelectValue>
@@ -95,7 +91,8 @@ function AddIsoLeadDialog({
               ))}
             </SelectContent>
           </Select>
-          <Input placeholder="Assigned ISO Agent" value={agent} onChange={e => setAgent(e.target.value)} />
+          <Input placeholder="Assigned Agent ID (optional)" value={assignedAgentId} onChange={e => setAssignedAgentId(e.target.value)} />
+          <Input placeholder="Notes" value={notes} onChange={e => setNotes(e.target.value)} />
         </div>
         <DialogFooter>
           <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
@@ -117,20 +114,19 @@ function IsoLeadsTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Phone</TableHead>
+          <TableHead>Lead ID</TableHead>
+          <TableHead>ISO ID</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Assigned ISO Agent</TableHead>
+          <TableHead>Assigned Agent ID</TableHead>
+          <TableHead>Notes</TableHead>
           <TableHead>Date Added</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {leads.map(lead => (
           <TableRow key={lead.id}>
-            <TableCell>{lead.name}</TableCell>
-            <TableCell>{lead.email ?? ""}</TableCell>
-            <TableCell>{lead.phone ?? ""}</TableCell>
+            <TableCell>{lead.lead_id}</TableCell>
+            <TableCell>{lead.iso_id}</TableCell>
             <TableCell>
               <Select
                 value={lead.status}
@@ -148,8 +144,9 @@ function IsoLeadsTable({
                 </SelectContent>
               </Select>
             </TableCell>
-            <TableCell>{lead.assigned_iso_agent ?? ""}</TableCell>
-            <TableCell>{new Date(lead.date_added).toLocaleDateString()}</TableCell>
+            <TableCell>{lead.assigned_agent_id ?? ""}</TableCell>
+            <TableCell>{lead.notes ?? ""}</TableCell>
+            <TableCell>{new Date(lead.created_at).toLocaleDateString()}</TableCell>
           </TableRow>
         ))}
       </TableBody>
@@ -160,19 +157,15 @@ function IsoLeadsTable({
 export default function IsoLeadsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Fetch ISO leads for the current user
+  // Fetch ISO leads
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["iso-leads"],
     queryFn: async () => {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData?.user) return [];
       const { data, error } = await supabase
         .from("iso_leads")
-        .select("id, name, email, phone, status, assigned_iso_agent, date_added")
-        .eq("created_by", userData.user.id)
-        .order("date_added", { ascending: false });
+        .select("id, lead_id, iso_id, status, assigned_agent_id, created_at, notes")
+        .order("created_at", { ascending: false });
       if (error || !data) return [];
-      // Type assertion: ensure each field is filled as in the IsoLead type
       return data as IsoLead[];
     },
   });
