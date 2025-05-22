@@ -1,107 +1,34 @@
 
+// Cleaned up and refactored ISO Leads page for the correct table schema
+
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import Layout from "@/components/layout";
+import AddIsoLeadDialog from "./components/AddIsoLeadDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
-// NEW IsoLead type to match the schema
 type IsoLead = {
   id: string;
-  lead_id: string;
-  iso_id: string;
+  name: string;
+  email: string;
+  phone: string | null;
   status: string;
-  assigned_agent_id: string | null;
-  created_at: string;
-  notes: string | null;
+  assigned_iso_agent: string | null;
+  date_added: string | null;
+  created_by: string | null;
 };
 
 const STATUS_OPTIONS = [
-  { value: "unassigned", label: "Unassigned" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "converted", label: "Converted" },
+  { value: "new", label: "New" },
+  { value: "contacted", label: "Contacted" },
+  { value: "approved", label: "Approved" },
   { value: "rejected", label: "Rejected" },
-  { value: "closed", label: "Closed" },
-  { value: "follow_up", label: "Follow-Up" },
 ];
-
-// Dialog for adding a new ISO lead
-function AddIsoLeadDialog({
-  open,
-  onOpenChange,
-  onSuccess,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  onSuccess: () => void;
-}) {
-  const [leadId, setLeadId] = useState("");
-  const [isoId, setIsoId] = useState("");
-  const [status, setStatus] = useState("unassigned");
-  const [assignedAgentId, setAssignedAgentId] = useState("");
-  const [notes, setNotes] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async () => {
-    if (!leadId || !isoId) {
-      toast({ description: "Lead ID and ISO ID are required", title: "Missing Info" });
-      return;
-    }
-    setLoading(true);
-    // created_at: handled by default
-    const { error } = await supabase.from("iso_leads").insert([
-      {
-        lead_id: leadId,
-        iso_id: isoId,
-        status,
-        assigned_agent_id: assignedAgentId || null,
-        notes: notes || null,
-      },
-    ]);
-    setLoading(false);
-    if (error) {
-      toast({ title: "Failed to add lead", description: error.message });
-    } else {
-      toast({ title: "Lead added" });
-      onSuccess();
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add New ISO Lead</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <Input placeholder="Lead ID *" value={leadId} onChange={e => setLeadId(e.target.value)} />
-          <Input placeholder="ISO ID *" value={isoId} onChange={e => setIsoId(e.target.value)} />
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger>
-              <SelectValue>{STATUS_OPTIONS.find(o => o.value === status)?.label}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map(opt => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Input placeholder="Assigned Agent ID (optional)" value={assignedAgentId} onChange={e => setAssignedAgentId(e.target.value)} />
-          <Input placeholder="Notes" value={notes} onChange={e => setNotes(e.target.value)} />
-        </div>
-        <DialogFooter>
-          <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={loading}>{loading ? "Saving..." : "Add"}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function IsoLeadsTable({
   leads,
@@ -114,19 +41,20 @@ function IsoLeadsTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Lead ID</TableHead>
-          <TableHead>ISO ID</TableHead>
+          <TableHead>Name</TableHead>
+          <TableHead>Email</TableHead>
+          <TableHead>Phone</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Assigned Agent ID</TableHead>
-          <TableHead>Notes</TableHead>
+          <TableHead>Assigned ISO Agent</TableHead>
           <TableHead>Date Added</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {leads.map(lead => (
           <TableRow key={lead.id}>
-            <TableCell>{lead.lead_id}</TableCell>
-            <TableCell>{lead.iso_id}</TableCell>
+            <TableCell>{lead.name}</TableCell>
+            <TableCell>{lead.email}</TableCell>
+            <TableCell>{lead.phone ?? ""}</TableCell>
             <TableCell>
               <Select
                 value={lead.status}
@@ -144,9 +72,8 @@ function IsoLeadsTable({
                 </SelectContent>
               </Select>
             </TableCell>
-            <TableCell>{lead.assigned_agent_id ?? ""}</TableCell>
-            <TableCell>{lead.notes ?? ""}</TableCell>
-            <TableCell>{new Date(lead.created_at).toLocaleDateString()}</TableCell>
+            <TableCell>{lead.assigned_iso_agent ?? ""}</TableCell>
+            <TableCell>{lead.date_added ? new Date(lead.date_added).toLocaleDateString() : ""}</TableCell>
           </TableRow>
         ))}
       </TableBody>
@@ -156,15 +83,16 @@ function IsoLeadsTable({
 
 export default function IsoLeadsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { user } = useAuth(); // get the current user
 
-  // Fetch ISO leads
+  // Fetch ISO leads, current user's records only
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["iso-leads"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("iso_leads")
-        .select("id, lead_id, iso_id, status, assigned_agent_id, created_at, notes")
-        .order("created_at", { ascending: false });
+        .select("id, name, email, phone, status, assigned_iso_agent, date_added, created_by")
+        .order("date_added", { ascending: false });
       if (error || !data) return [];
       return data as IsoLead[];
     },
@@ -196,7 +124,7 @@ export default function IsoLeadsPage() {
           <div className="text-center text-muted-foreground">Loading...</div>
         ) : (
           <IsoLeadsTable
-            leads={data || []}
+            leads={data?.filter(l => l.created_by === user?.id) || []}
             onStatusChange={(id, newStatus) => updateStatusMutation.mutate({ id, newStatus })}
           />
         )}
@@ -207,6 +135,7 @@ export default function IsoLeadsPage() {
             setDialogOpen(false);
             refetch();
           }}
+          userId={user?.id || null}
         />
       </div>
     </Layout>
