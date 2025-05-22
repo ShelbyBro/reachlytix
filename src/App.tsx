@@ -18,6 +18,7 @@ import LeadGenerator from "./pages/lead-generator/LeadGenerator";
 import NotFound from "./pages/NotFound";
 import VoipPanel from "./pages/voip/VoipPanel";
 import IsoLeads from "./pages/iso/IsoLeads";
+import IsoApplicationsPage from "./pages/iso-applications/IsoApplicationsPage";
 
 // Create the router configuration
 const router = createBrowserRouter([
@@ -130,6 +131,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <IsoLeads />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/iso-applications",
+    element: (
+      <ProtectedRoute>
+        <IsoApplicationsPage />
       </ProtectedRoute>
     ),
   },

@@ -410,6 +410,39 @@ export type Database = {
           },
         ]
       }
+      iso_applications: {
+        Row: {
+          assigned_processor: string | null
+          created_at: string
+          created_by: string
+          id: string
+          lead_name: string
+          requested_amount: number
+          status: string
+          submitted_on: string
+        }
+        Insert: {
+          assigned_processor?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          lead_name: string
+          requested_amount: number
+          status?: string
+          submitted_on?: string
+        }
+        Update: {
+          assigned_processor?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          lead_name?: string
+          requested_amount?: number
+          status?: string
+          submitted_on?: string
+        }
+        Relationships: []
+      }
       iso_leads: {
         Row: {
           assigned_agent_id: string | null
