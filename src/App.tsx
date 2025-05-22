@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./App.css";
 import Layout from "./components/layout";
@@ -18,6 +17,7 @@ import AIAgents from "./pages/ai-agents/AIAgents";
 import LeadGenerator from "./pages/lead-generator/LeadGenerator";
 import NotFound from "./pages/NotFound";
 import VoipPanel from "./pages/voip/VoipPanel";
+import IsoLeads from "./pages/iso/IsoLeads";
 
 // Create the router configuration
 const router = createBrowserRouter([
@@ -122,6 +122,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute requiredRoles={["admin"]}>
         <VoipPanel />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/iso-leads",
+    element: (
+      <ProtectedRoute>
+        <IsoLeads />
       </ProtectedRoute>
     ),
   },
