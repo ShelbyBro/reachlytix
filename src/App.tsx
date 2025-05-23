@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import VoipPanel from "./pages/voip/VoipPanel";
 import IsoLeads from "./pages/iso/IsoLeads";
 import IsoApplicationsPage from "./pages/iso-applications/IsoApplicationsPage";
+import IsoMerchantsPage from "./pages/iso-merchants";
 
 // Create the router configuration
 const router = createBrowserRouter([
@@ -139,6 +140,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <IsoApplicationsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/iso-merchants",
+    element: (
+      <ProtectedRoute>
+        <IsoMerchantsPage />
       </ProtectedRoute>
     ),
   },
