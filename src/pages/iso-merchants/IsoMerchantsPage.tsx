@@ -7,14 +7,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import MerchantTable from "./MerchantTable";
 import NewMerchantDialog, { MerchantFormFields } from "./NewMerchantDialog";
 
-type MerchantFormFields = {
-  merchant_name: string;
-  industry?: string;
-  contact_person?: string;
-  contact_email?: string;
-  phone_number?: string;
-};
-
 export default function IsoMerchantsPage() {
   const { user } = useAuth();
   const [showDialog, setShowDialog] = useState(false);
