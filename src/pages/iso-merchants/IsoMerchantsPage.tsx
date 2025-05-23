@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import MerchantTable from "./MerchantTable";
-import NewMerchantDialog from "./NewMerchantDialog";
+import NewMerchantDialog, { MerchantFormFields } from "./NewMerchantDialog";
 
 type MerchantFormFields = {
   merchant_name: string;
@@ -60,13 +59,13 @@ export default function IsoMerchantsPage() {
   // Add merchant
   const handleMerchantCreated = async (merchant: MerchantFormFields) => {
     if (!user?.id) return;
-    const { error } = await supabase.from("iso_merchants").insert([
-      {
-        ...merchant,
-        iso_id: user.id,
-        status: "New",
-      },
-    ]);
+    const insertData = {
+      ...merchant,
+      iso_id: user.id,
+    };
+    const { error } = await supabase
+      .from("iso_merchants")
+      .insert([insertData]);
     if (!error) {
       setShowDialog(false);
       refetch();
