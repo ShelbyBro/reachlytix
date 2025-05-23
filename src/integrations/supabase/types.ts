@@ -488,6 +488,42 @@ export type Database = {
           },
         ]
       }
+      iso_merchants: {
+        Row: {
+          contact_email: string | null
+          contact_person: string | null
+          created_at: string
+          id: string
+          industry: string | null
+          iso_id: string
+          merchant_name: string
+          phone_number: string | null
+          status: string
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_person?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          iso_id: string
+          merchant_name: string
+          phone_number?: string | null
+          status?: string
+        }
+        Update: {
+          contact_email?: string | null
+          contact_person?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          iso_id?: string
+          merchant_name?: string
+          phone_number?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           client_id: string | null
