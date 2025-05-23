@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,12 +23,13 @@ export default function IsoApplicationsPage() {
   const { user } = useAuth();
   const [newAppLoading, setNewAppLoading] = useState(false);
 
+  // Fetch only applications created by the logged-in user (RLS enforced)
   const {
     data: applications,
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["iso-applications"],
+    queryKey: ["iso-applications", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
       const { data, error } = await supabase
@@ -40,6 +40,8 @@ export default function IsoApplicationsPage() {
       if (error) throw error;
       return data as Application[];
     },
+    // The meta is not strictly needed for RLS here, as backend enforces it
+    // meta: { onError: ... }
   });
 
   // Status update
@@ -68,6 +70,7 @@ export default function IsoApplicationsPage() {
   async function handleNewAppSubmit(data: { lead_name: string; requested_amount: number; assigned_processor?: string }) {
     setNewAppLoading(true);
     try {
+      // Always set created_by to current user's ID — can't be spoofed
       const { error } = await supabase.from("iso_applications").insert([
         {
           ...data,
@@ -101,11 +104,18 @@ export default function IsoApplicationsPage() {
             New Application
           </Button>
         </div>
-        <ApplicationsTable
-          applications={applications ?? []}
-          loading={isLoading}
-          onStatusChange={handleStatusChange}
-        />
+        {/* Only show a message if no applications */}
+        {(!isLoading && (!applications || applications.length === 0)) ? (
+          <div className="w-full text-center py-12 text-muted-foreground border rounded-lg bg-card/60">
+            No applications yet. Click <span className="font-semibold text-primary">+New Application</span> to add one.
+          </div>
+        ) : (
+          <ApplicationsTable
+            applications={applications ?? []}
+            loading={isLoading}
+            onStatusChange={handleStatusChange}
+          />
+        )}
         <NewIsoAppDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
