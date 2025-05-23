@@ -14,7 +14,8 @@ import {
   Bot,
   Search,
   Phone,
-  CheckSquare
+  CheckSquare,
+  Store
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -63,6 +64,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
   
   // ISO-specific links (only show for ISOs)
   const isoLinks = [
+    { icon: Store, label: "Merchants", href: "/iso-merchants" },
     { icon: CheckSquare, label: "ISO Applications", href: "/iso-applications" },
   ];
 
