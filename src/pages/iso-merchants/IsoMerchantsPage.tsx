@@ -8,6 +8,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import MerchantTable from "./MerchantTable";
 import NewMerchantDialog from "./NewMerchantDialog";
 
+type MerchantFormFields = {
+  merchant_name: string;
+  industry?: string;
+  contact_person?: string;
+  contact_email?: string;
+  phone_number?: string;
+};
+
 export default function IsoMerchantsPage() {
   const { user } = useAuth();
   const [showDialog, setShowDialog] = useState(false);
@@ -50,7 +58,7 @@ export default function IsoMerchantsPage() {
   };
 
   // Add merchant
-  const handleMerchantCreated = async (merchant: Omit<any, "iso_id" | "created_at" | "id" | "status">) => {
+  const handleMerchantCreated = async (merchant: MerchantFormFields) => {
     if (!user?.id) return;
     const { error } = await supabase.from("iso_merchants").insert([
       {
