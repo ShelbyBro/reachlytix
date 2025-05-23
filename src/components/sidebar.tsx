@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -31,7 +30,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
-  const { isAdmin: userIsAdmin, isClient } = useUserRole();
+  const { isAdmin: userIsAdmin, isClient, isIso } = useUserRole();
   
   // Determine if we should show admin sidebar based on props or user role
   const showAdminSidebar = isAdmin || userIsAdmin();
@@ -62,8 +61,17 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
   
+  // ISO-specific links (only show for ISOs)
+  const isoLinks = [
+    { icon: CheckSquare, label: "ISO Applications", href: "/iso-applications" },
+  ];
+
   // Choose the right links based on user role
   let links = showAdminSidebar ? adminLinks : clientLinks;
+  // If ISO, add isoLinks on top of clientLinks (but not for admin sidebar)
+  if (isIso() && !showAdminSidebar) {
+    links = [...isoLinks, ...links];
+  }
 
   const handleLogout = async () => {
     await signOut();

@@ -8,6 +8,7 @@ import { DashboardStatsCards } from "./components/DashboardStatsCards";
 import { DashboardFeatureCards } from "./components/DashboardFeatureCards";
 import { DashboardCharts } from "./components/DashboardCharts";
 import { DashboardCampaignTabs } from "./components/DashboardCampaignTabs";
+import { IsoApplicationsWidget } from "./components/IsoApplicationsWidget";
 
 export default function Dashboard() {
   const { profile, role } = useAuth();
@@ -20,11 +21,18 @@ export default function Dashboard() {
     setGreeting(`${greetingText}, ${profile?.first_name || "there"}!`);
   }, [profile]);
 
+  const isIso = role === "iso";
+
   return (
     <Layout>
       <section id="client-login">
         <DashboardHeader greeting={greeting} role={role} />
         <DashboardAdminNotice role={role} />
+        {isIso && (
+          <div className="mb-4">
+            <IsoApplicationsWidget />
+          </div>
+        )}
         <DashboardStatsCards />
         <DashboardFeatureCards />
         <DashboardCharts />
@@ -33,3 +41,4 @@ export default function Dashboard() {
     </Layout>
   );
 }
+
