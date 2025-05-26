@@ -1,4 +1,3 @@
-
 import { SimpleCampaign } from "@/types/campaign";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -71,11 +70,11 @@ export function CreateCampaignForm({
   } = useCampaignLeadsUpload(campaignId);
 
   const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [sending, setSending] = useState(false);
 
   // Handle CSV file upload + associate leads to campaign
   const handleCsvUpload = async (file: File) => {
     setCsvFile(file);
-
     const text = await file.text();
     const csvLeads = parseCSVTextToLeads(text);
     // Very basic: skip completely empty rows (edge cases)
@@ -94,7 +93,7 @@ export function CreateCampaignForm({
   // Only allow "start"/"schedule" when there are leads uploaded
   const canSubmitCampaign = campaignName && uploadedLeads.length > 0 && !uploading;
 
-  // Submission button action
+  // --- UPDATE: On submit, store subject/content in campaign, and simulate send to each lead (uploaded by current user only)
   const handleStartOrSchedule = async () => {
     if (!campaignName || uploadedLeads.length === 0) {
       toast({
@@ -105,15 +104,61 @@ export function CreateCampaignForm({
       return;
     }
 
-    await handleSave();
+    setSending(true);
 
-    // Show confirmation visual
-    toast({
-      title: "Campaign Created!",
-      description: `Campaign created & assigned to ${uploadedLeads.length} lead${uploadedLeads.length === 1 ? "" : "s"}.`,
-    });
-    // Optionally, call parent
-    onCampaignCreated();
+    // 1. Save campaign with subject/content included
+    try {
+      // Save campaign with subject/content in campaigns table
+      // Insert/update logic—if editing, may differ (delegated to handleSave)
+      await handleSave({
+        campaignName,
+        description,
+        scheduledDate,
+        messageType,
+        subject,
+        content,
+      });
+
+      // 2. Link leads if not already (should have been added at upload time)
+      // Only use leads uploaded by this user and linked to this campaign
+      const campaignLeads = uploadedLeads.filter(
+        lead =>
+          lead.client_id === user?.id &&
+          (!!lead.email || !!lead.phone)
+      );
+
+      // 3. Simulate sending email to each lead
+      let emailsSent = 0;
+      if (campaignLeads.length) {
+        for (const lead of campaignLeads) {
+          // Simulate the email "send"
+          if (lead.email) {
+            // just log for simulation
+            console.log(`[MOCK EMAIL] Sending "${subject}" to ${lead.email}`);
+            emailsSent++;
+            await new Promise(res => setTimeout(res, 70)); // quick delay per mail
+          }
+        }
+      }
+
+      // 4. Show confirmation visual
+      toast({
+        title: "Campaign sent!",
+        description: `Campaign sent to ${emailsSent} lead${emailsSent === 1 ? "" : "s"} successfully.`,
+      });
+
+      // Optionally clear leads and inform parent
+      if (onCampaignCreated) onCampaignCreated();
+
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: err?.message || "Failed to send campaign.",
+      });
+    } finally {
+      setSending(false);
+    }
   };
 
   // Streamlined campaign create form (no more segments or audience selectors)
@@ -195,13 +240,16 @@ export function CreateCampaignForm({
           )}
           <Button
             onClick={handleStartOrSchedule}
-            disabled={!canSubmitCampaign}
+            disabled={!canSubmitCampaign || sending}
           >
-            {scheduledDate ? "Schedule Campaign" : "Start Campaign"}
+            {sending
+              ? "Sending Campaign..."
+              : scheduledDate
+                ? "Schedule Campaign"
+                : "Start Campaign"}
           </Button>
         </div>
       </CardContent>
     </Card>
   );
 }
-
