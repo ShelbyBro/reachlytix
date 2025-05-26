@@ -40,7 +40,21 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
       });
       setUserLeads([]);
     } else {
-      setUserLeads(data ?? []);
+      // Map DB rows into CsvRow shape for UI components
+      const rows: CsvRow[] = (data ?? []).map((lead: any) => ({
+        name: lead.name ?? "",
+        email: lead.email ?? "",
+        phone: lead.phone ?? "",
+        source: lead.source ?? "",
+        isValid: true,
+        invalidReason: undefined,
+        // Optionally, spread any other fields, e.g. id/status if needed for UI
+        ...(lead.id && { id: lead.id }),
+        ...(lead.status && { status: lead.status }),
+        ...(lead.client_id && { client_id: lead.client_id }),
+        ...(lead.created_at && { created_at: lead.created_at }),
+      }));
+      setUserLeads(rows);
     }
     setFetchingLeads(false);
   };
