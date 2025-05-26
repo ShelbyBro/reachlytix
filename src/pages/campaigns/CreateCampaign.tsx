@@ -181,7 +181,14 @@ export default function CreateCampaign() {
                             <DatePicker
                               date={field.value}
                               onSelect={field.onChange}
-                              disabled={(date) => date < new Date()}
+                              disabled={(date) => {
+                                // Allow today (clear time portion)
+                                const today = new Date();
+                                today.setHours(0,0,0,0);
+                                const d = new Date(date);
+                                d.setHours(0,0,0,0);
+                                return d < today;
+                              }}
                             />
                             {field.value && (
                               <Button

@@ -10,17 +10,31 @@ export default function CampaignDetailsPage() {
   const { id } = useParams();
   const [campaign, setCampaign] = useState<SimpleCampaign | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchCampaign() {
       setLoading(true);
-      if (!id) return;
+      setFetchError(null);
+      if (!id) {
+        setFetchError("No campaign ID in URL.");
+        setLoading(false);
+        return;
+      }
       const { data, error } = await supabase
         .from("campaigns")
         .select("*")
         .eq("id", id)
         .maybeSingle();
-      if (!error && data) setCampaign(data as SimpleCampaign);
+      if (error) {
+        setFetchError(error.message || "Unknown error from DB.");
+        setCampaign(null);
+      } else if (!data) {
+        setFetchError("No data returned for this campaign ID.");
+        setCampaign(null);
+      } else {
+        setCampaign(data as SimpleCampaign);
+      }
       setLoading(false);
     }
     fetchCampaign();
@@ -36,7 +50,12 @@ export default function CampaignDetailsPage() {
   if (!campaign) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        Campaign not found or you do not have access.
+        <div className="text-lg font-bold mb-2">Campaign not found or you do not have access.</div>
+        {fetchError && (
+          <div className="text-xs mt-2 p-2 bg-red-50 border border-red-200 rounded text-red-800 break-all">
+            {fetchError}
+          </div>
+        )}
       </div>
     );
   }
