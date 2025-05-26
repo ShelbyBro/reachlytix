@@ -331,25 +331,16 @@ export default function CreateCampaign() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <label className="block font-semibold">Upload Recipients (CSV)</label>
-                    {/* Use same upload style as CreateCampaignForm */}
-                    <input
-                      type="file"
-                      accept=".csv"
-                      className="mt-2"
-                      // CSV upload logic should be implemented/reused
-                      // Disabled for email demo! Replace with actual uploader if/when needed.
-                      disabled
-                    />
-                    <div className="text-sm text-muted-foreground">
-                      Upload a CSV file with columns: name, email, phone.
+                    {/* Replaced the disabled input with the working CSV uploader */}
+                    {/* See EmailCsvUploader.tsx for implementation */}
+                    <label className="block font-semibold mb-1">Upload Recipients (CSV)</label>
+                    <EmailCsvUploader />
+                    <div className="text-sm text-muted-foreground mt-2">
+                      Upload a CSV file with columns: name, email, phone.<br />
                       Only these uploaded leads will receive this campaign.
                     </div>
                   </div>
-                  <div className="px-3 py-2 border border-dashed rounded bg-muted/20 text-muted-foreground">
-                    {/* Placeholder for uploaded leads. Replace with working list if integrating. */}
-                    No leads uploaded yet.
-                  </div>
+                  {/* Placeholder for uploaded leads removed, handled by EmailCsvUploader */}
                   <div className="text-xs text-muted-foreground pt-2">
                     <b>Note:</b> Audience/segment selection is NOT supported for Email campaigns. You must upload a CSV.
                   </div>
