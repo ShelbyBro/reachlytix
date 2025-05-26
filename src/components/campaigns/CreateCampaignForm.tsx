@@ -1,3 +1,4 @@
+
 import { SimpleCampaign } from "@/types/campaign";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -5,11 +6,10 @@ import { useCampaignForm } from "@/hooks/use-campaign-form";
 import { CampaignDetailsFields } from "./CampaignDetailsFields";
 import { CampaignMessageContent } from "./CampaignMessageContent";
 import { SchedulingField } from "./SchedulingField";
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Upload } from "lucide-react";
 import { useCampaignLeadsUpload } from "@/hooks/use-campaign-leads-upload";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface CreateCampaignFormProps {
@@ -71,7 +71,6 @@ export function CreateCampaignForm({
   } = useCampaignLeadsUpload(campaignId);
 
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [recipientsCount, setRecipientsCount] = useState(0);
 
   // Handle CSV file upload + associate leads to campaign
   const handleCsvUpload = async (file: File) => {
@@ -79,13 +78,17 @@ export function CreateCampaignForm({
 
     const text = await file.text();
     const csvLeads = parseCSVTextToLeads(text);
-
-    // very basic: skip completely empty rows (edge cases)
+    // Very basic: skip completely empty rows (edge cases)
     const validLeads = csvLeads.filter(l => !!l.email || !!l.phone);
 
     const inserted = await uploadLeads(validLeads);
-    if (inserted) setRecipientsCount(inserted.length);
-    else setRecipientsCount(0);
+    if (!inserted) {
+      toast({
+        variant: "destructive",
+        title: "Lead Upload Failed",
+        description: "Could not upload leads. Please check your CSV.",
+      });
+    }
   };
 
   // Only allow "start"/"schedule" when there are leads uploaded
@@ -113,7 +116,7 @@ export function CreateCampaignForm({
     onCampaignCreated();
   };
 
-  // UI: single step streamlined campaign create form (no more "segments"/"audience" selectors)
+  // Streamlined campaign create form (no more segments or audience selectors)
   return (
     <Card>
       <CardHeader>
@@ -201,3 +204,4 @@ export function CreateCampaignForm({
     </Card>
   );
 }
+
