@@ -1,3 +1,4 @@
+
 import { SimpleCampaign } from "@/types/campaign";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -142,8 +143,8 @@ export function CreateCampaignForm({
     }
   };
 
-  // STREAMLINED: Email UI never shows any "audience/segment" selector (was removed).
-  // If you add back audience/segment filtering, do NOT show for email campaigns!
+  // IMPORTANT! Never render any "audience" or segmentation UI for Email campaigns!
+  // For email (isEmailCampaign), only show CSV upload, uploaded leads summary, and nothing else for audience.
 
   return (
     <Card>
@@ -179,8 +180,7 @@ export function CreateCampaignForm({
           campaignId={campaignId}
         />
 
-        {/* Audience/Segment UI is now COMPLETELY REMOVED for email. Only CSV upload & uploaded lead status remains below message fields. */}
-        {isEmailCampaign && (
+        {isEmailCampaign ? (
           <>
             {/* CSV Upload Area */}
             <div className="flex flex-col gap-2 border bg-muted/30 rounded-lg p-4 my-4">
@@ -235,10 +235,8 @@ export function CreateCampaignForm({
               )}
             </div>
           </>
-        )}
-
-        {/* For non-email campaign types, keep existing CSV section logic as fallback if needed */}
-        {!isEmailCampaign && (
+        ) : (
+          // For non-email campaign types, fallback to original CSV UI (or audience if present)
           <div className="flex flex-col gap-2 border bg-muted/30 rounded-lg p-4 my-4">
             <div className="flex items-center gap-2 font-semibold">
               <Upload className="h-5 w-5 text-primary" />Upload Recipients (CSV)
@@ -301,3 +299,4 @@ export function CreateCampaignForm({
     </Card>
   );
 }
+// DO NOT ADD "audience" or segmentation UI for email campaigns -- only CSV and uploaded leads info are allowed.
