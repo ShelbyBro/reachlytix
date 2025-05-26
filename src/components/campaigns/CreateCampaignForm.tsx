@@ -142,7 +142,9 @@ export function CreateCampaignForm({
     }
   };
 
-  // Streamlined campaign create form (no more segments or audience selectors)
+  // STREAMLINED: Email UI never shows any "audience/segment" selector (was removed).
+  // If you add back audience/segment filtering, do NOT show for email campaigns!
+
   return (
     <Card>
       <CardHeader>
@@ -176,49 +178,71 @@ export function CreateCampaignForm({
           onWhatsappEnabledChange={setWhatsappEnabled}
           campaignId={campaignId}
         />
-        {/* Inline Lead Uploader, only for this campaign */}
+
+        {/* Audience/Segment UI is now COMPLETELY REMOVED for email. Only CSV upload & uploaded lead status remains below message fields. */}
         {isEmailCampaign && (
-          <div className="flex flex-col gap-2 border bg-muted/30 rounded-lg p-4 my-4">
-            <div className="flex items-center gap-2 font-semibold"><Upload className="h-5 w-5 text-primary" />Upload Recipients (CSV)</div>
-            <input
-              type="file"
-              accept=".csv"
-              className="mt-2"
-              disabled={uploading}
-              onChange={e => {
-                if (e.target.files && e.target.files[0]) {
-                  handleCsvUpload(e.target.files[0]);
-                }
-              }}
-            />
-            <div className="text-sm text-muted-foreground">
-              {uploading && "Uploading..."}
-              {!uploading && uploadedLeads.length > 0 && (
-                <>
-                  <strong>{uploadedLeads.length}</strong> recipient{uploadedLeads.length === 1 ? "" : "s"} loaded.
-                </>
-              )}
-              {!uploading && uploadedLeads.length === 0 && "No recipients uploaded yet."}
-            </div>
-            {uploadedLeads.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="mt-1 w-max"
-                onClick={clearLeads}
+          <>
+            {/* CSV Upload Area */}
+            <div className="flex flex-col gap-2 border bg-muted/30 rounded-lg p-4 my-4">
+              <div className="flex items-center gap-2 font-semibold">
+                <Upload className="h-5 w-5 text-primary" />
+                Upload Recipients (CSV)
+              </div>
+              <input
+                type="file"
+                accept=".csv"
+                className="mt-2"
                 disabled={uploading}
-              >
-                Remove Uploaded Leads
-              </Button>
-            )}
-            <div className="text-xs text-muted-foreground">
-              Upload a CSV file with columns: name, email, phone. Only these uploaded leads will receive this campaign.
+                onChange={e => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleCsvUpload(e.target.files[0]);
+                  }
+                }}
+              />
+              <div className="text-sm text-muted-foreground">
+                {uploading && "Uploading..."}
+                {!uploading && uploadedLeads.length > 0 && (
+                  <>
+                    <strong>{uploadedLeads.length}</strong> recipient
+                    {uploadedLeads.length === 1 ? "" : "s"} loaded.
+                  </>
+                )}
+                {!uploading && uploadedLeads.length === 0 && "No recipients uploaded yet."}
+              </div>
+              {uploadedLeads.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-1 w-max"
+                  onClick={clearLeads}
+                  disabled={uploading}
+                >
+                  Remove Uploaded Leads
+                </Button>
+              )}
+              <div className="text-xs text-muted-foreground">
+                Upload a CSV file with columns: name, email, phone. Only these uploaded leads will receive this campaign.
+              </div>
             </div>
-          </div>
+            {/* Show summary of uploaded leads only, no segments/audience! */}
+            <div className="px-3 py-2 border border-dashed rounded bg-muted/20 text-muted-foreground">
+              {uploadedLeads.length > 0 ? (
+                <>
+                  Uploaded <strong>{uploadedLeads.length}</strong> leads for this campaign.
+                </>
+              ) : (
+                <>No leads uploaded yet.</>
+              )}
+            </div>
+          </>
         )}
+
+        {/* For non-email campaign types, keep existing CSV section logic as fallback if needed */}
         {!isEmailCampaign && (
           <div className="flex flex-col gap-2 border bg-muted/30 rounded-lg p-4 my-4">
-            <div className="flex items-center gap-2 font-semibold"><Upload className="h-5 w-5 text-primary" />Upload Recipients (CSV)</div>
+            <div className="flex items-center gap-2 font-semibold">
+              <Upload className="h-5 w-5 text-primary" />Upload Recipients (CSV)
+            </div>
             <input
               type="file"
               accept=".csv"
@@ -234,7 +258,8 @@ export function CreateCampaignForm({
               {uploading && "Uploading..."}
               {!uploading && uploadedLeads.length > 0 && (
                 <>
-                  <strong>{uploadedLeads.length}</strong> recipient{uploadedLeads.length === 1 ? "" : "s"} loaded.
+                  <strong>{uploadedLeads.length}</strong> recipient
+                  {uploadedLeads.length === 1 ? "" : "s"} loaded.
                 </>
               )}
               {!uploading && uploadedLeads.length === 0 && "No recipients uploaded yet."}
@@ -253,17 +278,6 @@ export function CreateCampaignForm({
             <div className="text-xs text-muted-foreground">
               Upload a CSV file with columns: name, email, phone. Only these uploaded leads will receive this campaign.
             </div>
-          </div>
-        )}
-        {isEmailCampaign && (
-          <div className="px-3 py-2 border border-dashed rounded bg-muted/20 text-muted-foreground">
-            {uploadedLeads.length > 0 ? (
-              <>
-                Uploaded <strong>{uploadedLeads.length}</strong> leads for this campaign.
-              </>
-            ) : (
-              <>No leads uploaded yet.</>
-            )}
           </div>
         )}
 
