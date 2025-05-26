@@ -58,7 +58,7 @@ export function StartCampaignButton({ campaignId, disabled, onSuccess }: Props) 
 
       toast({
         title: "Campaign Sent Successfully",
-        description: "All assigned leads have been sent the campaign (mocked).",
+        description: `Emails sent to ${leads.length} leads${leads.length > 0 ? "!" : ""} (mocked)`,
       });
       if (onSuccess) onSuccess();
     } catch (error: any) {

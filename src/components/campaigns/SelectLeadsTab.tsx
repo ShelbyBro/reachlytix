@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Lead, SimpleCampaign } from "@/types/campaign";
+import { Lead } from "@/types/campaign";
+import { useAuth } from "@/contexts/AuthContext";
 
 type SelectLeadsTabProps = {
   campaignId: string;
@@ -15,21 +16,30 @@ type SelectLeadsTabProps = {
 
 export function SelectLeadsTab({ campaignId, onLeadsAssigned, initialSelectedLeadIds }: SelectLeadsTabProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [selected, setSelected] = useState<(string)[]>(initialSelectedLeadIds || []);
+  const [selected, setSelected] = useState<string[]>(initialSelectedLeadIds || []);
   const [isLoading, setIsLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Fetch leads on mount
+  // Fetch leads that belong to this client
   useEffect(() => {
     async function fetchLeads() {
       setIsLoading(true);
-      const { data, error } = await supabase.from("leads").select("*");
+      if (!user) {
+        setLeads([]);
+        setIsLoading(false);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("client_id", user.id); // ensure ownership
       if (data) setLeads(data);
       setIsLoading(false);
     }
     fetchLeads();
-  }, []);
+  }, [user]);
 
   // Load assigned leads when campaignId changes
   useEffect(() => {
@@ -39,6 +49,7 @@ export function SelectLeadsTab({ campaignId, onLeadsAssigned, initialSelectedLea
         .from("campaign_leads")
         .select("lead_id")
         .eq("campaign_id", campaignId);
+
       if (data) setSelected(data.map(d => d.lead_id));
     }
     if (campaignId) fetchAssignedLeads();
@@ -57,7 +68,7 @@ export function SelectLeadsTab({ campaignId, onLeadsAssigned, initialSelectedLea
       .eq("campaign_id", campaignId);
 
     // Re-insert selected
-    const toInsert = selected.map(lead_id => ({
+    const toInsert = selected.map((lead_id) => ({
       campaign_id: campaignId,
       lead_id
     }));
@@ -69,10 +80,17 @@ export function SelectLeadsTab({ campaignId, onLeadsAssigned, initialSelectedLea
     setSaving(false);
 
     if (!delError && !insError) {
-      toast({ title: "Leads Assigned", description: "Leads have been assigned to this campaign." });
+      toast({
+        title: "Leads assigned to campaign",
+        description: "Leads have been assigned to this campaign.",
+      });
       if (onLeadsAssigned) onLeadsAssigned();
     } else {
-      toast({ variant: "destructive", title: "Error", description: delError?.message ?? insError?.message });
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: delError?.message ?? insError?.message,
+      });
     }
   };
 

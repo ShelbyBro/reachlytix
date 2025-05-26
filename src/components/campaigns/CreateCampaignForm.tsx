@@ -45,6 +45,7 @@ export function CreateCampaignForm({
   } = useCampaignForm(editingCampaign, onCampaignCreated, onCancel);
 
   const [currentTab, setCurrentTab] = useState("details");
+  const [leadsAssigned, setLeadsAssigned] = useState(false);
 
   return (
     <Card>
@@ -99,7 +100,12 @@ export function CreateCampaignForm({
           </TabsContent>
           <TabsContent value="leads">
             {campaignId ? (
-              <SelectLeadsTab campaignId={campaignId} />
+              <SelectLeadsTab
+                campaignId={campaignId}
+                onLeadsAssigned={() => {
+                  setLeadsAssigned(true);
+                }}
+              />
             ) : (
               <div className="text-sm text-muted-foreground">Please save campaign details first to select leads.</div>
             )}
