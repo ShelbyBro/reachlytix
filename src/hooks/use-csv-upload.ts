@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { parseCSV, validateHeaders, type CsvRow } from "@/utils/csv-parser";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,6 +32,7 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
           title: "Missing required columns",
           description: `Your CSV is missing: ${missingHeaders.join(', ')}`
         });
+        setIsUploading(false);
         return;
       }
 
@@ -62,7 +63,7 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
     
     try {
       setIsUploading(true);
-      
+
       const validRows = parsedData.filter(row => row.isValid);
       
       if (validRows.length === 0) {
@@ -75,6 +76,7 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
         return;
       }
 
+      // Always set client_id to the logged-in user's id!
       const leadsToInsert = validRows.map(row => ({
         name: row.name,
         email: row.email,
@@ -96,6 +98,7 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
             .from('leads')
             .select('id')
             .or(`email.eq.${lead.email},phone.eq.${lead.phone}`)
+            .eq('client_id', user.id)
             .limit(1);
           
           if (checkError) {
@@ -158,3 +161,4 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
     setPreviewVisible
   };
 }
+

@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Lead } from "@/types/campaign";
 import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 
 type SelectLeadsTabProps = {
   campaignId: string;
@@ -34,14 +35,24 @@ export function SelectLeadsTab({ campaignId, onLeadsAssigned, initialSelectedLea
       const { data, error } = await supabase
         .from("leads")
         .select("*")
-        .eq("client_id", user.id); // ensure ownership
-      if (data) setLeads(data);
+        .eq("client_id", user.id);
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Failed to fetch leads",
+          description: error.message,
+        });
+        setLeads([]);
+      } else if (data) {
+        setLeads(data);
+      }
       setIsLoading(false);
     }
     fetchLeads();
   }, [user]);
 
-  // Load assigned leads when campaignId changes
+  // Reload assigned leads when campaignId changes
   useEffect(() => {
     async function fetchAssignedLeads() {
       if (!campaignId) return;
@@ -61,6 +72,15 @@ export function SelectLeadsTab({ campaignId, onLeadsAssigned, initialSelectedLea
 
   const handleSave = async () => {
     setSaving(true);
+    if (selected.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No leads selected",
+        description: "Please select at least one lead to assign.",
+      });
+      setSaving(false);
+      return;
+    }
     // Remove all existing campaign_leads for this campaign
     const { error: delError } = await supabase
       .from("campaign_leads")
@@ -81,14 +101,14 @@ export function SelectLeadsTab({ campaignId, onLeadsAssigned, initialSelectedLea
 
     if (!delError && !insError) {
       toast({
-        title: "Leads assigned to campaign",
+        title: "Leads assigned successfully",
         description: "Leads have been assigned to this campaign.",
       });
       if (onLeadsAssigned) onLeadsAssigned();
     } else {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: "Error assigning leads",
         description: delError?.message ?? insError?.message,
       });
     }
@@ -97,35 +117,44 @@ export function SelectLeadsTab({ campaignId, onLeadsAssigned, initialSelectedLea
   return (
     <div>
       <div className="mb-2 font-semibold">Select which uploaded leads should receive this campaign:</div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Select</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Phone</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {leads.map(lead => (
-            <TableRow key={lead.id}>
-              <TableCell>
-                <Checkbox checked={selected.includes(lead.id)} onCheckedChange={() => toggleSelected(lead.id)} />
-              </TableCell>
-              <TableCell>{lead.name}</TableCell>
-              <TableCell>{lead.email}</TableCell>
-              <TableCell>{lead.phone ?? "-"}</TableCell>
-              <TableCell>{lead.status ?? "-"}</TableCell>
+      {isLoading ? (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
+          <Loader2 className="animate-spin" /> Loading leads...
+        </div>
+      ) : leads.length === 0 ? (
+        <div className="text-sm text-muted-foreground p-4 text-center">No leads found. Upload leads or add some first.</div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Select</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Status</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {leads.map(lead => (
+              <TableRow key={lead.id}>
+                <TableCell>
+                  <Checkbox checked={selected.includes(lead.id)} onCheckedChange={() => toggleSelected(lead.id)} />
+                </TableCell>
+                <TableCell>{lead.name}</TableCell>
+                <TableCell>{lead.email}</TableCell>
+                <TableCell>{lead.phone ?? "-"}</TableCell>
+                <TableCell>{lead.status ?? "-"}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
       <div className="flex justify-end mt-4">
-        <Button onClick={handleSave} disabled={saving}>
+        <Button onClick={handleSave} disabled={saving || leads.length === 0}>
           {saving ? "Assigning..." : "Assign Selected Leads"}
         </Button>
       </div>
     </div>
   );
 }
+

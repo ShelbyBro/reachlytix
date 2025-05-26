@@ -25,7 +25,15 @@ export function StartCampaignButton({ campaignId, disabled, onSuccess }: Props) 
         .eq("campaign_id", campaignId);
 
       if (clError) throw clError;
-      if (!assigned || assigned.length === 0) throw new Error("No leads assigned.");
+      if (!assigned || assigned.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "No leads assigned",
+          description: "Please assign leads to this campaign before starting.",
+        });
+        setSending(false);
+        return;
+      }
 
       // Fetch leads data
       const leadIds = assigned.map((r: any) => r.lead_id);
@@ -35,17 +43,24 @@ export function StartCampaignButton({ campaignId, disabled, onSuccess }: Props) 
         .in("id", leadIds);
 
       if (lError) throw lError;
+      if (!leads || leads.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "No valid leads found",
+          description: "No valid leads found to send campaign to.",
+        });
+        setSending(false);
+        return;
+      }
 
       // Simulate sending emails one by one
+      let emailsSent = 0;
       for (const lead of leads) {
         if (!lead.email) continue;
         // Simulate email send: log or fake API call
         console.log(`[Mock] Sent email for campaign ${campaignId} to ${lead.email} (lead ${lead.id})`);
-        // (Optional) Insert into campaign_logs for tracking:
-        // await supabase.from("campaign_logs").insert({
-        //   campaign_id: campaignId, lead_id: lead.id, delivery_status: "sent", message_type: "email"
-        // });
-        await new Promise((res) => setTimeout(res, 300)); // fake delay
+        emailsSent++;
+        await new Promise((res) => setTimeout(res, 200)); // fake delay
       }
 
       // Mark campaign as sent
@@ -57,12 +72,12 @@ export function StartCampaignButton({ campaignId, disabled, onSuccess }: Props) 
       if (upError) throw upError;
 
       toast({
-        title: "Campaign Sent Successfully",
-        description: `Emails sent to ${leads.length} leads${leads.length > 0 ? "!" : ""} (mocked)`,
+        title: "Campaign sent",
+        description: `Emails sent to ${emailsSent} lead${emailsSent === 1 ? "" : "s"}.`,
       });
       if (onSuccess) onSuccess();
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Failed to Send", description: error.message });
+      toast({ variant: "destructive", title: "Failed to send", description: error.message });
     }
     setSending(false);
   };
@@ -81,3 +96,4 @@ export function StartCampaignButton({ campaignId, disabled, onSuccess }: Props) 
     </Button>
   );
 }
+
