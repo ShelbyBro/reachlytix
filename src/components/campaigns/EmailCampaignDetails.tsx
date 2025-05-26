@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Send } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast"; // Standard toast usage
 
 type EmailCampaignDetailsProps = {
   campaign: {
@@ -45,10 +45,13 @@ export default function EmailCampaignDetails({ campaign }: EmailCampaignDetailsP
 
       if (error) throw error;
 
-      toast.success("Campaign marked as sent.");
+      toast({ description: "Campaign marked as sent." });
       // Optionally, you could refetch or reload page.
     } catch (err: any) {
-      toast.error("Failed to start campaign: " + (err.message || "Unknown error"));
+      toast({
+        variant: "destructive",
+        description: "Failed to start campaign: " + (err.message || "Unknown error"),
+      });
     } finally {
       setSending(false);
     }
