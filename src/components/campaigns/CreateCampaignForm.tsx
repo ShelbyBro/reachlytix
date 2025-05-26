@@ -1,4 +1,3 @@
-
 import { SimpleCampaign } from "@/types/campaign";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -7,6 +6,9 @@ import { CampaignDetailsFields } from "./CampaignDetailsFields";
 import { CampaignMessageContent } from "./CampaignMessageContent";
 import { SchedulingField } from "./SchedulingField";
 import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SelectLeadsTab } from "./SelectLeadsTab";
 
 interface CreateCampaignFormProps {
   onCampaignCreated: () => void;
@@ -38,9 +40,11 @@ export function CreateCampaignForm({
     setWhatsappContent,
     messageType,
     setMessageType,
-    campaignId, // Add this line to extract campaignId
+    campaignId,
     handleSave
   } = useCampaignForm(editingCampaign, onCampaignCreated, onCancel);
+
+  const [currentTab, setCurrentTab] = useState("details");
 
   return (
     <Card>
@@ -53,35 +57,54 @@ export function CreateCampaignForm({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <CampaignDetailsFields
-          campaignName={campaignName}
-          description={description}
-          onCampaignNameChange={setCampaignName}
-          onDescriptionChange={setDescription}
-        />
-
-        <Separator className="my-6" />
-
-        <CampaignMessageContent
-          messageType={messageType}
-          setMessageType={setMessageType}
-          subject={subject}
-          content={content}
-          smsContent={smsContent}
-          whatsappContent={whatsappContent}
-          whatsappEnabled={whatsappEnabled}
-          onSubjectChange={setSubject}
-          onContentChange={setContent}
-          onSmsContentChange={setSmsContent}
-          onWhatsappContentChange={setWhatsappContent}
-          onWhatsappEnabledChange={setWhatsappEnabled}
-          campaignId={campaignId} // Pass campaignId here
-        />
-
-        <SchedulingField
-          scheduledDate={scheduledDate}
-          onScheduledDateChange={setScheduledDate}
-        />
+        <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="content">Content</TabsTrigger>
+            <TabsTrigger value="audience">Audience</TabsTrigger>
+            <TabsTrigger value="leads">Select Leads</TabsTrigger>
+          </TabsList>
+          <TabsContent value="details">
+            <CampaignDetailsFields
+              campaignName={campaignName}
+              description={description}
+              onCampaignNameChange={setCampaignName}
+              onDescriptionChange={setDescription}
+            />
+            <SchedulingField
+              scheduledDate={scheduledDate}
+              onScheduledDateChange={setScheduledDate}
+            />
+          </TabsContent>
+          <TabsContent value="content">
+            <CampaignMessageContent
+              messageType={messageType}
+              setMessageType={setMessageType}
+              subject={subject}
+              content={content}
+              smsContent={smsContent}
+              whatsappContent={whatsappContent}
+              whatsappEnabled={whatsappEnabled}
+              onSubjectChange={setSubject}
+              onContentChange={setContent}
+              onSmsContentChange={setSmsContent}
+              onWhatsappContentChange={setWhatsappContent}
+              onWhatsappEnabledChange={setWhatsappEnabled}
+              campaignId={campaignId}
+            />
+          </TabsContent>
+          <TabsContent value="audience">
+            <Separator className="my-6" />
+            Audience Tab Content
+          </TabsContent>
+          <TabsContent value="leads">
+            {campaignId ? (
+              <SelectLeadsTab campaignId={campaignId} />
+            ) : (
+              <div className="text-sm text-muted-foreground">Please save campaign details first to select leads.</div>
+            )}
+          </TabsContent>
+        </Tabs>
 
         <div className="flex justify-end space-x-2 pt-4">
           {onCancel && (
