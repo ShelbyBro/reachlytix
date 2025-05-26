@@ -93,7 +93,10 @@ export function CreateCampaignForm({
   // Only allow "start"/"schedule" when there are leads uploaded
   const canSubmitCampaign = campaignName && uploadedLeads.length > 0 && !uploading;
 
-  // --- UPDATE: On submit, store subject/content in campaign, and simulate send to each lead (uploaded by current user only)
+  // --- UPDATE: Only apply email campaign logic for type "email"
+  const isEmailCampaign = messageType === "email";
+
+  // Handle campaign save/upload flow -- only for EMAIL campaigns.
   const handleStartOrSchedule = async () => {
     if (!campaignName || uploadedLeads.length === 0) {
       toast({
@@ -107,46 +110,32 @@ export function CreateCampaignForm({
     setSending(true);
 
     try {
-      // 1. Save campaign with subject/content in campaigns table
-      // NOTE: FIX signature (call with no args!)
+      // 1. Save campaign with subject/content in campaigns table (and ensure type=email)
+      if (!isEmailCampaign) {
+        // fallback to original logic for other types (not touched)
+        await handleSave();
+        setSending(false);
+        return;
+      }
+      // Save subject/content in campaigns table for email
       await handleSave();
 
-      // 2. Link leads if not already (should have been added at upload time)
-      // Only use leads uploaded by this user and linked to this campaign
-      const campaignLeads = uploadedLeads.filter(
-        lead =>
-          lead.client_id === user?.id &&
-          (!!lead.email || !!lead.phone)
-      );
+      // 2. Leads: Ensure all leads are uploaded and linked
+      // Leads are already uploaded in uploadLeads(), which also creates campaign_leads rows
 
-      // 3. Simulate sending email to each lead
-      let emailsSent = 0;
-      if (campaignLeads.length) {
-        for (const lead of campaignLeads) {
-          // Simulate the email "send"
-          if (lead.email) {
-            // just log for simulation
-            console.log(`[MOCK EMAIL] Sending "${subject}" to ${lead.email}`);
-            emailsSent++;
-            await new Promise(res => setTimeout(res, 70)); // quick delay per mail
-          }
-        }
-      }
-
-      // 4. Show confirmation visual
+      // 3. Show visual feedback
       toast({
-        title: "Campaign sent!",
-        description: `Campaign sent to ${emailsSent} lead${emailsSent === 1 ? "" : "s"} successfully.`,
+        title: "Campaign ready!",
+        description: `Campaign "${campaignName}" saved with ${uploadedLeads.length} recipient${uploadedLeads.length === 1 ? "" : "s"}.`,
       });
 
-      // Optionally clear leads and inform parent
       if (onCampaignCreated) onCampaignCreated();
 
     } catch (err: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: err?.message || "Failed to send campaign.",
+        description: err?.message || "Failed to save email campaign.",
       });
     } finally {
       setSending(false);
