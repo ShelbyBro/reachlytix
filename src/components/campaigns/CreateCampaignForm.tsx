@@ -5,30 +5,30 @@ import { useCampaignForm } from "@/hooks/use-campaign-form";
 import { CampaignDetailsFields } from "./CampaignDetailsFields";
 import { CampaignMessageContent } from "./CampaignMessageContent";
 import { SchedulingField } from "./SchedulingField";
-import { Separator } from "@/components/ui/separator";
-import { useState, useEffect, useCallback } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SelectLeadsTab } from "./SelectLeadsTab";
-import { Link } from "react-router-dom";
-import { InlineLeadUploader } from "./InlineLeadUploader";
-import { UploadLeadsModal } from "./UploadLeadsModal";
+import { useState, useCallback } from "react";
 import { Upload } from "lucide-react";
+import { useCampaignLeadsUpload } from "@/hooks/use-campaign-leads-upload";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { StartCampaignButton } from "./StartCampaignButton";
-
-interface AudienceOption {
-  value: "all";
-  label: string;
-  count: number;
-}
 
 interface CreateCampaignFormProps {
   onCampaignCreated: () => void;
   editingCampaign?: SimpleCampaign | null;
   onCancel?: () => void;
+}
+
+function parseCSVTextToLeads(csvText: string) {
+  // Basic CSV parser (assumes headers: name,email,phone)
+  const lines = csvText.trim().split("\n").filter(line => !!line);
+  const [headerLine, ...rows] = lines;
+  const headers = headerLine.split(",").map(h => h.trim().toLowerCase());
+  return rows.map(row => {
+    const values = row.split(",");
+    const lead: any = {};
+    headers.forEach((h, idx) => (lead[h] = values[idx] || ""));
+    return lead;
+  });
 }
 
 export function CreateCampaignForm({
@@ -59,118 +59,61 @@ export function CreateCampaignForm({
     handleSave,
   } = useCampaignForm(editingCampaign, onCampaignCreated, onCancel);
 
-  const { user } = useAuth();
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  // Audience state
-  const [leads, setLeads] = useState<any[]>([]);
-  const [leadsLoading, setLeadsLoading] = useState(true);
-  const [audienceOption, setAudienceOption] = useState<AudienceOption>({ value: "all", label: "All Leads", count: 0 });
+  // Campaign lead upload (per-campaign, local to this campaign only)
+  const {
+    uploadedLeads,
+    uploading,
+    uploadLeads,
+    clearLeads,
+  } = useCampaignLeadsUpload(campaignId);
 
-  // Fetch leads for this user only, as soon as user/id is set
-  useEffect(() => {
-    async function fetchMyLeads() {
-      setLeadsLoading(true);
-      if (!user) {
-        setLeads([]);
-        setLeadsLoading(false);
-        return;
-      }
-      const { data, error } = await supabase
-        .from("leads")
-        .select("*")
-        .eq("created_by", user.id); // Only current user's leads
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [recipientsCount, setRecipientsCount] = useState(0);
 
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Failed to fetch leads",
-          description: error.message,
-        });
-        setLeads([]);
-      } else {
-        setLeads(data ?? []);
-      }
-      setLeadsLoading(false);
-    }
-    fetchMyLeads();
-  }, [user]);
+  // Handle CSV file upload + associate leads to campaign
+  const handleCsvUpload = async (file: File) => {
+    setCsvFile(file);
 
-  useEffect(() => {
-    setAudienceOption({
-      value: "all",
-      label: "All Leads",
-      count: leads.length,
-    });
-  }, [leads]);
+    const text = await file.text();
+    const csvLeads = parseCSVTextToLeads(text);
 
-  // Called by the schedule/start button
-  const handleScheduleOrStart = async () => {
-    if (!campaignId) {
-      toast({
-        variant: "destructive",
-        title: "Please Save Campaign First",
-        description: "You must save campaign details before scheduling.",
-      });
-      return;
-    }
-    if (leads.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "No leads available",
-        description: "You must have at least one uploaded lead before starting this campaign.",
-      });
-      return;
-    }
+    // very basic: skip completely empty rows (edge cases)
+    const validLeads = csvLeads.filter(l => !!l.email || !!l.phone);
 
-    // Remove existing campaign_leads assignments for this campaign
-    await supabase.from("campaign_leads").delete().eq("campaign_id", campaignId);
-
-    // Insert each lead_id for the chosen audience group (always user-created leads for "All")
-    const records = leads.map(lead => ({
-      campaign_id: campaignId,
-      lead_id: lead.id,
-      created_at: new Date().toISOString(),
-    }));
-
-    if (records.length) {
-      const { error } = await supabase.from("campaign_leads").insert(records);
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error assigning leads",
-          description: error.message,
-        });
-        return;
-      } else {
-        toast({
-          title: "Audience assigned",
-          description: `Assigned to ${records.length} recipient${records.length === 1 ? "" : "s"}.`,
-        });
-      }
-    } else {
-      toast({
-        variant: "destructive",
-        title: "No leads to assign",
-        description: "No valid leads found to assign.",
-      });
-      return;
-    }
-
-    // Call the save handler to persist changes
-    await handleSave();
+    const inserted = await uploadLeads(validLeads);
+    if (inserted) setRecipientsCount(inserted.length);
+    else setRecipientsCount(0);
   };
 
-  // Leads upload/refresh logic (unchanged)
-  const [currentTab, setCurrentTab] = useState("details");
-  const [leadsAssigned, setLeadsAssigned] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [leadUploadTrigger, setLeadUploadTrigger] = useState(Date.now());
-  const handleLeadsUploaded = useCallback(() => {
-    setLeadUploadTrigger(Date.now());
-    setCurrentTab("leads"); // after upload, switch to "Select Leads"
-  }, []);
+  // Only allow "start"/"schedule" when there are leads uploaded
+  const canSubmitCampaign = campaignName && uploadedLeads.length > 0 && !uploading;
 
+  // Submission button action
+  const handleStartOrSchedule = async () => {
+    if (!campaignName || uploadedLeads.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Missing required info",
+        description: "Please provide campaign name and upload leads.",
+      });
+      return;
+    }
+
+    await handleSave();
+
+    // Show confirmation visual
+    toast({
+      title: "Campaign Created!",
+      description: `Campaign created & assigned to ${uploadedLeads.length} lead${uploadedLeads.length === 1 ? "" : "s"}.`,
+    });
+    // Optionally, call parent
+    onCampaignCreated();
+  };
+
+  // UI: single step streamlined campaign create form (no more "segments"/"audience" selectors)
   return (
     <Card>
       <CardHeader>
@@ -178,133 +121,81 @@ export function CreateCampaignForm({
         <CardDescription>
           {editingCampaign
             ? "Update your campaign information and message content below."
-            : "Enter your campaign information and message content below."}
+            : "Enter your campaign information, message content, and attach a CSV of leads for this campaign."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* --- Prominent Upload Leads Card/Button --- */}
-        <div className="w-full mb-4 flex justify-center">
-          <div className="bg-muted/50 border rounded-lg px-6 py-5 flex flex-col items-center text-center max-w-xl shadow-sm">
-            <Upload className="w-8 h-8 mb-2 text-primary" />
-            <div className="text-lg font-semibold mb-1">Upload Your Leads</div>
-            <div className="text-sm text-muted-foreground mb-2">
-              Have a CSV list of prospects? Upload your leads before assigning them to this campaign.
-            </div>
-            <Button type="button" className="mt-2" onClick={() => setModalOpen(true)} size="lg">
-              <Upload className="mr-2" /> Upload Leads
-            </Button>
+        {/* Campaign Details */}
+        <CampaignDetailsFields 
+          campaignName={campaignName} description={description}
+          onCampaignNameChange={setCampaignName} onDescriptionChange={setDescription}
+        />
+        <SchedulingField scheduledDate={scheduledDate} onScheduledDateChange={setScheduledDate} />
+        {/* Campaign Content */}
+        <CampaignMessageContent
+          messageType={messageType}
+          setMessageType={setMessageType}
+          subject={subject}
+          content={content}
+          smsContent={smsContent}
+          whatsappContent={whatsappContent}
+          whatsappEnabled={whatsappEnabled}
+          onSubjectChange={setSubject}
+          onContentChange={setContent}
+          onSmsContentChange={setSmsContent}
+          onWhatsappContentChange={setWhatsappContent}
+          onWhatsappEnabledChange={setWhatsappEnabled}
+          campaignId={campaignId}
+        />
+        {/* Inline Lead Uploader, only for this campaign */}
+        <div className="flex flex-col gap-2 border bg-muted/30 rounded-lg p-4 my-4">
+          <div className="flex items-center gap-2 font-semibold"><Upload className="h-5 w-5 text-primary" />Upload Recipients (CSV)</div>
+          <input
+            type="file"
+            accept=".csv"
+            className="mt-2"
+            disabled={uploading}
+            onChange={e => {
+              if (e.target.files && e.target.files[0]) {
+                handleCsvUpload(e.target.files[0]);
+              }
+            }}
+          />
+          <div className="text-sm text-muted-foreground">
+            {uploading && "Uploading..."}
+            {!uploading && uploadedLeads.length > 0 && (
+              <>
+                <strong>{uploadedLeads.length}</strong> recipient{uploadedLeads.length === 1 ? "" : "s"} loaded.
+              </>
+            )}
+            {!uploading && uploadedLeads.length === 0 && "No recipients uploaded yet."}
           </div>
-        </div>
-        <UploadLeadsModal open={modalOpen} onOpenChange={setModalOpen} onLeadsUploaded={handleLeadsUploaded} />
-
-        <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="content">Content</TabsTrigger>
-            <TabsTrigger value="audience">Audience</TabsTrigger>
-            <TabsTrigger value="upload-leads">Upload Leads</TabsTrigger>
-            <TabsTrigger value="leads">Select Leads</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="details">
-            <CampaignDetailsFields campaignName={campaignName} description={description} onCampaignNameChange={setCampaignName} onDescriptionChange={setDescription} />
-            <SchedulingField scheduledDate={scheduledDate} onScheduledDateChange={setScheduledDate} />
-          </TabsContent>
-
-          <TabsContent value="content">
-            <CampaignMessageContent
-              messageType={messageType}
-              setMessageType={setMessageType}
-              subject={subject}
-              content={content}
-              smsContent={smsContent}
-              whatsappContent={whatsappContent}
-              whatsappEnabled={whatsappEnabled}
-              onSubjectChange={setSubject}
-              onContentChange={setContent}
-              onSmsContentChange={setSmsContent}
-              onWhatsappContentChange={setWhatsappContent}
-              onWhatsappEnabledChange={setWhatsappEnabled}
-              campaignId={campaignId}
-            />
-          </TabsContent>
-
-          <TabsContent value="audience">
-            <Separator className="my-6" />
-            <div className="mb-4">Pick who should receive this campaign:</div>
-            <div className="flex items-center space-x-4 mb-4">
-              <Button
-                variant="default"
-                onClick={() => setAudienceOption({ value: "all", label: "All Leads", count: leads.length })}
-                disabled={leadsLoading || leads.length === 0}
-              >
-                All Leads ({leadsLoading ? "..." : leads.length}) recipient{leads.length === 1 ? "" : "s"}
-              </Button>
-            </div>
-            <div className="text-muted-foreground text-xs">
-              Only your uploaded leads are shown. Want to filter? Use the Select Leads tab.
-            </div>
-            {leads.length === 0 && !leadsLoading && (
-              <div className="py-6 text-center text-sm text-muted-foreground">No uploaded leads yet.</div>
-            )}
-          </TabsContent>
-          <TabsContent value="upload-leads">
-            <div className="mb-3 text-muted-foreground">
-              Upload a CSV file to add new leads, then assign them to this campaign instantly.
-            </div>
-            <InlineLeadUploader onLeadsUploaded={handleLeadsUploaded} />
-          </TabsContent>
-          <TabsContent value="leads">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Don&apos;t see your new leads here?{" "}
-                <Button
-                  variant="link"
-                  size="sm"
-                  type="button"
-                  onClick={() => setCurrentTab("upload-leads")}
-                  className="px-1"
-                >
-                  Upload Leads
-                </Button>
-              </span>
-            </div>
-            {campaignId ? (
-              <SelectLeadsTab
-                campaignId={campaignId}
-                key={leadUploadTrigger}
-                onLeadsAssigned={() => setLeadsAssigned(true)}
-              />
-            ) : (
-              <div className="text-sm text-muted-foreground">Please save campaign details first to select leads.</div>
-            )}
-          </TabsContent>
-        </Tabs>
-        <div className="flex justify-end space-x-2 pt-4">
-          {onCancel && (
-            <Button variant="outline" onClick={onCancel}>
-              Cancel
+          {uploadedLeads.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-1 w-max"
+              onClick={clearLeads}
+              disabled={uploading}
+            >
+              Remove Uploaded Leads
             </Button>
           )}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <Button
-                    onClick={handleScheduleOrStart}
-                    disabled={leadsLoading || leads.length === 0}
-                  >
-                    {leads.length === 0 ? "Start Campaign" : scheduledDate ? "Schedule Campaign" : "Start Campaign"}
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              {leads.length === 0 && (
-                <TooltipContent>
-                  Upload at least one lead before you can start a campaign.
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
+          <div className="text-xs text-muted-foreground">
+            Upload a CSV file with columns: name, email, phone. Only these uploaded leads will receive this campaign.
+          </div>
+        </div>
+        {/* Submission Button */}
+        <div className="flex justify-end space-x-2 pt-4">
+          {onCancel && (
+            <Button variant="outline" onClick={onCancel}>Cancel</Button>
+          )}
+          <Button
+            onClick={handleStartOrSchedule}
+            disabled={!canSubmitCampaign}
+          >
+            {scheduledDate ? "Schedule Campaign" : "Start Campaign"}
+          </Button>
         </div>
       </CardContent>
     </Card>
