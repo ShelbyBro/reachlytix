@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CampaignDetailsView } from "@/components/campaigns/CampaignDetailsView";
+import EmailCampaignDetails from "@/components/campaigns/EmailCampaignDetails";
 import { SimpleCampaign } from "@/types/campaign";
 import { Loader2 } from "lucide-react";
 
@@ -59,5 +60,12 @@ export default function CampaignDetailsPage() {
       </div>
     );
   }
+
+  // Show EmailCampaignDetails for email campaigns
+  if (campaign.type === "email") {
+    return <EmailCampaignDetails campaign={campaign} />;
+  }
+
+  // Fallback to default details view for other types
   return <CampaignDetailsView campaign={campaign} />;
 }

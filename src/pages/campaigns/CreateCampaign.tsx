@@ -15,7 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Calendar, Send, Mail, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import EmailCsvUploader from "@/components/campaigns/EmailCsvUploader";
+import EmailCsvUploader, { parseCsv } from "@/components/campaigns/EmailCsvUploader";
+import { useEffect, useRef } from "react";
 
 // Form schema
 const formSchema = z.object({
@@ -27,7 +28,9 @@ const formSchema = z.object({
 
 export default function CreateCampaign() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedLeads, setUploadedLeads] = useState<any[]>([]);
   const navigate = useNavigate();
+  const hasHandledCsvToast = useRef(false);
   
   // Form setup
   const form = useForm<z.infer<typeof formSchema>>({
@@ -43,13 +46,86 @@ export default function CreateCampaign() {
   const watchType = form.watch("type");
   const isEmailType = watchType === "email";
 
+  // CSV uploader callback
+  function handleLeadsUpload(leads: any[]) {
+    setUploadedLeads(leads || []);
+    hasHandledCsvToast.current = false;
+  }
+
+  useEffect(() => {
+    if (uploadedLeads.length && !hasHandledCsvToast.current) {
+      hasHandledCsvToast.current = true;
+      toast.success(`Uploaded ${uploadedLeads.length} recipient${uploadedLeads.length > 1 ? 's' : ''}.`);
+    }
+  }, [uploadedLeads]);
+
   // Handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not authenticated");
-      
+
+      // For email: must have at least one recipient
+      if (values.type === "email") {
+        if (!uploadedLeads.length) throw new Error("Please upload a recipient CSV before scheduling.");
+
+        // Create campaign first
+        const { data: campaigns, error: campaignError } = await supabase
+          .from('campaigns')
+          .insert({
+            title: values.title,
+            description: values.description,
+            type: values.type,
+            client_id: userData.user.id,
+            scheduled_at: values.scheduledAt ? values.scheduledAt.toISOString() : null,
+            schedule_status: values.scheduledAt ? 'scheduled' : 'draft',
+            status: 'pending',
+          })
+          .select()
+          .single();
+
+        if (campaignError || !campaigns) throw campaignError || new Error("Failed to create campaign");
+
+        const campaignId = campaigns.id;
+
+        // Insert leads and associate to campaign
+        const insertLeads = uploadedLeads.map((lead) => ({
+          name: lead.name,
+          email: lead.email,
+          phone: lead.phone,
+          created_by: userData.user.id,
+          client_id: userData.user.id,
+          status: "new",
+          source: "email-csv-upload",
+        }));
+
+        const { data: leads, error: leadError } = await supabase
+          .from("leads")
+          .insert(insertLeads)
+          .select();
+
+        if (leadError || !leads) throw leadError || new Error("Failed to insert leads");
+
+        // Link leads to campaign_leads
+        const campaignLeads = leads.map((lead: any) => ({
+          campaign_id: campaignId,
+          lead_id: lead.id,
+        }));
+
+        const { error: campLeadError } = await supabase.from("campaign_leads").insert(campaignLeads);
+
+        if (campLeadError) throw campLeadError;
+
+        toast.success(
+          `Campaign scheduled for ${values.scheduledAt ? values.scheduledAt.toLocaleDateString() : "now"} with ${leads.length} recipients`
+        );
+        navigate(`/campaigns/${campaignId}`);
+        setUploadedLeads([]);
+        return;
+      }
+
+      // Other campaign types
       const { error } = await supabase
         .from('campaigns')
         .insert({
@@ -57,7 +133,7 @@ export default function CreateCampaign() {
           description: values.description,
           type: values.type,
           client_id: userData.user.id,
-          scheduled_at: values.scheduledAt ? values.scheduledAt.toISOString() : null, // Convert Date to ISO string
+          scheduled_at: values.scheduledAt ? values.scheduledAt.toISOString() : null,
           schedule_status: values.scheduledAt ? 'scheduled' : 'draft',
           status: 'pending',
         });
@@ -339,16 +415,18 @@ export default function CreateCampaign() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    {/* Replaced the disabled input with the working CSV uploader */}
-                    {/* See EmailCsvUploader.tsx for implementation */}
                     <label className="block font-semibold mb-1">Upload Recipients (CSV)</label>
-                    <EmailCsvUploader />
+                    <EmailCsvUploader onLeadsUploaded={handleLeadsUpload} />
                     <div className="text-sm text-muted-foreground mt-2">
                       Upload a CSV file with columns: name, email, phone.<br />
                       Only these uploaded leads will receive this campaign.
                     </div>
                   </div>
-                  {/* Placeholder for uploaded leads removed, handled by EmailCsvUploader */}
+                  {uploadedLeads.length > 0 && (
+                    <div className="mt-1 px-2 py-1 rounded bg-green-50 border border-green-300 text-green-900 text-xs">
+                      {uploadedLeads.length} lead{uploadedLeads.length === 1 ? "" : "s"} uploaded.
+                    </div>
+                  )}
                   <div className="text-xs text-muted-foreground pt-2">
                     <b>Note:</b> Audience/segment selection is NOT supported for Email campaigns. You must upload a CSV.
                   </div>
