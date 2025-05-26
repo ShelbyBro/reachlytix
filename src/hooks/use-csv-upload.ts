@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +22,9 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
   // New: holds user's uploaded leads for display
   const [userLeads, setUserLeads] = useState<CsvRow[]>([]);
   const [fetchingLeads, setFetchingLeads] = useState(false);
+
+  // NEW: Track filename, type, and status for Upload History (in-memory for this session; in real app, use DB/audit)
+  const [uploadHistory, setUploadHistory] = useState<{ filename: string; type: string; status: string }[]>([]);
 
   const fetchUserLeads = async () => {
     if (!user) return;
@@ -82,6 +84,11 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
       setParsedData(rows);
       setPreviewVisible(true);
       setIsUploading(false);
+      // After successful preview:
+      setUploadHistory(h => [
+        ...h,
+        { filename: file.name, type: "csv", status: "Parsed" }
+      ]);
     } catch (error: any) {
       console.error("Error parsing file:", error);
       toast({
@@ -223,6 +230,7 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
     uploadError,
     userLeads,
     fetchUserLeads,
-    fetchingLeads
+    fetchingLeads,
+    uploadHistory // Exposed for Upload History component (include filename, type, status)
   };
 }

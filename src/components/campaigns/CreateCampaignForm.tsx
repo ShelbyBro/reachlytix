@@ -104,7 +104,7 @@ export function CreateCampaignForm({
     });
   }, [leads]);
 
-  // Used for Schedule/Start Campaign
+  // Called by the schedule/start button
   const handleScheduleOrStart = async () => {
     if (!campaignId) {
       toast({
@@ -123,10 +123,10 @@ export function CreateCampaignForm({
       return;
     }
 
-    // Remove existing campaign_leads assignments
+    // Remove existing campaign_leads assignments for this campaign
     await supabase.from("campaign_leads").delete().eq("campaign_id", campaignId);
 
-    // Insert each lead_id
+    // Insert each lead_id for the chosen audience group (always user-created leads for "All")
     const records = leads.map(lead => ({
       campaign_id: campaignId,
       lead_id: lead.id,
@@ -142,6 +142,11 @@ export function CreateCampaignForm({
           description: error.message,
         });
         return;
+      } else {
+        toast({
+          title: "Audience assigned",
+          description: `Assigned to ${records.length} recipient${records.length === 1 ? "" : "s"}.`,
+        });
       }
     } else {
       toast({
@@ -151,11 +156,6 @@ export function CreateCampaignForm({
       });
       return;
     }
-
-    toast({
-      title: "Audience assigned",
-      description: `Assigned to ${records.length} recipients.`,
-    });
 
     // Call the save handler to persist changes
     await handleSave();
@@ -234,7 +234,7 @@ export function CreateCampaignForm({
             <div className="mb-4">Pick who should receive this campaign:</div>
             <div className="flex items-center space-x-4 mb-4">
               <Button
-                variant={audienceOption.value === "all" ? "default" : "outline"}
+                variant="default"
                 onClick={() => setAudienceOption({ value: "all", label: "All Leads", count: leads.length })}
                 disabled={leadsLoading || leads.length === 0}
               >
