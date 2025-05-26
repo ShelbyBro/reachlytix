@@ -122,7 +122,7 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
         return;
       }
 
-      // Do not set created_by (let Supabase default it to auth.uid())
+      // Tip: never include created_by in payload, let Supabase default handle it and RLS will succeed.
       const leadsToInsert = validRows.map(row => ({
         name: row.name,
         email: row.email,
@@ -130,7 +130,7 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
         source: selectedSource,
         status: 'new',
         client_id: user.id
-        // created_by: user.id <-- REMOVE THIS, let Supabase set it via default
+        // DO NOT specify created_by here!
       }));
 
       const batchSize = 50;
@@ -161,6 +161,7 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
             continue;
           }
 
+          // Only insert allowed fields, do NOT include created_by, not even as undefined/null
           const { error: insertError } = await supabase.from('leads').insert([lead]);
 
           if (insertError) {
