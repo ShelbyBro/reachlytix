@@ -1,4 +1,3 @@
-
 import { SimpleCampaign } from "@/types/campaign";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -67,8 +66,8 @@ export function CreateCampaignForm({
   const [leads, setLeads] = useState<any[]>([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
   const [audienceOption, setAudienceOption] = useState<AudienceOption>({ value: "all", label: "All Leads", count: 0 });
-  const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
 
+  // Fetch leads for this user only, as soon as user/id is set
   useEffect(() => {
     async function fetchMyLeads() {
       setLeadsLoading(true);
@@ -79,8 +78,8 @@ export function CreateCampaignForm({
       }
       const { data, error } = await supabase
         .from("leads")
-        .select("id,name,email,phone,status")
-        .eq("created_by", user.id);
+        .select("*")
+        .eq("created_by", user.id); // Only current user's leads
 
       if (error) {
         toast({
@@ -103,12 +102,19 @@ export function CreateCampaignForm({
       label: "All Leads",
       count: leads.length,
     });
-    setSelectedLeadIds(leads.map(lead => lead.id));
   }, [leads]);
 
-  // Used for mocking Schedule vs Start Campaign (for both use selected leads)
+  // Used for Schedule/Start Campaign
   const handleScheduleOrStart = async () => {
-    if (!campaignId || !selectedLeadIds.length) {
+    if (!campaignId) {
+      toast({
+        variant: "destructive",
+        title: "Please Save Campaign First",
+        description: "You must save campaign details before scheduling.",
+      });
+      return;
+    }
+    if (leads.length === 0) {
       toast({
         variant: "destructive",
         title: "No leads available",
@@ -116,16 +122,14 @@ export function CreateCampaignForm({
       });
       return;
     }
-    // Insert into campaign_leads
-    // Remove existing links (in case user is re-sending)
-    await supabase
-      .from("campaign_leads")
-      .delete()
-      .eq("campaign_id", campaignId);
 
-    const records = selectedLeadIds.map(lead_id => ({
+    // Remove existing campaign_leads assignments
+    await supabase.from("campaign_leads").delete().eq("campaign_id", campaignId);
+
+    // Insert each lead_id
+    const records = leads.map(lead => ({
       campaign_id: campaignId,
-      lead_id,
+      lead_id: lead.id,
       created_at: new Date().toISOString(),
     }));
 
@@ -139,16 +143,25 @@ export function CreateCampaignForm({
         });
         return;
       }
+    } else {
       toast({
-        title: "Audience assigned",
-        description: `Assigned to ${records.length} recipients.`,
+        variant: "destructive",
+        title: "No leads to assign",
+        description: "No valid leads found to assign.",
       });
+      return;
     }
-    // Now submit the campaign save (for scheduled or immediate send)
+
+    toast({
+      title: "Audience assigned",
+      description: `Assigned to ${records.length} recipients.`,
+    });
+
+    // Call the save handler to persist changes
     await handleSave();
   };
 
-  // Leads upload/refresh logic
+  // Leads upload/refresh logic (unchanged)
   const [currentTab, setCurrentTab] = useState("details");
   const [leadsAssigned, setLeadsAssigned] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -222,17 +235,14 @@ export function CreateCampaignForm({
             <div className="flex items-center space-x-4 mb-4">
               <Button
                 variant={audienceOption.value === "all" ? "default" : "outline"}
-                onClick={() => {
-                  setAudienceOption({ value: "all", label: "All Leads", count: leads.length });
-                  setSelectedLeadIds(leads.map(lead => lead.id));
-                }}
+                onClick={() => setAudienceOption({ value: "all", label: "All Leads", count: leads.length })}
                 disabled={leadsLoading || leads.length === 0}
               >
-                All Leads ({leadsLoading ? "..." : audienceOption.count}) recipient{audienceOption.count === 1 ? "" : "s"}
+                All Leads ({leadsLoading ? "..." : leads.length}) recipient{leads.length === 1 ? "" : "s"}
               </Button>
             </div>
             <div className="text-muted-foreground text-xs">
-              All leads you've uploaded are shown here. To target just a segment, use the Select Leads tab.
+              Only your uploaded leads are shown. Want to filter? Use the Select Leads tab.
             </div>
             {leads.length === 0 && !leadsLoading && (
               <div className="py-6 text-center text-sm text-muted-foreground">No uploaded leads yet.</div>
