@@ -6,7 +6,7 @@ import { CampaignDetailsFields } from "./CampaignDetailsFields";
 import { CampaignMessageContent } from "./CampaignMessageContent";
 import { SchedulingField } from "./SchedulingField";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SelectLeadsTab } from "./SelectLeadsTab";
 import { Link } from "react-router-dom";
