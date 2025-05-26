@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SelectLeadsTab } from "./SelectLeadsTab";
 import { Link } from "react-router-dom";
 import { InlineLeadUploader } from "./InlineLeadUploader";
+import { UploadLeadsModal } from "./UploadLeadsModal";
+import { Upload } from "lucide-react";
 
 interface CreateCampaignFormProps {
   onCampaignCreated: () => void;
@@ -46,14 +48,14 @@ export function CreateCampaignForm({
     handleSave
   } = useCampaignForm(editingCampaign, onCampaignCreated, onCancel);
 
-  const [currentTab, setCurrentTab] = useState("details");
-  const [leadsAssigned, setLeadsAssigned] = useState(false);
+  // Upload modal UI state
+  const [modalOpen, setModalOpen] = useState(false);
 
   // To trigger refresh of leads in SelectLeadsTab after uploading
   const [leadUploadTrigger, setLeadUploadTrigger] = useState(Date.now());
   const handleLeadsUploaded = useCallback(() => {
     setLeadUploadTrigger(Date.now());
-    setCurrentTab("leads"); // after upload, switch back to "Select Leads"
+    setCurrentTab("leads"); // after upload, switch to "Select Leads"
   }, []);
 
   return (
@@ -67,6 +69,27 @@ export function CreateCampaignForm({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+
+        {/* --- Prominent Upload Leads Card/Button --- */}
+        <div className="w-full mb-4 flex justify-center">
+          <div className="bg-muted/50 border rounded-lg px-6 py-5 flex flex-col items-center text-center max-w-xl shadow-sm">
+            <Upload className="w-8 h-8 mb-2 text-primary" />
+            <div className="text-lg font-semibold mb-1">Upload Your Leads</div>
+            <div className="text-sm text-muted-foreground mb-2">
+              Have a CSV list of prospects? Upload your leads before assigning them to this campaign.
+            </div>
+            <Button type="button" className="mt-2" onClick={() => setModalOpen(true)} size="lg">
+              <Upload className="mr-2" /> Upload Leads
+            </Button>
+          </div>
+        </div>
+        {/* --- Modal for Upload --- */}
+        <UploadLeadsModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          onLeadsUploaded={handleLeadsUploaded}
+        />
+
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-4">
           <TabsList>
             <TabsTrigger value="details">Details</TabsTrigger>
