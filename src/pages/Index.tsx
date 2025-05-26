@@ -1,11 +1,10 @@
-
 import { useEffect, useState } from "react";
 import { ArrowUpRight, Upload, Users, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Layout from "@/components/layout";
 import { supabase } from "@/integrations/supabase/client";
-import { CSVUploader } from "@/components/csv-uploader";
+import { CsvUploaderComponent } from "@/components/csv-uploader"; // Corrected import
 import { NeuralBackground } from "@/components/neural-background";
 import { MarketingAutomationSection } from "@/components/automation/MarketingAutomationSection";
 
@@ -131,7 +130,7 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <CSVUploader />
+                <CsvUploaderComponent />
               </CardContent>
             </Card>
           </div>

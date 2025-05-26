@@ -1,30 +1,25 @@
 
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect, useState } from "react";
 import { UserRole } from "@/types/auth";
 
 export function useUserRole() {
   const { role, isAdmin, isClient, isAgent, isIso, loading, authError } = useAuth();
   const [roleReady, setRoleReady] = useState(false);
-  
-  // Mark role as ready once it's loaded or after timeout
+
   useEffect(() => {
-    // Role is ready if it's not null and not loading
     if (role !== null && !loading) {
       setRoleReady(true);
     }
-    
-    // Fallback timeout in case role loading takes too long
     const timeoutId = setTimeout(() => {
       if (!roleReady) {
         console.warn("Role loading timeout reached in useUserRole");
         setRoleReady(true);
       }
     }, 5000);
-    
     return () => clearTimeout(timeoutId);
   }, [role, loading, roleReady]);
-  
+
   return {
     role,
     isAdmin,
@@ -33,8 +28,7 @@ export function useUserRole() {
     isIso,
     roleReady,
     authError,
-    
-    // Helper for role-based UI rendering
+
     canAccess: (allowedRoles: UserRole[]) => {
       if (!role) return false;
       return allowedRoles.includes(role as UserRole);

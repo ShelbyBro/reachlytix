@@ -1,7 +1,6 @@
-
 import React, { useState } from "react";
 import Layout from "@/components/layout";
-import { CSVUploader } from "@/components/csv-uploader";
+import { CsvUploaderComponent } from "@/components/csv-uploader";
 import { CampaignDropdown } from "@/components/campaigns/campaign-dropdown";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
@@ -85,7 +84,7 @@ export default function AddLeadsPage() {
           </div>
 
           <div className="space-y-4">
-            <CSVUploader />
+            <CsvUploaderComponent />
 
             <CampaignDropdown onCampaignChange={handleCampaignChange} value={selectedCampaignId} />
 

@@ -1,7 +1,7 @@
 
 import React from "react";
 import Layout from "@/components/layout";
-import { CSVUploader } from "@/components/csv-uploader";
+import { CsvUploaderComponent } from "@/components/csv-uploader"; // Corrected import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NeuralBackground } from "@/components/neural-background";
 
@@ -21,13 +21,12 @@ export default function UploadPage() {
               </p>
             </div>
           </div>
-          
           <Card className="border-0 bg-gradient-to-br from-card to-secondary/30 backdrop-blur-sm shadow-md">
             <CardHeader>
               <CardTitle>Upload Leads CSV</CardTitle>
             </CardHeader>
             <CardContent>
-              <CSVUploader />
+              <CsvUploaderComponent />
             </CardContent>
           </Card>
         </div>

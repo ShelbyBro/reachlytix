@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +14,6 @@ import {
   TableBody,
   TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -43,19 +41,13 @@ export function CsvUploaderComponent() {
     uploadHistory
   } = useCSVUpload({ selectedSource, selectedCampaign });
 
-  const onDrop = (acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    setFile(file);
-    parseFile(file);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setFile(file);
+      parseFile(file);
+    }
   };
-
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop,
-    accept: {
-      "text/csv": [".csv"],
-    },
-    multiple: false,
-  });
 
   return (
     <div>
@@ -87,16 +79,21 @@ export function CsvUploaderComponent() {
         </div>
       </div>
 
-      <div
-        {...getRootProps()}
-        className="border-2 border-dashed rounded-md p-6 text-center cursor-pointer bg-muted/50"
-      >
-        <input {...getInputProps()} />
-        {file ? (
-          <p>Selected file: {file.name}</p>
-        ) : (
-          <p>Drag 'n' drop a CSV file here, or click to select file</p>
-        )}
+      <div className="border-2 border-dashed rounded-md p-6 text-center cursor-pointer bg-muted/50">
+        <input
+          type="file"
+          accept=".csv"
+          onChange={handleFileChange}
+          className="hidden"
+          id="csv-upload"
+        />
+        <label htmlFor="csv-upload" className="cursor-pointer">
+          {file ? (
+            <p>Selected file: {file.name}</p>
+          ) : (
+            <p>Click to select a CSV file</p>
+          )}
+        </label>
       </div>
 
       {uploadError && (
