@@ -106,18 +106,10 @@ export function CreateCampaignForm({
 
     setSending(true);
 
-    // 1. Save campaign with subject/content included
     try {
-      // Save campaign with subject/content in campaigns table
-      // Insert/update logic—if editing, may differ (delegated to handleSave)
-      await handleSave({
-        campaignName,
-        description,
-        scheduledDate,
-        messageType,
-        subject,
-        content,
-      });
+      // 1. Save campaign with subject/content in campaigns table
+      // NOTE: FIX signature (call with no args!)
+      await handleSave();
 
       // 2. Link leads if not already (should have been added at upload time)
       // Only use leads uploaded by this user and linked to this campaign
