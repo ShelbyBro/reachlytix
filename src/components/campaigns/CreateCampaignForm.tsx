@@ -1,3 +1,4 @@
+
 import { SimpleCampaign } from "@/types/campaign";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -48,6 +49,9 @@ export function CreateCampaignForm({
     handleSave
   } = useCampaignForm(editingCampaign, onCampaignCreated, onCancel);
 
+  // ----------- FIX: Add missing useState hooks ----------
+  const [currentTab, setCurrentTab] = useState("details");
+  const [leadsAssigned, setLeadsAssigned] = useState(false);
   // Upload modal UI state
   const [modalOpen, setModalOpen] = useState(false);
 
