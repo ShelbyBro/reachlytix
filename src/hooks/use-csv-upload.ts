@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -122,14 +121,15 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
         return;
       }
 
-      // Set client_id for all leads to user ID
+      // Set client_id AND created_by for all leads to user ID
       const leadsToInsert = validRows.map(row => ({
         name: row.name,
         email: row.email,
         phone: row.phone,
         source: selectedSource,
         status: 'new',
-        client_id: user.id
+        client_id: user.id,
+        created_by: user.id // ***** ADD THIS TO SATISFY RLS POLICY *****
       }));
 
       const batchSize = 50;
