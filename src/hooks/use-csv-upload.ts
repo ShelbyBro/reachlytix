@@ -16,15 +16,42 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
   const [parseProgress, setParseProgress] = useState(0);
   const [parsedData, setParsedData] = useState<CsvRow[]>([]);
   const [previewVisible, setPreviewVisible] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // New: holds user's uploaded leads for display
+  const [userLeads, setUserLeads] = useState<CsvRow[]>([]);
+  const [fetchingLeads, setFetchingLeads] = useState(false);
+
+  const fetchUserLeads = async () => {
+    if (!user) return;
+    setFetchingLeads(true);
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("client_id", user.id)
+      .order("created_at", { ascending: false });
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error loading your leads",
+        description: error.message,
+      });
+      setUserLeads([]);
+    } else {
+      setUserLeads(data ?? []);
+    }
+    setFetchingLeads(false);
+  };
 
   const parseFile = async (file: File) => {
     try {
       setIsUploading(true);
+      setUploadError(null);
       const text = await file.text();
       const headers = text.split('\n')[0].split(',').map(header => header.trim().toLowerCase());
-      
+
       const missingHeaders = validateHeaders(headers);
       if (missingHeaders.length > 0) {
         toast({
@@ -33,6 +60,7 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
           description: `Your CSV is missing: ${missingHeaders.join(', ')}`
         });
         setIsUploading(false);
+        setUploadError("Missing required columns.");
         return;
       }
 
@@ -40,43 +68,47 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
       setParsedData(rows);
       setPreviewVisible(true);
       setIsUploading(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error parsing file:", error);
       toast({
         variant: "destructive",
         title: "Parse Error",
         description: "Failed to parse the CSV file"
       });
+      setUploadError("Parse error: " + error.message);
       setIsUploading(false);
     }
   };
 
   const handleUpload = async () => {
+    setUploadError(null);
     if (!parsedData.length || !user || !selectedSource) {
       toast({
         variant: "destructive",
         title: "Missing Required Fields",
         description: !selectedSource ? "Please select a lead source" : "No valid leads to upload"
       });
+      setUploadError("Please select a source and have at least one valid lead.");
       return;
     }
-    
+
     try {
       setIsUploading(true);
 
       const validRows = parsedData.filter(row => row.isValid);
-      
+
       if (validRows.length === 0) {
         toast({
           variant: "destructive",
           title: "No Valid Leads",
           description: "No valid leads to upload. Please fix the errors and try again."
         });
+        setUploadError("No valid leads to upload.");
         setIsUploading(false);
         return;
       }
 
-      // Always set client_id to the logged-in user's id!
+      // Set client_id for all leads to user ID
       const leadsToInsert = validRows.map(row => ({
         name: row.name,
         email: row.email,
@@ -85,56 +117,68 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
         status: 'new',
         client_id: user.id
       }));
-      
+
       const batchSize = 50;
       let successCount = 0;
       let duplicateCount = 0;
-      
+      let dbError: string | null = null;
+
       for (let i = 0; i < leadsToInsert.length; i += batchSize) {
         const batch = leadsToInsert.slice(i, i + batchSize);
-        
+
         for (const lead of batch) {
+          // Check for duplicate by email or phone for this client
           const { data: existingLeads, error: checkError } = await supabase
             .from('leads')
             .select('id')
             .or(`email.eq.${lead.email},phone.eq.${lead.phone}`)
             .eq('client_id', user.id)
             .limit(1);
-          
+
           if (checkError) {
             console.error("Error checking for duplicates:", checkError);
+            dbError = checkError.message;
             continue;
           }
-          
+
           if (existingLeads && existingLeads.length > 0) {
             duplicateCount++;
             continue;
           }
-          
+
           const { error: insertError } = await supabase.from('leads').insert([lead]);
-          
+
           if (insertError) {
             console.error("Error inserting lead:", insertError);
+            dbError = insertError.message;
           } else {
             successCount++;
           }
         }
       }
-      
-      toast({
-        title: "Upload Complete",
-        description: `Successfully imported ${successCount} leads. Skipped ${duplicateCount} duplicates. ${parsedData.length - validRows.length} invalid rows.`,
-        duration: 5000
-      });
-      
-      resetState();
-      
-    } catch (error) {
+
+      if (dbError) {
+        toast({
+          variant: "destructive",
+          title: "Upload Error",
+          description: dbError
+        });
+        setUploadError("Database error: " + dbError);
+      } else {
+        toast({
+          title: "Upload Complete",
+          description: `Imported ${successCount} leads. Skipped ${duplicateCount} duplicates.`
+        });
+        await fetchUserLeads();
+        resetState();
+      }
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Upload Failed",
         description: "An unexpected error occurred"
       });
+      setUploadError("Unexpected error: " + error.message);
       console.error(error);
     } finally {
       setIsUploading(false);
@@ -146,6 +190,7 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
     setParsedData([]);
     setParseProgress(0);
     setPreviewVisible(false);
+    setUploadError(null);
   };
 
   return {
@@ -158,7 +203,10 @@ export function useCSVUpload({ selectedSource, selectedCampaign }: UseCSVUploadO
     parseFile,
     handleUpload,
     resetState,
-    setPreviewVisible
+    setPreviewVisible,
+    uploadError,
+    userLeads,
+    fetchUserLeads,
+    fetchingLeads
   };
 }
-

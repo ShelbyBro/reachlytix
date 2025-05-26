@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Layout from "@/components/layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,12 +9,56 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { Upload as UploadIcon, FileSpreadsheet, FileCheck, AlertTriangle } from "lucide-react";
+import { useCSVUpload } from "@/hooks/use-csv-upload";
+
+function UploadedLeadsList({ leads, fetching }: { leads: any[], fetching: boolean }) {
+  if (fetching) return <div className="text-sm text-muted-foreground py-6">Loading your leads...</div>;
+  if (leads.length === 0) return <div className="text-sm text-muted-foreground italic py-4">No leads uploaded yet.</div>;
+  return (
+    <div className="mt-2 rounded bg-muted/40 p-2 max-h-56 overflow-y-auto">
+      <div className="text-xs font-medium mb-1 text-muted-foreground">Last 10 Uploaded Leads</div>
+      <div className="grid grid-cols-3 gap-2 font-semibold text-xs text-muted-foreground border-b pb-1 mb-1">
+        <div>Name</div><div>Email</div><div>Phone</div>
+      </div>
+      {leads.slice(0,10).map((lead) =>
+        <div key={lead.id} className="grid grid-cols-3 gap-2 text-xs py-1 border-b border-muted">
+          <span>{lead.name}</span>
+          <span>{lead.email}</span>
+          <span>{lead.phone}</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Upload() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [uploadType, setUploadType] = useState("leads");
+  // Use the CSV upload hook for "leads" only
+  const {
+    file: csvFile,
+    isUploading,
+    parseProgress,
+    parsedData,
+    previewVisible,
+    setFile: setCsvFile,
+    parseFile,
+    handleUpload,
+    resetState,
+    setPreviewVisible,
+    uploadError,
+    userLeads,
+    fetchUserLeads,
+    fetchingLeads
+  } = useCSVUpload({ selectedSource: "manual", selectedCampaign: "" });
+
+  // Load user leads on mount so users always see what's already uploaded
+  useEffect(() => {
+    fetchUserLeads();
+    // eslint-disable-next-line
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -23,7 +66,7 @@ export default function Upload() {
     }
   };
 
-  const handleUpload = async () => {
+  const handleUploadSimulated = async () => {
     if (!file) {
       toast({
         variant: "destructive",
@@ -117,7 +160,7 @@ export default function Upload() {
                 </RadioGroup>
                 
                 <div className="border-2 border-dashed rounded-md border-muted p-6 flex flex-col items-center justify-center">
-                  {!file ? (
+                  {!csvFile ? (
                     <>
                       <UploadIcon className="mb-4 h-10 w-10 text-muted-foreground" />
                       <div className="text-center space-y-2">
@@ -128,7 +171,12 @@ export default function Upload() {
                         <Input 
                           type="file" 
                           accept=".csv" 
-                          onChange={handleFileChange}
+                          onChange={e => {
+                            if (e.target.files && e.target.files[0]) {
+                              setCsvFile(e.target.files[0]);
+                              parseFile(e.target.files[0]);
+                            }
+                          }}
                           className="max-w-xs mx-auto"
                         />
                       </div>
@@ -138,40 +186,46 @@ export default function Upload() {
                       <div className="flex items-center space-x-3">
                         <FileSpreadsheet className="h-8 w-8 text-primary" />
                         <div className="flex-1">
-                          <div className="text-sm font-medium">{file.name}</div>
+                          <div className="text-sm font-medium">{csvFile.name}</div>
                           <div className="text-xs text-muted-foreground">
-                            {(file.size / 1024).toFixed(1)} KB
+                            {(csvFile.size / 1024).toFixed(1)} KB
                           </div>
                         </div>
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => setFile(null)}
+                          onClick={resetState}
                         >
                           Remove
                         </Button>
                       </div>
-                      
-                      {uploading && (
+                      {/* Upload error */}
+                      {uploadError && (
+                        <div className="text-xs text-red-500">
+                          {uploadError}
+                        </div>
+                      )}
+                      {isUploading && (
                         <div className="space-y-2">
-                          <Progress value={progress} className="h-2" />
+                          <Progress value={parseProgress} className="h-2" />
                           <div className="text-xs text-muted-foreground text-right">
-                            {Math.round(progress)}% complete
+                            {Math.round(parseProgress)}% complete
                           </div>
                         </div>
                       )}
                     </div>
                   )}
                 </div>
-                
                 <div className="flex justify-end">
                   <Button 
                     onClick={handleUpload} 
-                    disabled={!file || uploading}
+                    disabled={!csvFile || isUploading}
                   >
-                    {uploading ? "Uploading..." : "Upload File"}
+                    {isUploading ? "Uploading..." : "Upload File"}
                   </Button>
                 </div>
+                {/* Immediate display of user leads (if leads tab selected or after upload) */}
+                <UploadedLeadsList leads={userLeads} fetching={fetchingLeads} />
               </CardContent>
             </Card>
             
@@ -273,3 +327,6 @@ export default function Upload() {
     </Layout>
   );
 }
+
+// Note: This file is now above 276 lines.
+// Suggest refactoring into smaller component files soon.

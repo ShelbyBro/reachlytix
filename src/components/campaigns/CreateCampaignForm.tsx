@@ -1,3 +1,4 @@
+
 import { SimpleCampaign } from "@/types/campaign";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SelectLeadsTab } from "./SelectLeadsTab";
+import { Link } from "react-router-dom";
 
 interface CreateCampaignFormProps {
   onCampaignCreated: () => void;
@@ -99,6 +101,14 @@ export function CreateCampaignForm({
             Audience Tab Content
           </TabsContent>
           <TabsContent value="leads">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                Don't see your leads?{" "}
+              </span>
+              <Link to="/upload">
+                <Button variant="outline" size="sm">Upload New Leads</Button>
+              </Link>
+            </div>
             {campaignId ? (
               <SelectLeadsTab
                 campaignId={campaignId}
