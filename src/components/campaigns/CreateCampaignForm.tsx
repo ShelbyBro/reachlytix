@@ -1,4 +1,3 @@
-
 import { SimpleCampaign } from "@/types/campaign";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,6 +10,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SelectLeadsTab } from "./SelectLeadsTab";
 import { Link } from "react-router-dom";
+import { InlineLeadUploader } from "./InlineLeadUploader";
 
 interface CreateCampaignFormProps {
   onCampaignCreated: () => void;
@@ -49,6 +49,13 @@ export function CreateCampaignForm({
   const [currentTab, setCurrentTab] = useState("details");
   const [leadsAssigned, setLeadsAssigned] = useState(false);
 
+  // To trigger refresh of leads in SelectLeadsTab after uploading
+  const [leadUploadTrigger, setLeadUploadTrigger] = useState(Date.now());
+  const handleLeadsUploaded = useCallback(() => {
+    setLeadUploadTrigger(Date.now());
+    setCurrentTab("leads"); // after upload, switch back to "Select Leads"
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -65,6 +72,7 @@ export function CreateCampaignForm({
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="audience">Audience</TabsTrigger>
+            <TabsTrigger value="upload-leads">Upload Leads</TabsTrigger>
             <TabsTrigger value="leads">Select Leads</TabsTrigger>
           </TabsList>
           <TabsContent value="details">
@@ -100,21 +108,32 @@ export function CreateCampaignForm({
             <Separator className="my-6" />
             Audience Tab Content
           </TabsContent>
+          <TabsContent value="upload-leads">
+            <div className="mb-3 text-muted-foreground">
+              Upload a CSV file to add new leads, then assign them to this campaign instantly.
+            </div>
+            <InlineLeadUploader onLeadsUploaded={handleLeadsUploaded} />
+          </TabsContent>
           <TabsContent value="leads">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
-                Don't see your leads?{" "}
+                Don&apos;t see your new leads here?{" "}
+                <Button
+                  variant="link"
+                  size="sm"
+                  type="button"
+                  onClick={() => setCurrentTab("upload-leads")}
+                  className="px-1"
+                >
+                  Upload Leads
+                </Button>
               </span>
-              <Link to="/upload">
-                <Button variant="outline" size="sm">Upload New Leads</Button>
-              </Link>
             </div>
             {campaignId ? (
               <SelectLeadsTab
                 campaignId={campaignId}
-                onLeadsAssigned={() => {
-                  setLeadsAssigned(true);
-                }}
+                key={leadUploadTrigger} // rerender after upload
+                onLeadsAssigned={() => setLeadsAssigned(true)}
               />
             ) : (
               <div className="text-sm text-muted-foreground">Please save campaign details first to select leads.</div>
