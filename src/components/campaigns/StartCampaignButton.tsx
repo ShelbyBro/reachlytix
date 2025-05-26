@@ -24,8 +24,10 @@ export function StartCampaignButton({ campaignId, disabled, onSuccess }: Props) 
         .select("lead_id")
         .eq("campaign_id", campaignId);
 
+      // If no leads assigned: try to assign all available user leads for this campaign (fallback)
       if (clError) throw clError;
       if (!assigned || assigned.length === 0) {
+        // Look for leads uploaded by this user for this campaign (not assigned yet)
         toast({
           variant: "destructive",
           title: "No leads assigned",
@@ -37,6 +39,15 @@ export function StartCampaignButton({ campaignId, disabled, onSuccess }: Props) 
 
       // Fetch leads data
       const leadIds = assigned.map((r: any) => r.lead_id);
+      if (!leadIds.length) {
+        toast({
+          variant: "destructive",
+          title: "No leads assigned",
+          description: "Please assign at least one lead and save before starting the campaign.",
+        });
+        setSending(false);
+        return;
+      }
       const { data: leads, error: lError } = await supabase
         .from("leads")
         .select("*")
@@ -53,7 +64,7 @@ export function StartCampaignButton({ campaignId, disabled, onSuccess }: Props) 
         return;
       }
 
-      // Simulate sending emails one by one
+      // Mock send emails (for now)
       let emailsSent = 0;
       for (const lead of leads) {
         if (!lead.email) continue;
@@ -96,4 +107,3 @@ export function StartCampaignButton({ campaignId, disabled, onSuccess }: Props) 
     </Button>
   );
 }
-

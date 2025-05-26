@@ -23,7 +23,7 @@ export function SelectLeadsTab({ campaignId, onLeadsAssigned, initialSelectedLea
   const [isLoading, setIsLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Fetch leads that belong to this client
+  // Show only leads uploaded by this user
   useEffect(() => {
     async function fetchLeads() {
       setIsLoading(true);
@@ -32,10 +32,11 @@ export function SelectLeadsTab({ campaignId, onLeadsAssigned, initialSelectedLea
         setIsLoading(false);
         return;
       }
+      // Only select leads where created_by = user.id
       const { data, error } = await supabase
         .from("leads")
         .select("*")
-        .eq("client_id", user.id);
+        .eq("created_by", user.id);
 
       if (error) {
         toast({
@@ -70,6 +71,7 @@ export function SelectLeadsTab({ campaignId, onLeadsAssigned, initialSelectedLea
     setSelected((old) => old.includes(leadId) ? old.filter(id => id !== leadId) : [...old, leadId]);
   };
 
+  // Assign selected leads to the campaign_leads table
   const handleSave = async () => {
     setSaving(true);
     if (selected.length === 0) {
@@ -81,16 +83,18 @@ export function SelectLeadsTab({ campaignId, onLeadsAssigned, initialSelectedLea
       setSaving(false);
       return;
     }
+
     // Remove all existing campaign_leads for this campaign
     const { error: delError } = await supabase
       .from("campaign_leads")
       .delete()
       .eq("campaign_id", campaignId);
 
-    // Re-insert selected
+    // Re-insert selected leads
     const toInsert = selected.map((lead_id) => ({
       campaign_id: campaignId,
-      lead_id
+      lead_id,
+      created_at: new Date().toISOString(),
     }));
     let insError = undefined;
     if (toInsert.length) {
@@ -116,7 +120,7 @@ export function SelectLeadsTab({ campaignId, onLeadsAssigned, initialSelectedLea
 
   return (
     <div>
-      <div className="mb-2 font-semibold">Select which uploaded leads should receive this campaign:</div>
+      <div className="mb-2 font-semibold">Select which uploaded leads should receive this campaign (shows only your leads):</div>
       {isLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
           <Loader2 className="animate-spin" /> Loading leads...
@@ -157,4 +161,3 @@ export function SelectLeadsTab({ campaignId, onLeadsAssigned, initialSelectedLea
     </div>
   );
 }
-
