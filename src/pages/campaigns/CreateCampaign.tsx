@@ -38,6 +38,10 @@ export default function CreateCampaign() {
     },
   });
   
+  // Watch current campaign type
+  const watchType = form.watch("type");
+  const isEmailType = watchType === "email";
+
   // Handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
@@ -201,120 +205,158 @@ export default function CreateCampaign() {
               </CardContent>
             </Card>
             
-            <Tabs defaultValue="content" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="content">Campaign Content</TabsTrigger>
-                <TabsTrigger value="audience">Audience</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="content">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Campaign Content</CardTitle>
-                    <CardDescription>Create your message content</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {form.watch("type") === "email" && (
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <FormLabel>Email Subject</FormLabel>
-                          <Input placeholder="Enter email subject line" />
+            {/* Only render Tabs for non-email types! Email campaigns do NOT get tabs/segment/audience. */}
+            {!isEmailType && (
+              <Tabs defaultValue="content" className="space-y-4">
+                <TabsList>
+                  <TabsTrigger value="content">Campaign Content</TabsTrigger>
+                  <TabsTrigger value="audience">Audience</TabsTrigger>
+                </TabsList>
+                <TabsContent value="content">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Campaign Content</CardTitle>
+                      <CardDescription>Create your message content</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {form.watch("type") === "email" && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <FormLabel>Email Subject</FormLabel>
+                            <Input placeholder="Enter email subject line" />
+                          </div>
+                          <div className="space-y-2">
+                            <FormLabel>Email Body</FormLabel>
+                            <Textarea 
+                              placeholder="Enter email content" 
+                              className="min-h-[200px]" 
+                            />
+                            <FormDescription>
+                              Use the rich text editor to format your message
+                            </FormDescription>
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          <FormLabel>Email Body</FormLabel>
-                          <Textarea 
-                            placeholder="Enter email content" 
-                            className="min-h-[200px]" 
-                          />
-                          <FormDescription>
-                            Use the rich text editor to format your message
-                          </FormDescription>
+                      )}
+                      
+                      {form.watch("type") === "sms" && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <FormLabel>SMS Message</FormLabel>
+                            <Textarea 
+                              placeholder="Enter SMS content (160 characters max)" 
+                              className="min-h-[100px]" 
+                              maxLength={160}
+                            />
+                            <FormDescription>
+                              Keep your message concise and include a clear call to action
+                            </FormDescription>
+                          </div>
                         </div>
+                      )}
+                      
+                      {form.watch("type") === "ai-voice" && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <FormLabel>Voice Script</FormLabel>
+                            <Textarea 
+                              placeholder="Enter the script for the AI voice agent to use" 
+                              className="min-h-[200px]" 
+                            />
+                            <FormDescription>
+                              Write a conversational script that sounds natural when spoken
+                            </FormDescription>
+                          </div>
+                          <div className="space-y-2">
+                            <FormLabel>Voice Type</FormLabel>
+                            <Select>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a voice type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="male-professional">Male - Professional</SelectItem>
+                                <SelectItem value="female-professional">Female - Professional</SelectItem>
+                                <SelectItem value="male-friendly">Male - Friendly</SelectItem>
+                                <SelectItem value="female-friendly">Female - Friendly</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                <TabsContent value="audience">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Target Audience</CardTitle>
+                      <CardDescription>Select who will receive this campaign</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <FormLabel>Audience Type</FormLabel>
+                        <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select audience type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all-leads">All Leads</SelectItem>
+                            <SelectItem value="filtered">Filtered Leads</SelectItem>
+                            <SelectItem value="segment">Saved Segment</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
-                    )}
-                    
-                    {form.watch("type") === "sms" && (
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <FormLabel>SMS Message</FormLabel>
-                          <Textarea 
-                            placeholder="Enter SMS content (160 characters max)" 
-                            className="min-h-[100px]" 
-                            maxLength={160}
-                          />
-                          <FormDescription>
-                            Keep your message concise and include a clear call to action
-                          </FormDescription>
-                        </div>
+                      
+                      <div className="border rounded-md p-4 bg-muted/30">
+                        <p className="text-sm text-muted-foreground">
+                          Estimated audience size: <strong>0 recipients</strong>
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Select filters or segments to update the estimated audience size
+                        </p>
                       </div>
-                    )}
-                    
-                    {form.watch("type") === "ai-voice" && (
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <FormLabel>Voice Script</FormLabel>
-                          <Textarea 
-                            placeholder="Enter the script for the AI voice agent to use" 
-                            className="min-h-[200px]" 
-                          />
-                          <FormDescription>
-                            Write a conversational script that sounds natural when spoken
-                          </FormDescription>
-                        </div>
-                        <div className="space-y-2">
-                          <FormLabel>Voice Type</FormLabel>
-                          <Select>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a voice type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="male-professional">Male - Professional</SelectItem>
-                              <SelectItem value="female-professional">Female - Professional</SelectItem>
-                              <SelectItem value="male-friendly">Male - Friendly</SelectItem>
-                              <SelectItem value="female-friendly">Female - Friendly</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="audience">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Target Audience</CardTitle>
-                    <CardDescription>Select who will receive this campaign</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <FormLabel>Audience Type</FormLabel>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select audience type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all-leads">All Leads</SelectItem>
-                          <SelectItem value="filtered">Filtered Leads</SelectItem>
-                          <SelectItem value="segment">Saved Segment</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            )}
+
+            {/* For EMAIL show only CSV upload + info */}
+            {isEmailType && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recipients</CardTitle>
+                  <CardDescription>
+                    Upload your recipient list for this campaign (CSV required).
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block font-semibold">Upload Recipients (CSV)</label>
+                    {/* Use same upload style as CreateCampaignForm */}
+                    <input
+                      type="file"
+                      accept=".csv"
+                      className="mt-2"
+                      // CSV upload logic should be implemented/reused
+                      // Disabled for email demo! Replace with actual uploader if/when needed.
+                      disabled
+                    />
+                    <div className="text-sm text-muted-foreground">
+                      Upload a CSV file with columns: name, email, phone.
+                      Only these uploaded leads will receive this campaign.
                     </div>
-                    
-                    <div className="border rounded-md p-4 bg-muted/30">
-                      <p className="text-sm text-muted-foreground">
-                        Estimated audience size: <strong>0 recipients</strong>
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Select filters or segments to update the estimated audience size
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-            
+                  </div>
+                  <div className="px-3 py-2 border border-dashed rounded bg-muted/20 text-muted-foreground">
+                    {/* Placeholder for uploaded leads. Replace with working list if integrating. */}
+                    No leads uploaded yet.
+                  </div>
+                  <div className="text-xs text-muted-foreground pt-2">
+                    <b>Note:</b> Audience/segment selection is NOT supported for Email campaigns. You must upload a CSV.
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <div className="flex justify-between">
               <Button type="button" variant="outline" onClick={() => navigate("/campaigns")}>
                 Cancel
@@ -349,3 +391,6 @@ export default function CreateCampaign() {
     </Layout>
   );
 }
+
+// WARNING: Never add "audience", "segment", "All Leads", "Filtered Leads", or segment selectors for EMAIL campaign type!
+// Email must ONLY support CSV uploads and uploaded lead listing.
