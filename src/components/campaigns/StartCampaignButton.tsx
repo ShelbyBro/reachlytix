@@ -4,30 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Mail } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Props = {
   campaignId: string;
   disabled?: boolean;
   onSuccess?: () => void;
+  leadIds?: string[];
 };
 
-export function StartCampaignButton({ campaignId, disabled, onSuccess }: Props) {
+export function StartCampaignButton({ campaignId, disabled, onSuccess, leadIds = [] }: Props) {
   const { toast } = useToast();
   const [sending, setSending] = useState(false);
 
   const handleClick = async () => {
     setSending(true);
     try {
-      // Fetch assigned leads
-      const { data: assigned, error: clError } = await supabase
-        .from("campaign_leads")
-        .select("lead_id")
-        .eq("campaign_id", campaignId);
-
-      // If no leads assigned: try to assign all available user leads for this campaign (fallback)
-      if (clError) throw clError;
-      if (!assigned || assigned.length === 0) {
-        // Look for leads uploaded by this user for this campaign (not assigned yet)
+      if (!leadIds.length) {
         toast({
           variant: "destructive",
           title: "No leads assigned",
@@ -37,17 +30,29 @@ export function StartCampaignButton({ campaignId, disabled, onSuccess }: Props) 
         return;
       }
 
-      // Fetch leads data
-      const leadIds = assigned.map((r: any) => r.lead_id);
-      if (!leadIds.length) {
-        toast({
-          variant: "destructive",
-          title: "No leads assigned",
-          description: "Please assign at least one lead and save before starting the campaign.",
-        });
-        setSending(false);
-        return;
+      // Remove any existing assignments
+      await supabase.from("campaign_leads").delete().eq("campaign_id", campaignId);
+
+      // Insert new campaign_leads
+      const inserts = leadIds.map(lead_id => ({
+        campaign_id: campaignId,
+        lead_id,
+        created_at: new Date().toISOString(),
+      }));
+      if (inserts.length) {
+        const { error } = await supabase.from("campaign_leads").insert(inserts);
+        if (error) {
+          toast({
+            variant: "destructive",
+            title: "Error assigning leads",
+            description: error.message,
+          });
+          setSending(false);
+          return;
+        }
       }
+
+      // Fetch leads data
       const { data: leads, error: lError } = await supabase
         .from("leads")
         .select("*")
@@ -71,7 +76,7 @@ export function StartCampaignButton({ campaignId, disabled, onSuccess }: Props) 
         // Simulate email send: log or fake API call
         console.log(`[Mock] Sent email for campaign ${campaignId} to ${lead.email} (lead ${lead.id})`);
         emailsSent++;
-        await new Promise((res) => setTimeout(res, 200)); // fake delay
+        await new Promise((res) => setTimeout(res, 150)); // small delay
       }
 
       // Mark campaign as sent
@@ -93,17 +98,34 @@ export function StartCampaignButton({ campaignId, disabled, onSuccess }: Props) 
     setSending(false);
   };
 
+  // If no leads available, disable button and show tooltip
+  const finalDisabled = disabled || leadIds.length === 0 || sending;
+  const triggerElem = (
+    <span>
+      <Button onClick={handleClick} disabled={finalDisabled}>
+        {sending ? (
+          <>
+            <Mail className="mr-2 animate-spin" /> Sending...
+          </>
+        ) : (
+          <>
+            <Check className="mr-2" /> Start Campaign
+          </>
+        )}
+      </Button>
+    </span>
+  );
+
   return (
-    <Button onClick={handleClick} disabled={disabled || sending}>
-      {sending ? (
-        <>
-          <Mail className="mr-2 animate-spin" /> Sending...
-        </>
-      ) : (
-        <>
-          <Check className="mr-2" /> Start Campaign
-        </>
-      )}
-    </Button>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>{triggerElem}</TooltipTrigger>
+        {leadIds.length === 0 && (
+          <TooltipContent>
+            Upload and select at least one lead before you can start a campaign.
+          </TooltipContent>
+        )}
+      </Tooltip>
+    </TooltipProvider>
   );
 }

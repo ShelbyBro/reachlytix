@@ -7,13 +7,24 @@ import { CampaignDetailsFields } from "./CampaignDetailsFields";
 import { CampaignMessageContent } from "./CampaignMessageContent";
 import { SchedulingField } from "./SchedulingField";
 import { Separator } from "@/components/ui/separator";
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SelectLeadsTab } from "./SelectLeadsTab";
 import { Link } from "react-router-dom";
 import { InlineLeadUploader } from "./InlineLeadUploader";
 import { UploadLeadsModal } from "./UploadLeadsModal";
 import { Upload } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { StartCampaignButton } from "./StartCampaignButton";
+
+interface AudienceOption {
+  value: "all";
+  label: string;
+  count: number;
+}
 
 interface CreateCampaignFormProps {
   onCampaignCreated: () => void;
@@ -21,10 +32,10 @@ interface CreateCampaignFormProps {
   onCancel?: () => void;
 }
 
-export function CreateCampaignForm({ 
-  onCampaignCreated, 
+export function CreateCampaignForm({
+  onCampaignCreated,
   editingCampaign = null,
-  onCancel 
+  onCancel,
 }: CreateCampaignFormProps) {
   const {
     campaignName,
@@ -46,16 +57,101 @@ export function CreateCampaignForm({
     messageType,
     setMessageType,
     campaignId,
-    handleSave
+    handleSave,
   } = useCampaignForm(editingCampaign, onCampaignCreated, onCancel);
 
-  // ----------- FIX: Add missing useState hooks ----------
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Audience state
+  const [leads, setLeads] = useState<any[]>([]);
+  const [leadsLoading, setLeadsLoading] = useState(true);
+  const [audienceOption, setAudienceOption] = useState<AudienceOption>({ value: "all", label: "All Leads", count: 0 });
+  const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    async function fetchMyLeads() {
+      setLeadsLoading(true);
+      if (!user) {
+        setLeads([]);
+        setLeadsLoading(false);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("leads")
+        .select("id,name,email,phone,status")
+        .eq("created_by", user.id);
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Failed to fetch leads",
+          description: error.message,
+        });
+        setLeads([]);
+      } else {
+        setLeads(data ?? []);
+      }
+      setLeadsLoading(false);
+    }
+    fetchMyLeads();
+  }, [user]);
+
+  useEffect(() => {
+    setAudienceOption({
+      value: "all",
+      label: "All Leads",
+      count: leads.length,
+    });
+    setSelectedLeadIds(leads.map(lead => lead.id));
+  }, [leads]);
+
+  // Used for mocking Schedule vs Start Campaign (for both use selected leads)
+  const handleScheduleOrStart = async () => {
+    if (!campaignId || !selectedLeadIds.length) {
+      toast({
+        variant: "destructive",
+        title: "No leads available",
+        description: "You must have at least one uploaded lead before starting this campaign.",
+      });
+      return;
+    }
+    // Insert into campaign_leads
+    // Remove existing links (in case user is re-sending)
+    await supabase
+      .from("campaign_leads")
+      .delete()
+      .eq("campaign_id", campaignId);
+
+    const records = selectedLeadIds.map(lead_id => ({
+      campaign_id: campaignId,
+      lead_id,
+      created_at: new Date().toISOString(),
+    }));
+
+    if (records.length) {
+      const { error } = await supabase.from("campaign_leads").insert(records);
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error assigning leads",
+          description: error.message,
+        });
+        return;
+      }
+      toast({
+        title: "Audience assigned",
+        description: `Assigned to ${records.length} recipients.`,
+      });
+    }
+    // Now submit the campaign save (for scheduled or immediate send)
+    await handleSave();
+  };
+
+  // Leads upload/refresh logic
   const [currentTab, setCurrentTab] = useState("details");
   const [leadsAssigned, setLeadsAssigned] = useState(false);
-  // Upload modal UI state
   const [modalOpen, setModalOpen] = useState(false);
-
-  // To trigger refresh of leads in SelectLeadsTab after uploading
   const [leadUploadTrigger, setLeadUploadTrigger] = useState(Date.now());
   const handleLeadsUploaded = useCallback(() => {
     setLeadUploadTrigger(Date.now());
@@ -67,13 +163,12 @@ export function CreateCampaignForm({
       <CardHeader>
         <CardTitle>{editingCampaign ? "Edit Campaign" : "Create New Campaign"}</CardTitle>
         <CardDescription>
-          {editingCampaign 
-            ? "Update your campaign information and message content below." 
+          {editingCampaign
+            ? "Update your campaign information and message content below."
             : "Enter your campaign information and message content below."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-
         {/* --- Prominent Upload Leads Card/Button --- */}
         <div className="w-full mb-4 flex justify-center">
           <div className="bg-muted/50 border rounded-lg px-6 py-5 flex flex-col items-center text-center max-w-xl shadow-sm">
@@ -87,12 +182,7 @@ export function CreateCampaignForm({
             </Button>
           </div>
         </div>
-        {/* --- Modal for Upload --- */}
-        <UploadLeadsModal
-          open={modalOpen}
-          onOpenChange={setModalOpen}
-          onLeadsUploaded={handleLeadsUploaded}
-        />
+        <UploadLeadsModal open={modalOpen} onOpenChange={setModalOpen} onLeadsUploaded={handleLeadsUploaded} />
 
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-4">
           <TabsList>
@@ -102,18 +192,12 @@ export function CreateCampaignForm({
             <TabsTrigger value="upload-leads">Upload Leads</TabsTrigger>
             <TabsTrigger value="leads">Select Leads</TabsTrigger>
           </TabsList>
+
           <TabsContent value="details">
-            <CampaignDetailsFields
-              campaignName={campaignName}
-              description={description}
-              onCampaignNameChange={setCampaignName}
-              onDescriptionChange={setDescription}
-            />
-            <SchedulingField
-              scheduledDate={scheduledDate}
-              onScheduledDateChange={setScheduledDate}
-            />
+            <CampaignDetailsFields campaignName={campaignName} description={description} onCampaignNameChange={setCampaignName} onDescriptionChange={setDescription} />
+            <SchedulingField scheduledDate={scheduledDate} onScheduledDateChange={setScheduledDate} />
           </TabsContent>
+
           <TabsContent value="content">
             <CampaignMessageContent
               messageType={messageType}
@@ -131,9 +215,28 @@ export function CreateCampaignForm({
               campaignId={campaignId}
             />
           </TabsContent>
+
           <TabsContent value="audience">
             <Separator className="my-6" />
-            Audience Tab Content
+            <div className="mb-4">Pick who should receive this campaign:</div>
+            <div className="flex items-center space-x-4 mb-4">
+              <Button
+                variant={audienceOption.value === "all" ? "default" : "outline"}
+                onClick={() => {
+                  setAudienceOption({ value: "all", label: "All Leads", count: leads.length });
+                  setSelectedLeadIds(leads.map(lead => lead.id));
+                }}
+                disabled={leadsLoading || leads.length === 0}
+              >
+                All Leads ({leadsLoading ? "..." : audienceOption.count}) recipient{audienceOption.count === 1 ? "" : "s"}
+              </Button>
+            </div>
+            <div className="text-muted-foreground text-xs">
+              All leads you've uploaded are shown here. To target just a segment, use the Select Leads tab.
+            </div>
+            {leads.length === 0 && !leadsLoading && (
+              <div className="py-6 text-center text-sm text-muted-foreground">No uploaded leads yet.</div>
+            )}
           </TabsContent>
           <TabsContent value="upload-leads">
             <div className="mb-3 text-muted-foreground">
@@ -159,7 +262,7 @@ export function CreateCampaignForm({
             {campaignId ? (
               <SelectLeadsTab
                 campaignId={campaignId}
-                key={leadUploadTrigger} // rerender after upload
+                key={leadUploadTrigger}
                 onLeadsAssigned={() => setLeadsAssigned(true)}
               />
             ) : (
@@ -167,16 +270,31 @@ export function CreateCampaignForm({
             )}
           </TabsContent>
         </Tabs>
-
         <div className="flex justify-end space-x-2 pt-4">
           {onCancel && (
             <Button variant="outline" onClick={onCancel}>
               Cancel
             </Button>
           )}
-          <Button onClick={handleSave}>
-            {editingCampaign ? "Update Campaign" : "Create Campaign"}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    onClick={handleScheduleOrStart}
+                    disabled={leadsLoading || leads.length === 0}
+                  >
+                    {leads.length === 0 ? "Start Campaign" : scheduledDate ? "Schedule Campaign" : "Start Campaign"}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {leads.length === 0 && (
+                <TooltipContent>
+                  Upload at least one lead before you can start a campaign.
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </CardContent>
     </Card>
